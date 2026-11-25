@@ -1,5 +1,6 @@
 // Pantalla que aparece al terminar el flujo de /reportar:
-//   - modo "creado": el reporte se registró (201). Muestra el folio, la fecha y hora en hora de Juárez y el estado.
+//   - modo "creado": el reporte se registró (201). Muestra el folio, la fecha y hora en hora de Juárez y el estado
+//     (en un encharcamiento: Activo y "vigente hasta").
 //   - modo "confirmado": la persona confirmó un reporte que ya existía; no se creó un folio nuevo.
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
@@ -67,7 +68,7 @@ export default function ConfirmacionReporte({ modo, reporte, alReportarOtro }: P
           <dt>Estado</dt>
           <dd>{ETIQUETA_ESTADO[reporte.estado]}</dd>
         </div>
-        {creado && reporte.vigente_hasta && (
+        {reporte.vigente_hasta && (
           <div>
             <dt>Vigente hasta</dt>
             <dd>{formatoFechaHora(reporte.vigente_hasta)} (hora de Ciudad Juárez)</dd>

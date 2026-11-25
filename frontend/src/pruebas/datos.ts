@@ -69,3 +69,24 @@ export function reporteCercano(parcial: Partial<ReporteCercano> = {}): ReporteCe
   const { puede_editar: _a, motivo_rechazo: _b, ...publico } = reporteMio()
   return { ...publico, id: 77, folio: 'BCH-2026-000050', confirmaciones: 2, antiguedad_dias: 3, distancia_m: 12, ...parcial }
 }
+
+// Un encharcamiento activo (como lo responde POST /api/reportes/encharcamientos): `tipo_dano` es null (contrato).
+export function encharcamientoMio(parcial: Partial<ReporteMio> = {}): ReporteMio {
+  return reporteMio({
+    id: 500,
+    folio: 'ENC-2026-000045',
+    categoria: 'encharcamiento',
+    tipo_dano: null,
+    severidad: null,
+    tamano: null,
+    profundidad: null,
+    carril: null,
+    nivel_agua: 'media_llanta',
+    hay_riesgo: null,
+    estado: 'activo',
+    sin_validar: false,
+    vigente_hasta: '2026-11-25T03:05:00Z', // 6 horas después: 20:05 en Ciudad Juárez
+    puede_editar: false,
+    ...parcial,
+  })
+}

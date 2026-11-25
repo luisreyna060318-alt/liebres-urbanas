@@ -146,7 +146,8 @@ export interface ReportePublico {
   id: number
   folio: string
   categoria: Categoria
-  tipo_dano: { codigo: TipoDanoCodigo; nombre: string }
+  // null en los encharcamientos (el contrato: solo los baches tienen tipo de daño)
+  tipo_dano: { codigo: TipoDanoCodigo; nombre: string } | null
   calle: string
   colonia: { id: number; nombre: string }
   lat: number
