@@ -1,0 +1,140 @@
+# Integración continua de Liebre Urbana.
+# Se ejecuta en cada push y en cada pull request. Solo lee el repositorio (contents: read) y no usa secretos.
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (ruff y pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      # Mientras el backend no exista (backend/requirements-dev.txt), los pasos de abajo se omiten sin fallar.
+      # Así este archivo puede fusionarse antes que el PR del backend.
+      - name: Detectar si existe el backend
+        id: detectar
+        run: |
+          if [ -f backend/requirements-dev.txt ]; then
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+            echo "backend/requirements-dev.txt no existe todavia; se omiten los pasos del backend."
+          fi
+
+      - name: Instalar Python 3.12
+        if: steps.detectar.outputs.existe == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Instalar dependencias del backend
+        if: steps.detectar.outputs.existe == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements-dev.txt
+
+      # Se corre desde la raíz porque ruff.toml vive ahí
+      - name: Revisar estilo con ruff
+        if: steps.detectar.outputs.existe == 'true'
+        run: ruff check backend db
+
+      # Las pruebas usan SQLite en memoria, por eso no hace falta PostgreSQL ni ningún secreto
+      - name: Correr pruebas con pytest
+        if: steps.detectar.outputs.existe == 'true'
+        working-directory: backend
+        run: python -m pytest -q
+
+  frontend:
+    name: Frontend (lint, pruebas y build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      # Mientras el frontend no exista (frontend/package.json), los pasos de abajo se omiten sin fallar
+      - name: Detectar si existe el frontend
+        id: detectar
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "existe=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=false" >> "$GITHUB_OUTPUT"
+            echo "frontend/package.json no existe todavia; se omiten los pasos del frontend."
+          fi
+
+      - name: Instalar Node 22
+        if: steps.detectar.outputs.existe == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # npm ci instala exactamente lo que dice package-lock.json (reproducible)
+      - name: Instalar dependencias del frontend
+        if: steps.detectar.outputs.existe == 'true'
+        working-directory: frontend
+        run: npm ci
+
+      - name: Revisar estilo del frontend
+        if: steps.detectar.outputs.existe == 'true'
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Correr pruebas con Vitest
+        if: steps.detectar.outputs.existe == 'true'
+        working-directory: frontend
+        run: npm test
+
+      - name: Compilar el frontend
+        if: steps.detectar.outputs.existe == 'true'
+        working-directory: frontend
+        run: npm run build
+
+  # Comprueba que Docker Compose y las dos imágenes se arman (no se publican en ningún registro).
+  # Es un job aparte: no depende de los otros y no los retrasa.
+  docker:
+    name: Docker (compose e imágenes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      # Misma validación que hace "docker compose up": el .env de ejemplo debe bastar para armar la configuración
+      - name: Validar docker compose con el .env de ejemplo
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+      # La imagen del backend se construye desde la raíz porque necesita backend/ y db/.
+      # Se omite mientras el backend no exista (antes de fusionar su PR).
+      - name: Construir la imagen del backend
+        run: |
+          if [ -f backend/requirements.txt ]; then
+            docker build -f backend/Dockerfile -t liebre-urbana-api:ci .
+          else
+            echo "backend/requirements.txt no existe todavia; se omite la imagen del backend."
+          fi
+
+      - name: Construir la imagen del frontend
+        run: |
+          if [ -f frontend/package-lock.json ]; then
+            docker build --build-arg VITE_API_URL=http://localhost:8000 -t liebre-urbana-web:ci frontend
+          else
+            echo "frontend/package-lock.json no existe todavia; se omite la imagen del frontend."
+          fi
