@@ -100,8 +100,8 @@ export interface Colonia {
   nombre: string
   sector: Sector
   activa: boolean
-  lat: number
-  lon: number
+  lat: number | null // una colonia puede no tener punto aproximado
+  lon: number | null
 }
 
 export interface TipoDano {
@@ -229,6 +229,22 @@ export interface NuevoEncharcamiento {
 
 export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
+}
+
+// --- Administración de colonias y sectores (sección 11 del contrato) ---
+export interface NuevaColonia {
+  nombre: string
+  sector_id: number
+  lat: number | null // las coordenadas van las dos o ninguna
+  lon: number | null
+}
+
+export interface EdicionColonia extends NuevaColonia {
+  activa: boolean
+}
+
+export interface EntradaSector {
+  nombre: string
 }
 
 // --- Moderación y seguimiento (sección 10) ---

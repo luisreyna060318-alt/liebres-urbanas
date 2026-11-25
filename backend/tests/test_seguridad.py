@@ -62,10 +62,20 @@ ENDPOINTS = [
     # Seguimiento de reparaciones (HU-05.2): moderador o coordinador
     ("GET", "/api/moderacion/seguimiento", None, {"moderador", "coordinador"}),
 ]
-# Registro y login son públicos pero se prueban aparte (crean cuentas y necesitan credenciales).
-# El avance de reparación necesita un bache ya validado: su matriz de roles está en test_avance_reparacion.py
-RUTAS_PROBADAS_APARTE = {("POST", "/api/auth/registro"), ("POST", "/api/auth/login"),
-                         ("POST", "/api/reportes/{reporte_id}/estado")}
+# Rutas que se prueban aparte, cada una con su propia matriz de roles (necesitan datos o credenciales especiales):
+# - registro y login son públicos y crean cuentas;
+# - el avance de reparación necesita un bache ya validado (test_avance_reparacion.py);
+# - la administración de colonias y sectores (HU-06.1) está en test_admin_catalogos.py.
+RUTAS_PROBADAS_APARTE = {
+    ("POST", "/api/auth/registro"),
+    ("POST", "/api/auth/login"),
+    ("POST", "/api/reportes/{reporte_id}/estado"),
+    ("POST", "/api/colonias"),
+    ("PUT", "/api/colonias/{colonia_id}"),
+    ("DELETE", "/api/colonias/{colonia_id}"),
+    ("POST", "/api/sectores"),
+    ("PUT", "/api/sectores/{sector_id}"),
+}
 
 
 @pytest.fixture(autouse=True)

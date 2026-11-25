@@ -20,6 +20,10 @@ COMENTARIO_MAX = 500  # comentario público de un cambio de estado
 PASSWORD_MIN = 8  # con letras y números
 NOMBRE_MIN = 2
 NOMBRE_MAX = 80
+NOMBRE_COLONIA_MIN = 2  # administración de colonias y sectores (HU-06.1)
+NOMBRE_COLONIA_MAX = 120
+NOMBRE_SECTOR_MAX = 80
+FUENTE_COLONIA_MANUAL = "Alta manual (coordinación)"  # `fuente` de las colonias que crea el coordinador (RNF-09)
 
 # --- Sesión ---
 INACTIVIDAD_MIN = 30  # el token dura 30 min; el frontend lo renueva (refresh) mientras hay actividad
