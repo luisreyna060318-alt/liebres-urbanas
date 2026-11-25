@@ -8,9 +8,10 @@ backend/
 ├── app/
 │   ├── core/       config, database, reglas (todas las cifras), errores, security, deps, tiempo, geo, paginacion
 │   ├── models/     tablas: catalogos.py, usuario.py, reporte.py
-│   ├── schemas/    entrada y salida (auth, catalogos, comun)
-│   ├── services/   auth, folios, estados (máquina de estados + historial), catalogos
-│   ├── routers/    sistema (/health, /reglas), auth, catalogos
+│   ├── schemas/    entrada y salida (auth, catalogos, comun, geo, reportes + serializadores)
+│   ├── services/   auth, folios, estados (máquina de estados + historial), catalogos, geocodificacion,
+│   │               validaciones, reportes, cercanos, confirmaciones, encharcamientos
+│   ├── routers/    sistema (/health, /reglas), auth, catalogos, geo, reportes
 │   └── main.py     aplicación, CORS, cabeceras de seguridad y manejadores de errores
 └── tests/          pytest con SQLite en memoria (sin Docker)
 ```
@@ -97,3 +98,11 @@ cd .. && backend/.venv/Scripts/ruff.exe check backend db  # usa el ruff.toml de 
   `monkeypatch.setattr(geocodificacion, "_llamar_http", falso)` (ver `tests/test_geo.py`).
 - **Historial**: solo se inserta. El ORM lanza `HistorialInalterable` si se intenta modificar o borrar una fila, y en
   PostgreSQL un trigger lo impide. Única excepción: al borrar un reporte completo su historial se va en cascada.
+- **Salida de reportes**: arma `ReportePublico`/`ReporteMio`/`Cercano`/`ReporteDetalle` SOLO con los serializadores de
+  `schemas/reportes.py` (`a_reporte_publico(reporte, hoy_local())`...). Copian campo por campo: nunca sale el autor (RN-04).
+- **Encharcamientos vencidos**: no hay tareas programadas. Llama `services.encharcamientos.expirar_vencidos(db)` al inicio
+  de cualquier endpoint que lea encharcamientos (consulta, detalle, zona, tablero).
+- **Rutas**: las rutas fijas como `/api/reportes/cercanos` se registran antes que `/api/reportes/{id}`; si agregas
+  `GET /api/reportes/{reporte_id}`, declara el id como `int` o incluye tu router después de `routers/reportes.py`.
+- **Seguridad**: si agregas un endpoint, súmalo a `ENDPOINTS` en `tests/test_seguridad.py` (una prueba lo exige).
+  Revisión A01/A02 en `docs/seguridad-backend.md`.
