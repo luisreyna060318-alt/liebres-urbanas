@@ -90,5 +90,10 @@ cd .. && backend/.venv/Scripts/ruff.exe check backend db  # usa el ruff.toml de 
 - **Folios**: `services.folios.generar_folio(db, prefijo_de(categoria), hoy_local().year)` antes del commit.
 - **Fechas**: guarda y devuelve UTC (`core.tiempo.ahora_utc()`); para "qué día es hoy en Juárez", `hoy_local()`.
 - **Cercanía**: prefiltra con `core.geo.caja()` en SQL y confirma con `core.geo.distancia_m()`.
+- **Municipio (RN-01)**: `core.geo.dentro_del_municipio(lat, lon)` con el rectángulo `MUNICIPIO_BBOX` de `reglas.py`
+  (fuente anotada ahí). Funciona sin internet.
+- **Nominatim**: solo `services/geocodificacion.py` sale a internet (1 petición por segundo, caché, 5 s, 503 si
+  falla). En las pruebas la red está bloqueada por el fixture `sin_red` de `conftest.py`: simúlala con
+  `monkeypatch.setattr(geocodificacion, "_llamar_http", falso)` (ver `tests/test_geo.py`).
 - **Historial**: solo se inserta. El ORM lanza `HistorialInalterable` si se intenta modificar o borrar una fila, y en
   PostgreSQL un trigger lo impide. Única excepción: al borrar un reporte completo su historial se va en cascada.
