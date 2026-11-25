@@ -163,7 +163,10 @@ del más reciente al más antiguo. El historial público **no** incluye quién h
 - `descripcion` es opcional (hasta 500 caracteres). `calle` y `colonia_id` se pueden corregir antes de enviar.
 - Si existe un bache abierto a 30 m o menos y `forzar` no es `true` → **409** `POSIBLE_DUPLICADO` con
   `"duplicados": [ ReportePublico + { "distancia_m": 12 } ]`. Con `forzar: true` se crea uno nuevo (HU-02.3 CA4).
-- 201 → `ReporteMio` con folio, `creado_en` asignado por el servidor y estado `recibido`.
+- 201 → `ReporteMio` con folio, `creado_en` asignado por el servidor y estado `recibido`. Si la entrada trae `creado_en`,
+  `estado`, `severidad` o `confirmaciones`, se ignoran. `senalizado` solo se guarda en `alcantarilla_sin_tapa`; en
+  `hundimiento` y `grieta` `profundidad` es opcional (si llega, cuenta para la severidad).
+- Errores en este orden: 422 `VALIDACION` (con `campos`), 422 `FUERA_DEL_MUNICIPIO`, 429 `LIMITE_HORARIO`, 409 `POSIBLE_DUPLICADO`.
 
 ### 6.3 Crear un encharcamiento — `POST /api/reportes/encharcamientos` (rol ciudadano)
 
@@ -188,6 +191,9 @@ Entrada `{ "tipo": "confirma" | "sigue" | "ya_no_hay" }`. Salida 201 `ReportePub
 - `sigue` solo en encharcamientos activos; suma 6 h a la vigencia **desde ese momento**.
 - `ya_no_hay` solo en encharcamientos activos; con el tercer desmentido de personas distintas el reporte pasa a `historico`.
 - Una persona responde una sola vez por reporte (409 `YA_CONFIRMADO`); no puede responder el suyo (403 `ES_TU_REPORTE`).
+- Reporte inexistente o rechazado → 404 `NO_ENCONTRADO`. Tipo que no corresponde a la categoría → 422 `VALIDACION`
+  (`campos.tipo`). Reporte ya cerrado (bache `reparado`, encharcamiento `historico` o vencido) → 409 `TRANSICION_INVALIDA`.
+- `ya_no_hay` no suma a `confirmaciones`; `sigue` y `confirma` sí. Cada respuesta se guarda con su fecha y hora.
 
 ### 6.6 Mis reportes
 
@@ -198,6 +204,15 @@ Entrada `{ "tipo": "confirma" | "sigue" | "ya_no_hay" }`. Salida 201 `ReportePub
 | `DELETE /api/reportes/{id}` | — | 204; 409 `REPORTE_NO_EDITABLE` |
 
 Solo el autor puede editar o eliminar (403 `SIN_PERMISO` para otra persona).
+Orden de las revisiones: 404 si no existe → 403 si no es el autor → 409 si ya no está en `recibido`. El `PUT` recibe los
+campos de un **bache** (un encharcamiento nace `activo`, así que nunca es editable ni se puede eliminar: 409). Al eliminar se
+borran también su historial y sus confirmaciones.
+
+### 6.8 Vigencia de encharcamientos
+
+No hay tareas programadas: `services/encharcamientos.expirar_vencidos(db)` pasa a `historico` los activos con `vigente_hasta`
+vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de encharcamientos, `cercanos`, `confirmaciones` y
+`mis-reportes`; los endpoints de consulta pública, detalle, zona y tablero también deben llamarlo antes de leer.
 
 ### 6.7 Consulta pública (la construye Carlos; la forma ya queda fijada)
 
