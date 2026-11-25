@@ -156,7 +156,7 @@ def test_pide_probabilidad_por_hora_para_juarez(client, open_meteo, reloj):
     assert "apikey" not in parametros  # Open-Meteo no necesita llave
 
 
-def test_llamada_real_con_user_agent_generico_y_5_segundos(monkeypatch):
+def test_llamada_real_con_user_agent_generico_y_tope_por_fase(monkeypatch):
     """_llamar_http es la única función que sale a internet; aquí se reemplaza httpx.get para ver QUÉ enviaría."""
     enviado = {}
 
@@ -167,7 +167,11 @@ def test_llamada_real_con_user_agent_generico_y_5_segundos(monkeypatch):
     monkeypatch.setattr(clima.httpx, "get", get_falso)
     assert LLAMAR_HTTP_REAL({"latitude": 31.74}) == {"ok": True}
     assert enviado["url"] == "https://api.open-meteo.com/v1/forecast"
-    assert enviado["timeout"] == 5
+    # Tope explícito en CADA fase (httpx no tiene tope total): ninguna espera pasa de 5 s
+    tope = enviado["timeout"]
+    assert isinstance(tope, httpx.Timeout)
+    assert (tope.connect, tope.write, tope.read, tope.pool) == (2, 2, 5, 1)
+    assert max(tope.connect, tope.write, tope.read, tope.pool) <= 5
     # Sin correos ni datos personales en el encabezado
     assert enviado["headers"] == {"User-Agent": "LiebreUrbana-proyecto-escolar"}
     assert "@" not in clima.USER_AGENT
