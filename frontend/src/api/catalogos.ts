@@ -1,6 +1,15 @@
 // Catálogos de solo lectura (sección 4 del contrato). Los usan los formularios y los filtros de otras pantallas.
 import { api, armarConsulta } from './cliente.ts'
-import type { Colonia, MotivoRechazo, Paginacion, Sector, TipoDano } from './tipos.ts'
+import type {
+  Colonia,
+  EdicionColonia,
+  EntradaSector,
+  MotivoRechazo,
+  NuevaColonia,
+  Paginacion,
+  Sector,
+  TipoDano,
+} from './tipos.ts'
 
 // GET /api/sectores
 export function pedirSectores(): Promise<Sector[]> {
@@ -28,4 +37,31 @@ export function pedirTiposDano(): Promise<TipoDano[]> {
 // GET /api/motivos-rechazo (solo los activos)
 export function pedirMotivosRechazo(): Promise<MotivoRechazo[]> {
   return api.get<MotivoRechazo[]>('/api/motivos-rechazo')
+}
+
+// --- Administración (solo coordinador, sección 11 del contrato) ---
+
+// POST /api/colonias (201)
+export function crearColonia(datos: NuevaColonia): Promise<Colonia> {
+  return api.post<Colonia>('/api/colonias', datos)
+}
+
+// PUT /api/colonias/{id}: se envía todo; `activa: false` la desactiva
+export function actualizarColonia(id: number, datos: EdicionColonia): Promise<Colonia> {
+  return api.put<Colonia>(`/api/colonias/${id}`, datos)
+}
+
+// DELETE /api/colonias/{id} (204). Con reportes responde 409: solo se puede desactivar
+export function borrarColonia(id: number): Promise<void> {
+  return api.delete<void>(`/api/colonias/${id}`)
+}
+
+// POST /api/sectores (201)
+export function crearSector(datos: EntradaSector): Promise<Sector> {
+  return api.post<Sector>('/api/sectores', datos)
+}
+
+// PUT /api/sectores/{id}
+export function renombrarSector(id: number, datos: EntradaSector): Promise<Sector> {
+  return api.put<Sector>(`/api/sectores/${id}`, datos)
 }

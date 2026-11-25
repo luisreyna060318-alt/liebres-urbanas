@@ -9,7 +9,7 @@ from datetime import timedelta
 import pytest
 
 from app.main import app
-from app.models import Reporte
+from app.models import MotivoRechazo, Reporte
 from app.schemas.geo import GeoBusqueda, GeoResultado
 from app.schemas.reportes import CambioEstado, Cercano, ReporteDetalle, ReporteMio, ReportePublico
 from app.services import clima, geocodificacion
@@ -56,9 +56,36 @@ ENDPOINTS = [
     ("GET", "/api/mis-reportes", None, SOLO_CIUDADANO),
     ("PUT", "/api/reportes/{propio}", lambda e: _cuerpo_edicion(e["colonia_id"]), SOLO_CIUDADANO),
     ("DELETE", "/api/reportes/{propio}", None, SOLO_CIUDADANO),
+    ("GET", "/api/tablero", None, {"coordinador"}),
+    # Moderación (HU-05.1): solo el moderador, según la tabla de endpoints #26 a #28
+    ("GET", "/api/moderacion/bandeja", None, {"moderador"}),
+    ("POST", "/api/reportes/{ajeno}/validar", lambda e: {}, {"moderador"}),
+    ("POST", "/api/reportes/{ajeno}/rechazar", lambda e: {"motivo_rechazo_id": e["motivo_id"]}, {"moderador"}),
+    # Seguimiento de reparaciones (HU-05.2): moderador o coordinador
+    ("GET", "/api/moderacion/seguimiento", None, {"moderador", "coordinador"}),
 ]
+# Administración de usuarios (HU-06.2): su matriz de roles está en test_admin_usuarios.py
+RUTAS_ADMIN_USUARIOS = {
+    ("GET", "/api/usuarios"),
+    ("PUT", "/api/usuarios/{usuario_id}/rol"),
+    ("PUT", "/api/usuarios/{usuario_id}/suspension"),
+}
 # Registro y login son públicos pero se prueban aparte (crean cuentas y necesitan credenciales)
 RUTAS_PROBADAS_APARTE = {("POST", "/api/auth/registro"), ("POST", "/api/auth/login")}
+# Rutas que se prueban aparte, cada una con su propia matriz de roles (necesitan datos o credenciales especiales):
+# - registro y login son públicos y crean cuentas;
+# - el avance de reparación necesita un bache ya validado (test_avance_reparacion.py);
+# - la administración de colonias y sectores (HU-06.1) está en test_admin_catalogos.py.
+RUTAS_PROBADAS_APARTE = {
+    ("POST", "/api/auth/registro"),
+    ("POST", "/api/auth/login"),
+    ("POST", "/api/reportes/{reporte_id}/estado"),
+    ("POST", "/api/colonias"),
+    ("PUT", "/api/colonias/{colonia_id}"),
+    ("DELETE", "/api/colonias/{colonia_id}"),
+    ("POST", "/api/sectores"),
+    ("PUT", "/api/sectores/{sector_id}"),
+}
 
 
 @pytest.fixture(autouse=True)
@@ -72,6 +99,9 @@ def nominatim_falso(monkeypatch):
 def escenario(db, crear_usuario, catalogo):
     """Fábrica: para un usuario dado, crea un bache SUYO y uno de otra persona. Devuelve los ids y la colonia."""
     autora = crear_usuario("autora@ejemplo.test")
+    motivo = MotivoRechazo(codigo="duplicado", nombre="Duplicado")
+    db.add(motivo)
+    db.commit()
 
     def _bache(autor_id: int, n: int) -> int:
         lat, lon = punto(n)
@@ -84,7 +114,7 @@ def escenario(db, crear_usuario, catalogo):
 
     def _armar(usuario) -> dict:
         return {"ajeno": _bache(autora.id, 1), "propio": _bache(usuario.id, 2) if usuario else _bache(autora.id, 2),
-                "colonia_id": catalogo["colonia"].id}
+                "colonia_id": catalogo["colonia"].id, "motivo_id": motivo.id}
 
     return _armar
 
@@ -133,7 +163,7 @@ def test_la_matriz_cubre_todas_las_rutas():
         if ruta.startswith("/api") and not ruta.startswith("/api/_pruebas")
         for metodo in metodos
     }
-    assert en_app - RUTAS_PROBADAS_APARTE == en_matriz
+    assert en_app - RUTAS_PROBADAS_APARTE - RUTAS_ADMIN_USUARIOS == en_matriz
 
 
 @pytest.mark.parametrize("rol", ["moderador", "coordinador"])

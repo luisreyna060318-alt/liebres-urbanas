@@ -230,6 +230,121 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
+## 12. Administración de usuarios (C9)
+
+Solo el rol `coordinador` (HU-06.2). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+
+`UsuarioAdmin` = `{ "id": 7, "nombre": "Ana Pérez", "correo": "ana@ejemplo.test", "rol": "ciudadano", "activo": true, "creado_en": "2026-11-24T21:05:00Z" }`
+(**nunca** el hash ni la contraseña). `activo: false` significa **cuenta suspendida**.
+
+| Endpoint | Entrada | Salida |
+|---|---|---|
+| `GET /api/usuarios?q=&rol=&pagina=1&tam=10` | `q`: parte del nombre o del correo, sin distinguir mayúsculas; `rol`: `ciudadano`, `moderador` o `coordinador` | Paginación (10 por página; `tam` hasta 100) de `UsuarioAdmin`, en orden alfabético por nombre |
+| `PUT /api/usuarios/{id}/rol` | `{ "rol": "moderador" }` | 200 `UsuarioAdmin` |
+| `PUT /api/usuarios/{id}/suspension` | `{ "suspendido": true }` (`true` suspende, `false` reactiva) | 200 `UsuarioAdmin` |
+
+Reglas:
+- El rol y el estado de la cuenta se leen de la base en **cada** petición: un cambio surte efecto en la siguiente petición de la
+  persona afectada, aunque su token siga vigente (HU-06.2 CA2). Una cuenta suspendida recibe 403 `CUENTA_SUSPENDIDA` con su
+  token anterior y tampoco puede iniciar sesión (403 `CUENTA_SUSPENDIDA`); sus reportes se conservan. Al reactivarla vuelve a entrar.
+- No se puede quitar el rol de coordinador ni suspender al **último coordinador activo**: 409 `ULTIMO_COORDINADOR`. También
+  aplica cuando un coordinador lo intenta consigo mismo. Un coordinador suspendido no cuenta como "otro coordinador".
+  Poner el mismo rol que ya tiene, o reactivar/suspender cuentas que no son coordinadoras activas, no se bloquea.
+- Un `rol` fuera de los tres valores, o un `suspendido` que no es booleano: 422 `VALIDACION` con `campos.rol` o
+  `campos.suspendido`. Cuenta inexistente: 404 `NO_ENCONTRADO`.
+
+Código nuevo: 409 `ULTIMO_COORDINADOR`.
+
+## 11. Administración de colonias y sectores (C8)
+
+Solo el rol `coordinador` (HU-06.1). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+Las lecturas (`GET /api/sectores` y `GET /api/colonias`, sección 4) siguen siendo públicas y no cambian: el selector de los
+formularios sigue pidiendo solo las activas (`solo_activas=true` por omisión); la pantalla de administración pide
+`solo_activas=false` para ver también las inactivas.
+
+| Endpoint | Entrada | Salida |
+|---|---|---|
+| `POST /api/colonias` | `{ "nombre", "sector_id", "lat", "lon" }` (`lat` y `lon` opcionales, pero las dos o ninguna) | 201 colonia (forma de la sección 4), `activa: true` |
+| `PUT /api/colonias/{id}` | `{ "nombre", "sector_id", "lat", "lon", "activa" }` (se envía todo) | 200 colonia |
+| `DELETE /api/colonias/{id}` | — | 204; 409 `COLONIA_CON_REPORTES` si tiene reportes (solo se puede desactivar con `activa: false`) |
+| `POST /api/sectores` | `{ "nombre" }` | 201 `{ "id", "nombre" }` |
+| `PUT /api/sectores/{id}` | `{ "nombre" }` | 200 `{ "id", "nombre" }` |
+
+Reglas:
+- `nombre` de colonia: 2 a 120 caracteres; de sector: 2 a 80. Se quitan los espacios de sobra.
+- Nombre único por sector, sin distinguir mayúsculas: 409 `COLONIA_DUPLICADA`. El mismo nombre en otro sector sí se permite.
+  El nombre de un sector es único: 409 `SECTOR_DUPLICADO`. Conservar el propio nombre al editar no es duplicado.
+  La restricción vive también en la base de datos (una carrera entre dos coordinadores responde el mismo 409).
+- `lat` y `lon` deben estar dentro del municipio de Juárez (`core/reglas.MUNICIPIO_BBOX`): 422 `VALIDACION` con `campos.lat`
+  y `campos.lon`. Si viene solo una de las dos, el error va en la que falta. `sector_id` inexistente: 422 con `campos.sector_id`.
+- `fuente` no se pide: las colonias dadas de alta aquí quedan con la fuente "Alta manual (coordinación)".
+- Colonia o sector inexistente: 404 `NO_ENCONTRADO`. Al eliminar una colonia sin reportes también se quitan las
+  colonias de interés (`usuario_colonias`) que apuntaban a ella.
+- Desactivar no toca los reportes existentes: conservan su colonia.
+
+Códigos nuevos: 409 `COLONIA_DUPLICADA`, 409 `SECTOR_DUPLICADO`, 409 `COLONIA_CON_REPORTES`.
+
+## 10. Moderación y seguimiento (C6 y C7)
+
+Todos los cambios de estado pasan por `registrar_cambio_estado()`: el historial guarda el estado anterior y el nuevo,
+**quién** lo hizo (`actor_id`), la fecha y hora y el comentario. El historial **público** (`ReporteDetalle.historial`)
+muestra el comentario pero **no** a la persona que hizo el cambio (RN-04). Las respuestas usan `ReportePublico` (sin autor).
+Los endpoints llaman a `expirar_vencidos(db)` antes de leer.
+
+### 10.1 Bandeja — `GET /api/moderacion/bandeja?colonia_id=&tipo_dano_codigo=&pagina=1` (rol moderador)
+
+Paginación (**10 por página**) de `ReportePublico`: solo **baches en `recibido`**, del **más antiguo al más reciente**
+(`creado_en` ascendente). `colonia_id` y `tipo_dano_codigo` son opcionales; un código que no existe devuelve una lista vacía.
+Sin resultados → `{"items": [], "total": 0, ...}` (la interfaz muestra "No hay reportes por revisar").
+
+### 10.2 Validar — `POST /api/reportes/{id}/validar` (rol moderador)
+
+Entrada `{ "comentario": "Visto en sitio" }` (opcional, público, hasta 500 caracteres; vacío = sin comentario).
+200 → `ReportePublico` con `estado: "validado"`.
+
+### 10.3 Rechazar — `POST /api/reportes/{id}/rechazar` (rol moderador)
+
+```json
+{ "motivo_rechazo_id": 5, "motivo_texto": "Está dentro de un estacionamiento privado", "comentario": null }
+```
+
+- `motivo_rechazo_id` es obligatorio y debe ser un motivo **activo** (422 `campos.motivo_rechazo_id`).
+- `motivo_texto` (hasta 500) es obligatorio si el motivo tiene `pide_explicacion` (422 `campos.motivo_texto`).
+- `comentario` es opcional y público (hasta 500).
+- Se rechaza un **bache en `recibido`** o un **encharcamiento `activo` o `historico`** (RN-06: en cualquier momento).
+- 200 → `ReportePublico` con `estado: "rechazado"`. El autor ve el motivo en `ReporteMio.motivo_rechazo` (`/api/mis-reportes`).
+
+**Errores de 10.2 y 10.3, en este orden:** 401 / 403 `SIN_PERMISO` (cualquier rol distinto de moderador, también el
+coordinador) → 422 `VALIDACION` de forma (cuerpo, longitudes) → 404 `NO_ENCONTRADO` → 409 `TRANSICION_INVALIDA` (el reporte
+no está en un estado que lo permita; el mensaje dice en qué estado está, por ejemplo
+`"El reporte BCH-2026-000123 está en «Validado»: solo se validan baches que siguen en «Recibido»"`) → 422 `VALIDACION` del
+motivo.
+
+### 10.4 Seguimiento — `GET /api/moderacion/seguimiento?estado=&colonia_id=&tipo_dano_codigo=&pagina=1` (moderador o coordinador)
+
+Paginación (**10 por página**) de `ReportePublico`: **baches `validado` y `en_reparacion`**, del más antiguo al más reciente.
+`estado` es opcional (`validado` o `en_reparacion`; otro valor → 422 `campos.estado`); los demás filtros, como en 10.1.
+
+### 10.5 Registrar el avance — `POST /api/reportes/{id}/estado` (moderador o coordinador)
+
+```json
+{ "estado": "reparado", "comentario": "Bacheo terminado por la cuadrilla", "fecha_reparacion": "2026-11-20" }
+```
+
+- `estado`: `en_reparacion` (desde `validado`) o `reparado` (desde `en_reparacion`). Solo baches (RN-05).
+- `comentario`: opcional y **público** (hasta 500); aparece en `ReporteDetalle.historial`.
+- `fecha_reparacion` (`AAAA-MM-DD`): obligatoria en `reparado`, ni futura ni anterior al día del reporte (hora de Juárez);
+  en `en_reparacion` se ignora.
+- 200 → `ReportePublico` actualizado (en `reparado`, `antiguedad_dias` se cuenta hasta `fecha_reparacion`).
+
+Errores en este orden: 401 / 403 `SIN_PERMISO` (ciudadano) → 422 `VALIDACION` de forma (`campos.estado`,
+`campos.comentario`) → 404 `NO_ENCONTRADO` → 409 `TRANSICION_INVALIDA` (cualquier otro salto, o un encharcamiento; el mensaje
+dice el estado actual y los saltos permitidos) → 422 `VALIDACION` con `campos.fecha_reparacion` (`"Indica la fecha en que se
+reparó"`, `"La fecha de reparación no puede ser futura"`, `"La fecha de reparación no puede ser anterior al reporte"`).
+
+**Historial inalterable (RN-07):** no existe ninguna ruta para modificar ni borrar filas de `historial_estados`; el ORM lanza
+error si se intenta (`HistorialInalterable`) y en PostgreSQL lo impide un trigger (migración 0001).
+
 ## 8. Consulta pública (C3 y C4)
 
 Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).
@@ -270,6 +385,67 @@ Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya a
   `fecha_reparacion` si el bache está reparado. La fecha del reporte original es `creado_en`.
 - 404 `NO_ENCONTRADO` si no existe, **o** si está `rechazado` y quien consulta no tiene sesión de moderador o
   coordinador (incluido su autor: él ve el rechazo y el motivo en `GET /api/mis-reportes`).
+
+## 14. Tablero de indicadores (C10)
+
+### 14.1 `GET /api/tablero?desde=&hasta=&sector_id=` (HU-07.1, solo `coordinador`)
+
+| Parámetro | Valores | Notas |
+|---|---|---|
+| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` (igual que la sección 8.1) |
+| `sector_id` | entero ≥ 1 | Solo los reportes de las colonias de ese sector |
+
+**Una sola función de filtrado.** Todas las cifras salen de `services/consulta.consulta_reportes(FiltroReportes)` con
+`desde`, `hasta` y `sector_id`; el tablero solo cuenta y agrupa su resultado. Por eso cada conteo por estado coincide
+con `GET /api/reportes?categoria=..&estado=..&desde=..&hasta=..` (HU-07.1 CA5). Antes de leer llama a `expirar_vencidos(db)`.
+
+**Qué cuenta.** Todos los estados salvo `rechazado`: baches `recibido`, `validado`, `en_reparacion`, `reparado` y
+encharcamientos `activo` e `historico` (los históricos **sí** cuentan, HU-03.2 CA3). Los rechazados van aparte en
+`totales.rechazados` y no suman en `total`. "Abierto" = bache en `recibido`, `validado` o `en_reparacion`.
+
+```json
+{
+  "filtro": { "desde": "2026-09-01", "hasta": null, "sector_id": 3 },
+  "totales": {
+    "total": 120, "bache": 90, "encharcamiento": 30, "rechazados": 4,
+    "por_estado": [
+      { "categoria": "bache", "estado": "recibido", "total": 20 },
+      { "categoria": "bache", "estado": "validado", "total": 30 },
+      { "categoria": "bache", "estado": "en_reparacion", "total": 10 },
+      { "categoria": "bache", "estado": "reparado", "total": 30 },
+      { "categoria": "encharcamiento", "estado": "activo", "total": 5 },
+      { "categoria": "encharcamiento", "estado": "historico", "total": 25 }
+    ]
+  },
+  "top_colonias": [ { "colonia": { "id": 12, "nombre": "Partido Escobedo" }, "abiertos": 8 } ],
+  "tiempo_promedio_reparacion_dias": 6.4,
+  "reparados_medidos": 28,
+  "por_semana": [ { "inicio": "2026-09-07", "total": 0 }, { "inicio": "2026-09-14", "total": 9 } ],
+  "mas_longevos": [
+    { "id": 345, "folio": "BCH-2026-000123", "calle": "Av. Tecnológico",
+      "colonia": { "id": 12, "nombre": "Partido Escobedo" }, "estado": "validado", "antiguedad_dias": 41 }
+  ],
+  "longevidad_por_colonia": [ { "colonia": { "id": 12, "nombre": "Partido Escobedo" }, "abiertos": 8, "promedio_dias": 17.3 } ]
+}
+```
+
+- `por_estado` trae siempre los 6 pares (categoría, estado), en ese orden, aunque valgan 0.
+- `top_colonias`: hasta 10 colonias con más baches abiertos; empate → por nombre (alfabético) y luego por `id`.
+- `tiempo_promedio_reparacion_dias`: promedio, con un decimal, de los días entre la fila del historial que pasó el bache a
+  `validado` y la que lo pasó a `reparado` (diferencia de fecha y hora, en días con fracción). Solo baches `reparado`
+  dentro del filtro que tengan las dos filas; `reparados_medidos` dice cuántos. `null` si no hay ninguno.
+- `por_semana`: siempre **12** semanas de lunes a domingo (hora de Juárez), de la más antigua a la más reciente, con ceros.
+  La serie termina en la semana de `hasta` o, si no se envió, en la semana actual; `desde` **no** recorta la serie, pero
+  sí el conteo (las semanas anteriores a `desde` quedan en 0). Respeta `sector_id`.
+- `mas_longevos`: los 10 baches abiertos con `creado_en` más antiguo (empate por `id`). `antiguedad_dias` sigue RN-10
+  (días desde `creado_en`, en fecha de Juárez, hasta hoy).
+- `longevidad_por_colonia`: todas las colonias con baches abiertos, con su antigüedad promedio (RN-10, un decimal),
+  de la más alta a la más baja (empate por nombre).
+- Sin autor ni datos personales en ninguna parte (RN-04). Los valores 10 y 12 viven en `core/reglas.py`
+  (`TABLERO_TOP_COLONIAS`, `TABLERO_MAS_LONGEVOS`, `TABLERO_SEMANAS`).
+- Errores: 401 `NO_AUTENTICADO` sin sesión; 403 `SIN_PERMISO` para ciudadano y moderador; 422 `VALIDACION` con
+  `campos.hasta` si `desde` > `hasta`, `campos.sector_id` si el sector no existe o es < 1, y `campos.desde`/`campos.hasta`
+  si la fecha está mal escrita.
 
 ## 9. ¿Cómo está mi zona? (C5)
 
