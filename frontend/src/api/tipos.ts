@@ -231,6 +231,16 @@ export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
 }
 
+// --- Administración de usuarios (sección 12 del contrato). Nunca incluye el hash de la contraseña ---
+export interface UsuarioAdmin {
+  id: number
+  nombre: string
+  correo: string
+  rol: Rol
+  activo: boolean // false = cuenta suspendida
+  creado_en: string
+}
+
 // --- Administración de colonias y sectores (sección 11 del contrato) ---
 export interface NuevaColonia {
   nombre: string

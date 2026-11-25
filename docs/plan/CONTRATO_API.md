@@ -230,6 +230,31 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
+## 12. Administración de usuarios (C9)
+
+Solo el rol `coordinador` (HU-06.2). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+
+`UsuarioAdmin` = `{ "id": 7, "nombre": "Ana Pérez", "correo": "ana@ejemplo.test", "rol": "ciudadano", "activo": true, "creado_en": "2026-11-24T21:05:00Z" }`
+(**nunca** el hash ni la contraseña). `activo: false` significa **cuenta suspendida**.
+
+| Endpoint | Entrada | Salida |
+|---|---|---|
+| `GET /api/usuarios?q=&rol=&pagina=1&tam=10` | `q`: parte del nombre o del correo, sin distinguir mayúsculas; `rol`: `ciudadano`, `moderador` o `coordinador` | Paginación (10 por página; `tam` hasta 100) de `UsuarioAdmin`, en orden alfabético por nombre |
+| `PUT /api/usuarios/{id}/rol` | `{ "rol": "moderador" }` | 200 `UsuarioAdmin` |
+| `PUT /api/usuarios/{id}/suspension` | `{ "suspendido": true }` (`true` suspende, `false` reactiva) | 200 `UsuarioAdmin` |
+
+Reglas:
+- El rol y el estado de la cuenta se leen de la base en **cada** petición: un cambio surte efecto en la siguiente petición de la
+  persona afectada, aunque su token siga vigente (HU-06.2 CA2). Una cuenta suspendida recibe 403 `CUENTA_SUSPENDIDA` con su
+  token anterior y tampoco puede iniciar sesión (403 `CUENTA_SUSPENDIDA`); sus reportes se conservan. Al reactivarla vuelve a entrar.
+- No se puede quitar el rol de coordinador ni suspender al **último coordinador activo**: 409 `ULTIMO_COORDINADOR`. También
+  aplica cuando un coordinador lo intenta consigo mismo. Un coordinador suspendido no cuenta como "otro coordinador".
+  Poner el mismo rol que ya tiene, o reactivar/suspender cuentas que no son coordinadoras activas, no se bloquea.
+- Un `rol` fuera de los tres valores, o un `suspendido` que no es booleano: 422 `VALIDACION` con `campos.rol` o
+  `campos.suspendido`. Cuenta inexistente: 404 `NO_ENCONTRADO`.
+
+Código nuevo: 409 `ULTIMO_COORDINADOR`.
+
 ## 11. Administración de colonias y sectores (C8)
 
 Solo el rol `coordinador` (HU-06.1). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
