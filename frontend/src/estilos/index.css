@@ -3,4 +3,11 @@
 @import './base.css';
 @import './layout.css';
 @import './componentes.css';
+@import './admin-usuarios.css';
 @import './reportes.css';
+@import './admin.css';
+@import './moderacion.css';
+@import './consulta.css';
+@import './tablero.css';
+@import './zona.css';
+@import './clima.css';

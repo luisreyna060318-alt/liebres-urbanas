@@ -100,8 +100,8 @@ export interface Colonia {
   nombre: string
   sector: Sector
   activa: boolean
-  lat: number
-  lon: number
+  lat: number | null // una colonia puede no tener punto aproximado
+  lon: number | null
 }
 
 export interface TipoDano {
@@ -229,4 +229,142 @@ export interface NuevoEncharcamiento {
 
 export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
+}
+
+// --- Administración de usuarios (sección 12 del contrato). Nunca incluye el hash de la contraseña ---
+export interface UsuarioAdmin {
+  id: number
+  nombre: string
+  correo: string
+  rol: Rol
+  activo: boolean // false = cuenta suspendida
+  creado_en: string
+}
+
+// --- Administración de colonias y sectores (sección 11 del contrato) ---
+export interface NuevaColonia {
+  nombre: string
+  sector_id: number
+  lat: number | null // las coordenadas van las dos o ninguna
+  lon: number | null
+}
+
+export interface EdicionColonia extends NuevaColonia {
+  activa: boolean
+}
+
+export interface EntradaSector {
+  nombre: string
+}
+
+// --- Moderación y seguimiento (sección 10) ---
+export interface FiltroModeracion {
+  colonia_id?: number
+  tipo_dano_codigo?: string
+  pagina?: number
+}
+
+export interface ValidarEntrada {
+  comentario?: string // público: aparece en el historial
+}
+
+export interface RechazarEntrada {
+  motivo_rechazo_id: number
+  motivo_texto?: string // obligatorio si el motivo tiene pide_explicacion
+  comentario?: string
+}
+
+// Avance de la reparación (HU-05.2): validado -> en_reparacion -> reparado
+export type EstadoAvance = 'en_reparacion' | 'reparado'
+
+export interface FiltroSeguimiento extends FiltroModeracion {
+  estado?: 'validado' | 'en_reparacion' // vacío = los dos
+}
+
+export interface AvanceEntrada {
+  estado: EstadoAvance
+  comentario?: string // público: aparece en el historial del detalle
+  fecha_reparacion?: string // "2026-11-20"; obligatoria en reparado (ni futura ni anterior al reporte)
+}
+
+// --- Consulta pública (sección 8): GET /api/reportes. Todo es opcional; sin `estado` llegan solo los activos ---
+export interface FiltroReportes {
+  categoria?: Categoria
+  estado?: Estado
+  colonia_id?: number
+  severidad?: Severidad
+  desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
+  hasta?: string
+  q?: string // parte de la calle o del folio
+  pagina?: number
+  tam?: number // 20 por omisión
+}
+
+// --- Tablero de indicadores (sección 14): GET /api/tablero, solo coordinador ---
+export interface FiltroTablero {
+  desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
+  hasta?: string
+  sector_id?: number
+}
+
+export interface TotalEstado {
+  categoria: Categoria
+  estado: Estado
+  total: number
+}
+
+export interface ColoniaBreve {
+  id: number
+  nombre: string
+}
+
+export interface SemanaTablero {
+  inicio: string // lunes "AAAA-MM-DD" (hora de Juárez)
+  total: number
+}
+
+export interface BacheLongevo {
+  id: number
+  folio: string
+  calle: string
+  colonia: ColoniaBreve
+  estado: Estado
+  antiguedad_dias: number
+}
+
+export interface Tablero {
+  filtro: { desde: string | null; hasta: string | null; sector_id: number | null }
+  totales: {
+    total: number // sin los rechazados
+    bache: number
+    encharcamiento: number
+    por_estado: TotalEstado[]
+    rechazados: number
+  }
+  top_colonias: { colonia: ColoniaBreve; abiertos: number }[]
+  tiempo_promedio_reparacion_dias: number | null
+  reparados_medidos: number
+  por_semana: SemanaTablero[] // 12 semanas, de la más antigua a la más reciente
+  mas_longevos: BacheLongevo[]
+  longevidad_por_colonia: { colonia: ColoniaBreve; abiertos: number; promedio_dias: number }[]
+}
+
+// --- ¿Cómo está mi zona? (sección 9) ---
+// GET /api/zona: reportes activos a 1 km, intransitables primero y luego por distancia.
+// `total` puede ser mayor que items.length cuando se alcanza el tope.
+export interface ZonaRespuesta {
+  centro: { lat: number; lon: number }
+  radio_m: number
+  total: number
+  items: ReporteCercano[]
+}
+
+// --- Aviso de lluvia (sección 13 del contrato) ---
+export interface AvisoLluvia {
+  disponible: boolean // false si Open-Meteo falló: la API igual responde 200
+  hay_aviso: boolean
+  probabilidad_max_pct: number | null
+  horas: number
+  umbral_pct: number
+  consultado_en: string | null
 }
