@@ -1,6 +1,14 @@
 // Piezas comunes de los formularios de moderación (validar, rechazar y, en seguimiento, cambiar el estado).
 import { ErrorApi } from '../../api/cliente.ts'
 import type { ReportePublico } from '../../api/tipos.ts'
+import { ZONA_HORARIA } from '../../utils/fechas.ts'
+
+// Día del calendario en Ciudad Juárez como "AAAA-MM-DD" (el formato de <input type="date">).
+// Se usa para el máximo (hoy) y el mínimo (día del reporte) de la fecha de reparación.
+export function diaEnJuarez(fecha: Date): string {
+  const formato = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA, year: 'numeric', month: '2-digit', day: '2-digit' })
+  return formato.format(fecha)
+}
 
 export interface PropsAccion {
   reporte: ReportePublico
