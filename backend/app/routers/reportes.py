@@ -12,9 +12,17 @@ from app.core.deps import SesionDB, require_role
 from app.core.reglas import CATEGORIAS
 from app.models import Usuario
 from app.schemas.comun import Pagina, respuestas_error
-from app.schemas.reportes import BacheEdicion, BacheEntrada, Cercano, ConfirmacionEntrada, ReporteMio, ReportePublico
-from app.services import cercanos as cercanos_service
+from app.schemas.reportes import (
+    BacheEdicion,
+    BacheEntrada,
+    Cercano,
+    ConfirmacionEntrada,
+    EncharcamientoEntrada,
+    ReporteMio,
+    ReportePublico,
+)
 from app.services import confirmaciones as confirmaciones_service
+from app.services import encharcamientos as encharcamientos_service
 from app.services import reportes as reportes_service
 
 router = APIRouter(prefix="/api", tags=["Reportes del ciudadano"])
@@ -48,6 +56,23 @@ def crear_bache(datos: BacheEntrada, usuario: Ciudadano, db: SesionDB):
     return reportes_service.crear_bache(db, usuario, datos)
 
 
+@router.post(
+    "/reportes/encharcamientos",
+    response_model=ReporteMio,
+    status_code=status.HTTP_201_CREATED,
+    summary="Reportar un encharcamiento",
+    responses=ERRORES_ALTA,
+)
+def crear_encharcamiento(datos: EncharcamientoEntrada, usuario: Ciudadano, db: SesionDB):
+    """Crea un encharcamiento que se publica **activo** de inmediato (RN-06), con folio `ENC-AAAA-NNNNNN` y
+    `vigente_hasta` = ahora + 6 h.
+
+    - `nivel_agua`: `a_un_lado`, `cubre_carril`, `media_llanta` o `intransitable`.
+    - `intransitable` exige `hay_riesgo` (¿vehículos varados o personas en riesgo?).
+    - Si hay uno activo a 50 m o menos → 409 `POSIBLE_DUPLICADO` (reenvía con `forzar: true` para crearlo)."""
+    return encharcamientos_service.crear_encharcamiento(db, usuario, datos)
+
+
 @router.get(
     "/reportes/cercanos",
     response_model=list[Cercano],
@@ -63,7 +88,7 @@ def reportes_cercanos(
 ):
     """Baches abiertos a 30 m o menos, o encharcamientos activos y vigentes a 50 m o menos, del más cercano al más
     lejano. El formulario lo llama antes de enviar para ofrecer «confirmar» en lugar de duplicar (HU-02.3)."""
-    return cercanos_service.cercanos_publicos(db, categoria, lat, lon)
+    return reportes_service.cercanos_para_formulario(db, categoria, lat, lon)
 
 
 @router.post(
@@ -81,6 +106,8 @@ def confirmar_reporte(reporte_id: int, datos: ConfirmacionEntrada, usuario: Ciud
     """Suma tu confirmación a un reporte existente sin crear otro folio.
 
     - `confirma`: solo baches abiertos; suma 1 a `confirmaciones`.
+    - `sigue`: solo encharcamientos activos; la vigencia pasa a 6 h **desde este momento** y suma 1.
+    - `ya_no_hay`: solo encharcamientos activos; con el tercer desmentido de personas distintas pasa a «historico».
     Una respuesta por persona y por reporte; el autor no puede confirmar el suyo."""
     return confirmaciones_service.confirmar(db, usuario, reporte_id, datos.tipo)
 
