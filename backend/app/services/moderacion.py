@@ -63,9 +63,17 @@ def listar_bandeja(db: Session, colonia_id: int | None, tipo_dano_codigo: str | 
     return paginar_publicos(db, consulta_de_baches(("recibido",), colonia_id, tipo_dano_codigo), pagina)
 
 
-def obtener_reporte(db: Session, reporte_id: int) -> Reporte:
-    """El reporte o 404 NO_ENCONTRADO."""
-    reporte = db.get(Reporte, reporte_id)
+def obtener_reporte_para_cambiar(db: Session, reporte_id: int) -> Reporte:
+    """El reporte o 404 NO_ENCONTRADO, leído de nuevo de la base y con la fila BLOQUEADA hasta el commit.
+
+    Lo usan las rutas que cambian el estado (validar, rechazar, avance). with_for_update hace que, si dos
+    moderadores actúan a la vez sobre el mismo reporte, el segundo espere al primero y lea el estado ya
+    cambiado: exigir_salto() le responde 409 y no se escribe una segunda fila de historial incoherente.
+    populate_existing obliga a SQLAlchemy a usar lo que se acaba de leer aunque el objeto ya esté en la sesión.
+    Nota: SQLite (las pruebas) ignora FOR UPDATE y no bloquea filas; el bloqueo real ocurre en PostgreSQL.
+    Las lecturas (bandeja, seguimiento) no bloquean.
+    """
+    reporte = db.get(Reporte, reporte_id, with_for_update=True, populate_existing=True)
     if reporte is None:
         raise ErrorApi(404, "NO_ENCONTRADO", "El reporte no existe")
     return reporte
@@ -82,7 +90,7 @@ def exigir_salto(reporte: Reporte, nuevo_estado: str, explicacion: str) -> None:
 def validar(db: Session, moderador: Usuario, reporte_id: int, datos: ValidarEntrada) -> ReportePublico:
     """recibido -> validado. Queda en el historial con el moderador, la fecha y hora y el comentario."""
     expirar_vencidos(db)
-    reporte = obtener_reporte(db, reporte_id)
+    reporte = obtener_reporte_para_cambiar(db, reporte_id)
     exigir_salto(reporte, "validado", "solo se validan baches que siguen en «Recibido»")
     registrar_cambio_estado(db, reporte, "validado", actor=moderador, comentario=datos.comentario)
     db.commit()
@@ -106,7 +114,7 @@ def registrar_avance(db: Session, actor: Usuario, reporte_id: int, datos: Avance
     """validado -> en_reparacion -> reparado (RN-05). Cualquier otro salto, o un encharcamiento, responde 409.
     «reparado» exige una fecha ni futura ni anterior al reporte (422 con campos.fecha_reparacion)."""
     expirar_vencidos(db)
-    reporte = obtener_reporte(db, reporte_id)
+    reporte = obtener_reporte_para_cambiar(db, reporte_id)
     exigir_salto(
         reporte, datos.estado,
         "solo los baches avanzan de «Validado» a «En reparación» y de «En reparación» a «Reparado»",
@@ -131,7 +139,7 @@ def rechazar(db: Session, moderador: Usuario, reporte_id: int, datos: RechazarEn
     """Rechaza un bache en «recibido», o un encharcamiento activo o histórico en cualquier momento (RN-06).
     El autor ve el motivo y la explicación en «Mis reportes» (ReporteMio.motivo_rechazo)."""
     expirar_vencidos(db)
-    reporte = obtener_reporte(db, reporte_id)
+    reporte = obtener_reporte_para_cambiar(db, reporte_id)
     exigir_salto(
         reporte, "rechazado", "solo se rechazan baches en «Recibido» y encharcamientos que no estén rechazados"
     )
