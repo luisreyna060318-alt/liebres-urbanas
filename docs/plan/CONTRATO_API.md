@@ -266,6 +266,31 @@ no está en un estado que lo permita; el mensaje dice en qué estado está, por 
 `"El reporte BCH-2026-000123 está en «Validado»: solo se validan baches que siguen en «Recibido»"`) → 422 `VALIDACION` del
 motivo.
 
+### 10.4 Seguimiento — `GET /api/moderacion/seguimiento?estado=&colonia_id=&tipo_dano_codigo=&pagina=1` (moderador o coordinador)
+
+Paginación (**10 por página**) de `ReportePublico`: **baches `validado` y `en_reparacion`**, del más antiguo al más reciente.
+`estado` es opcional (`validado` o `en_reparacion`; otro valor → 422 `campos.estado`); los demás filtros, como en 10.1.
+
+### 10.5 Registrar el avance — `POST /api/reportes/{id}/estado` (moderador o coordinador)
+
+```json
+{ "estado": "reparado", "comentario": "Bacheo terminado por la cuadrilla", "fecha_reparacion": "2026-11-20" }
+```
+
+- `estado`: `en_reparacion` (desde `validado`) o `reparado` (desde `en_reparacion`). Solo baches (RN-05).
+- `comentario`: opcional y **público** (hasta 500); aparece en `ReporteDetalle.historial`.
+- `fecha_reparacion` (`AAAA-MM-DD`): obligatoria en `reparado`, ni futura ni anterior al día del reporte (hora de Juárez);
+  en `en_reparacion` se ignora.
+- 200 → `ReportePublico` actualizado (en `reparado`, `antiguedad_dias` se cuenta hasta `fecha_reparacion`).
+
+Errores en este orden: 401 / 403 `SIN_PERMISO` (ciudadano) → 422 `VALIDACION` de forma (`campos.estado`,
+`campos.comentario`) → 404 `NO_ENCONTRADO` → 409 `TRANSICION_INVALIDA` (cualquier otro salto, o un encharcamiento; el mensaje
+dice el estado actual y los saltos permitidos) → 422 `VALIDACION` con `campos.fecha_reparacion` (`"Indica la fecha en que se
+reparó"`, `"La fecha de reparación no puede ser futura"`, `"La fecha de reparación no puede ser anterior al reporte"`).
+
+**Historial inalterable (RN-07):** no existe ninguna ruta para modificar ni borrar filas de `historial_estados`; el ORM lanza
+error si se intenta (`HistorialInalterable`) y en PostgreSQL lo impide un trigger (migración 0001).
+
 ## 8. Consulta pública (C3 y C4)
 
 Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).

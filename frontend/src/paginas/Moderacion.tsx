@@ -1,9 +1,10 @@
 // /moderacion (solo moderador, HU-05.1 y HU-05.2). Pestañas accesibles: "Por revisar" (validar o rechazar baches
-// nuevos) y, con HU-05.2, "En seguimiento" (registrar el avance de la reparación).
+// nuevos) y "En seguimiento" (registrar el avance de la reparación, HU-05.2).
 // Pestañas con el patrón de WAI-ARIA: las flechas izquierda/derecha cambian de pestaña y Tab entra al panel.
 import { useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useTitulo } from '../hooks/useTitulo.ts'
+import EnSeguimiento from './moderacion/EnSeguimiento.tsx'
 import PorRevisar from './moderacion/PorRevisar.tsx'
 
 interface Pestana {
@@ -12,7 +13,10 @@ interface Pestana {
   contenido: () => ReactNode
 }
 
-const PESTANAS: Pestana[] = [{ id: 'revisar', texto: 'Por revisar', contenido: () => <PorRevisar /> }]
+const PESTANAS: Pestana[] = [
+  { id: 'revisar', texto: 'Por revisar', contenido: () => <PorRevisar /> },
+  { id: 'seguimiento', texto: 'En seguimiento', contenido: () => <EnSeguimiento /> },
+]
 
 export default function Moderacion() {
   useTitulo('Moderación')

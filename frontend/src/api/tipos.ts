@@ -248,6 +248,19 @@ export interface RechazarEntrada {
   comentario?: string
 }
 
+// Avance de la reparación (HU-05.2): validado -> en_reparacion -> reparado
+export type EstadoAvance = 'en_reparacion' | 'reparado'
+
+export interface FiltroSeguimiento extends FiltroModeracion {
+  estado?: 'validado' | 'en_reparacion' // vacío = los dos
+}
+
+export interface AvanceEntrada {
+  estado: EstadoAvance
+  comentario?: string // público: aparece en el historial del detalle
+  fecha_reparacion?: string // "2026-11-20"; obligatoria en reparado (ni futura ni anterior al reporte)
+}
+
 // --- Consulta pública (sección 8): GET /api/reportes. Todo es opcional; sin `estado` llegan solo los activos ---
 export interface FiltroReportes {
   categoria?: Categoria
