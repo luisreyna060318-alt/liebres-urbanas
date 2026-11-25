@@ -1,13 +1,14 @@
 // /admin/usuarios (solo coordinador, HU-06.2): buscar cuentas, cambiar su rol y suspenderlas o reactivarlas.
 // Cada cambio pide confirmación. El servidor decide: por ejemplo, rechaza (409) quitarle el rol o suspender al
 // último coordinador activo, y esta pantalla muestra su mensaje tal cual.
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { cambiarRol, cambiarSuspension, pedirUsuarios } from '../api/usuarios.ts'
 import { ROLES } from '../api/tipos.ts'
 import type { Rol, UsuarioAdmin } from '../api/tipos.ts'
 import Alerta from '../componentes/Alerta.tsx'
 import Boton from '../componentes/Boton.tsx'
 import Campo from '../componentes/Campo.tsx'
+import Confirmar from '../componentes/Confirmar.tsx'
 import Estado from '../componentes/Estado.tsx'
 import Paginacion from '../componentes/Paginacion.tsx'
 import { useAuth } from '../context/AuthContexto.ts'
@@ -163,8 +164,11 @@ export default function AdminUsuarios() {
                   <td>{formatoFecha(u.creado_en)}</td>
                   <td>
                     {pendiente?.id === u.id ? (
-                      <Confirmacion
-                        pregunta={preguntaDe(u, pendiente)}
+                      <Confirmar
+                        etiqueta="Confirmar el cambio"
+                        mensaje={preguntaDe(u, pendiente)}
+                        textoConfirmar="Sí, confirmar"
+                        textoCargando="Guardando…"
                         ocupado={ocupado}
                         alConfirmar={() => void confirmar(u, pendiente)}
                         alCancelar={() => setPendiente(null)}
@@ -203,31 +207,4 @@ function preguntaDe(cuenta: UsuarioAdmin, accion: Pendiente): string {
   return accion.suspendido
     ? `¿Suspender la cuenta de ${cuenta.nombre}? No podrá iniciar sesión; sus reportes se conservan.`
     : `¿Reactivar la cuenta de ${cuenta.nombre}?`
-}
-
-interface PropsConfirmacion {
-  pregunta: string
-  ocupado: boolean
-  alConfirmar: () => void
-  alCancelar: () => void
-}
-
-// Pregunta antes de aplicar el cambio; el foco empieza en "Cancelar" (la opción segura) para quien usa teclado
-function Confirmacion({ pregunta, ocupado, alConfirmar, alCancelar }: PropsConfirmacion) {
-  const cancelar = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    cancelar.current?.focus()
-  }, [])
-
-  return (
-    <div className="confirmar-borrado" role="group" aria-label="Confirmar el cambio">
-      <p>{pregunta}</p>
-      <Boton onClick={alConfirmar} cargando={ocupado} textoCargando="Guardando…">
-        Sí, confirmar
-      </Boton>
-      <button type="button" className="boton boton-secundario" onClick={alCancelar} disabled={ocupado} ref={cancelar}>
-        Cancelar
-      </button>
-    </div>
-  )
 }
