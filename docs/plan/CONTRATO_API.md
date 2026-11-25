@@ -229,3 +229,32 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 | `coordinador` | Todo lo del moderador + catálogos, usuarios y roles, tablero |
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
+
+## 11. Administración de colonias y sectores (C8)
+
+Solo el rol `coordinador` (HU-06.1). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+Las lecturas (`GET /api/sectores` y `GET /api/colonias`, sección 4) siguen siendo públicas y no cambian: el selector de los
+formularios sigue pidiendo solo las activas (`solo_activas=true` por omisión); la pantalla de administración pide
+`solo_activas=false` para ver también las inactivas.
+
+| Endpoint | Entrada | Salida |
+|---|---|---|
+| `POST /api/colonias` | `{ "nombre", "sector_id", "lat", "lon" }` (`lat` y `lon` opcionales, pero las dos o ninguna) | 201 colonia (forma de la sección 4), `activa: true` |
+| `PUT /api/colonias/{id}` | `{ "nombre", "sector_id", "lat", "lon", "activa" }` (se envía todo) | 200 colonia |
+| `DELETE /api/colonias/{id}` | — | 204; 409 `COLONIA_CON_REPORTES` si tiene reportes (solo se puede desactivar con `activa: false`) |
+| `POST /api/sectores` | `{ "nombre" }` | 201 `{ "id", "nombre" }` |
+| `PUT /api/sectores/{id}` | `{ "nombre" }` | 200 `{ "id", "nombre" }` |
+
+Reglas:
+- `nombre` de colonia: 2 a 120 caracteres; de sector: 2 a 80. Se quitan los espacios de sobra.
+- Nombre único por sector, sin distinguir mayúsculas: 409 `COLONIA_DUPLICADA`. El mismo nombre en otro sector sí se permite.
+  El nombre de un sector es único: 409 `SECTOR_DUPLICADO`. Conservar el propio nombre al editar no es duplicado.
+  La restricción vive también en la base de datos (una carrera entre dos coordinadores responde el mismo 409).
+- `lat` y `lon` deben estar dentro del municipio de Juárez (`core/reglas.MUNICIPIO_BBOX`): 422 `VALIDACION` con `campos.lat`
+  y `campos.lon`. Si viene solo una de las dos, el error va en la que falta. `sector_id` inexistente: 422 con `campos.sector_id`.
+- `fuente` no se pide: las colonias dadas de alta aquí quedan con la fuente "Alta manual (coordinación)".
+- Colonia o sector inexistente: 404 `NO_ENCONTRADO`. Al eliminar una colonia sin reportes también se quitan las
+  colonias de interés (`usuario_colonias`) que apuntaban a ella.
+- Desactivar no toca los reportes existentes: conservan su colonia.
+
+Códigos nuevos: 409 `COLONIA_DUPLICADA`, 409 `SECTOR_DUPLICADO`, 409 `COLONIA_CON_REPORTES`.
