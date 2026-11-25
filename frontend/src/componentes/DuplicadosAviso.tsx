@@ -56,7 +56,8 @@ export default function DuplicadosAviso({
                 >
                   {textoConfirmar}
                   {/* El folio ayuda a distinguir los botones cuando hay varios reportes */}
-                  <span className="solo-lectores"> {d.folio}</span>
+                  {' '}
+                  <span className="solo-lectores">{d.folio}</span>
                 </Boton>
               }
             />

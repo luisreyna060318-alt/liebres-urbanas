@@ -1,6 +1,7 @@
-// Formulario para reportar un bache o daño en el pavimento (HU-02.1, HU-02.2 y HU-02.3).
+// Formulario para reportar un bache o daño en el pavimento (HU-02.1, HU-02.2 y HU-02.3) y para corregirlo (HU-02.5).
 // Es dinámico: al elegir el tipo de daño aparecen solo los campos de ese tipo (ver CAMPOS_POR_TIPO en utils/reportes.ts).
-//   <FormularioBache alCrear={(reporte) => ...} alConfirmar={(reporte) => ...} />
+//   Crear:  <FormularioBache alGuardar={(reporte) => ...} alConfirmar={(reporte) => ...} />
+//   Editar: <FormularioBache reporte={reporteExistente} alGuardar={(reporte) => ...} />   (usa PUT, sin duplicados)
 // - Valida en el cliente con las mismas reglas del servidor y muestra el mensaje junto a cada campo.
 // - Si el envío falla (sin conexión, límite por hora, fuera del municipio...) NO se borra nada: todo vive en el estado.
 // - Si el servidor responde 409 POSIBLE_DUPLICADO muestra DuplicadosAviso: confirmar el existente o reportar de todos modos.
@@ -8,13 +9,22 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { pedirTiposDano } from '../api/catalogos.ts'
 import { ErrorApi } from '../api/cliente.ts'
-import { confirmarReporte, crearBache } from '../api/reportes.ts'
+import { confirmarReporte, crearBache, editarReporte } from '../api/reportes.ts'
 import type { ReporteCercano, ReporteMio, ReportePublico } from '../api/tipos.ts'
 import { useApi } from '../hooks/useApi.ts'
 import { useReglas } from '../hooks/useReglas.ts'
 import { interpretarErrorEnvio, mensajeErrorConfirmacion } from '../utils/errores.ts'
 import { ETIQUETA_CARRIL, ETIQUETA_PROFUNDIDAD, ETIQUETA_TAMANO, opcionesDe } from '../utils/etiquetas.ts'
-import { armarBache, BACHE_VACIO, camposDeTipo, UBICACION_VACIA, validarBache } from '../utils/reportes.ts'
+import {
+  armarBache,
+  armarCamposBache,
+  BACHE_VACIO,
+  bacheDeReporte,
+  camposDeTipo,
+  UBICACION_VACIA,
+  ubicacionDeReporte,
+  validarBache,
+} from '../utils/reportes.ts'
 import type { DatosBache, DatosUbicacion, Errores } from '../utils/reportes.ts'
 import Alerta from './Alerta.tsx'
 import Boton from './Boton.tsx'
@@ -25,8 +35,9 @@ import GrupoRadios from './GrupoRadios.tsx'
 import SelectorUbicacion from './SelectorUbicacion.tsx'
 
 interface Props {
-  alCrear: (reporte: ReporteMio) => void // 201: se creó el reporte
-  alConfirmar: (reporte: ReportePublico) => void // la persona confirmó uno existente en vez de crear otro
+  reporte?: ReportePublico // si se pasa, el formulario edita ese reporte (PUT) en vez de crear uno nuevo
+  alGuardar: (reporte: ReporteMio) => void // se creó (201) o se guardaron los cambios (200)
+  alConfirmar?: (reporte: ReportePublico) => void // al crear: la persona confirmó uno existente en vez de crear otro
 }
 
 // Orden en que aparecen los campos en pantalla: el foco va al primero que tenga error
@@ -43,12 +54,13 @@ const ORDEN = [
   'descripcion',
 ]
 
-export default function FormularioBache({ alCrear, alConfirmar }: Props) {
+export default function FormularioBache({ reporte, alGuardar, alConfirmar }: Props) {
+  const editando = reporte !== undefined
   const reglas = useReglas()
   const tipos = useApi(() => pedirTiposDano())
 
-  const [ubicacion, setUbicacion] = useState<DatosUbicacion>(UBICACION_VACIA)
-  const [datos, setDatos] = useState<DatosBache>(BACHE_VACIO)
+  const [ubicacion, setUbicacion] = useState<DatosUbicacion>(reporte ? ubicacionDeReporte(reporte) : UBICACION_VACIA)
+  const [datos, setDatos] = useState<DatosBache>(reporte ? bacheDeReporte(reporte) : BACHE_VACIO)
   const [errores, setErrores] = useState<Errores>({})
   const [errorEnvio, setErrorEnvio] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -87,8 +99,10 @@ export default function FormularioBache({ alCrear, alConfirmar }: Props) {
     // 2) Mandar el reporte a la API
     setEnviando(true)
     try {
-      const creado = await crearBache(armarBache(ubicacion, datos, forzar))
-      alCrear(creado)
+      const guardado = reporte
+        ? await editarReporte(reporte.id, armarCamposBache(ubicacion, datos))
+        : await crearBache(armarBache(ubicacion, datos, forzar))
+      alGuardar(guardado)
     } catch (e) {
       if (e instanceof ErrorApi && e.codigo === 'POSIBLE_DUPLICADO' && e.duplicados.length > 0) {
         setDuplicados(e.duplicados)
@@ -104,11 +118,12 @@ export default function FormularioBache({ alCrear, alConfirmar }: Props) {
   }
 
   // "Confirmar este reporte": suma una confirmación al bache existente y no crea folio nuevo
-  async function confirmarExistente(reporte: ReporteCercano) {
-    setConfirmandoId(reporte.id)
+  async function confirmarExistente(existente: ReporteCercano) {
+    setConfirmandoId(existente.id)
     setErrorConfirmacion('')
     try {
-      alConfirmar(await confirmarReporte(reporte.id, 'confirma'))
+      const actualizado = await confirmarReporte(existente.id, 'confirma')
+      alConfirmar?.(actualizado)
     } catch (e) {
       setErrorConfirmacion(mensajeErrorConfirmacion(e))
     } finally {
@@ -137,7 +152,7 @@ export default function FormularioBache({ alCrear, alConfirmar }: Props) {
       onReintentar={tipos.recargar}
     >
       {/* noValidate: los mensajes los muestra nuestra validación, no el navegador */}
-      <form className="formulario formulario-reporte" onSubmit={alEnviar} noValidate aria-label="Reportar un bache">
+      <form className="formulario formulario-reporte" onSubmit={alEnviar} noValidate aria-label={editando ? 'Editar el reporte' : 'Reportar un bache'}>
         <SelectorUbicacion valor={ubicacion} onCambio={setUbicacion} errores={errores} />
 
         <fieldset className="grupo-dano">
@@ -250,8 +265,12 @@ export default function FormularioBache({ alCrear, alConfirmar }: Props) {
             error={errorConfirmacion}
           />
         ) : (
-          <Boton type="submit" cargando={enviando} textoCargando="Enviando reporte…">
-            Enviar reporte
+          <Boton
+            type="submit"
+            cargando={enviando}
+            textoCargando={editando ? 'Guardando cambios…' : 'Enviando reporte…'}
+          >
+            {editando ? 'Guardar cambios' : 'Enviar reporte'}
           </Boton>
         )}
       </form>

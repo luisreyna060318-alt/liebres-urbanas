@@ -1,7 +1,7 @@
 // Datos y validaciones de los formularios de reporte. Dan respuesta inmediata en el cliente con las mismas reglas
 // del servidor (contrato, secciones 6.2 y 6.3); el servidor vuelve a validar todo.
 // Los errores se indexan con el nombre del campo de la API, así se mezclan con los `campos` que devuelva el servidor.
-import type { Carril, NuevoBache, Profundidad, Tamano, TipoDanoCodigo } from '../api/tipos.ts'
+import type { Carril, NuevoBache, Profundidad, ReportePublico, Tamano, TipoDanoCodigo } from '../api/tipos.ts'
 
 export type Errores = Record<string, string>
 
@@ -99,9 +99,9 @@ export function validarBache(u: DatosUbicacion, d: DatosBache, descripcionMax: n
   return errores
 }
 
-// Arma el cuerpo de POST /api/reportes/baches. Los campos que no aplican al tipo van en null (como en el contrato).
-// Se asume que validarBache ya pasó sin errores.
-export function armarBache(u: DatosUbicacion, d: DatosBache, forzar = false): NuevoBache {
+// Campos de un bache que se pueden enviar al crear (POST) o al editar (PUT). Los que no aplican al tipo van en null
+// (como en el contrato). Se asume que validarBache ya pasó sin errores.
+export function armarCamposBache(u: DatosUbicacion, d: DatosBache): Omit<NuevoBache, 'forzar'> {
   const campos = camposDeTipo(d.tipo_dano_codigo)
   return {
     tipo_dano_codigo: d.tipo_dano_codigo as TipoDanoCodigo,
@@ -114,6 +114,26 @@ export function armarBache(u: DatosUbicacion, d: DatosBache, forzar = false): Nu
     profundidad: campos.includes('profundidad') ? (d.profundidad as Profundidad) : null,
     carril: campos.includes('carril') ? (d.carril as Carril) : null,
     senalizado: campos.includes('senalizado') ? d.senalizado === 'si' : null,
-    forzar,
+  }
+}
+
+// Cuerpo de POST /api/reportes/baches: los campos más `forzar` (true = "reportarlo de todos modos")
+export function armarBache(u: DatosUbicacion, d: DatosBache, forzar = false): NuevoBache {
+  return { ...armarCamposBache(u, d), forzar }
+}
+
+// Los datos de un reporte existente convertidos a lo que captura el formulario (para editarlo)
+export function ubicacionDeReporte(r: ReportePublico): DatosUbicacion {
+  return { calle: r.calle, colonia_id: String(r.colonia.id), lat: String(r.lat), lon: String(r.lon) }
+}
+
+export function bacheDeReporte(r: ReportePublico): DatosBache {
+  return {
+    tipo_dano_codigo: r.tipo_dano.codigo,
+    tamano: r.tamano ?? '',
+    profundidad: r.profundidad ?? '',
+    carril: r.carril ?? '',
+    senalizado: r.senalizado === null ? '' : r.senalizado ? 'si' : 'no',
+    descripcion: r.descripcion,
   }
 }

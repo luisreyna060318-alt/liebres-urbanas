@@ -48,7 +48,7 @@ export default function Reportar() {
       {categoria === 'bache' && (
         <FormularioBache
           key={intento}
-          alCrear={(reporte) => setResultado({ modo: 'creado', reporte })}
+          alGuardar={(reporte) => setResultado({ modo: 'creado', reporte })}
           alConfirmar={(reporte) => setResultado({ modo: 'confirmado', reporte })}
         />
       )}

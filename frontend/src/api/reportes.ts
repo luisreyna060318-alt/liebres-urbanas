@@ -7,6 +7,7 @@ import type {
   NuevoEncharcamiento,
   Paginacion,
   ReporteCercano,
+  ReporteDetalle,
   ReporteMio,
   ReportePublico,
   TipoConfirmacion,
@@ -40,6 +41,11 @@ export function confirmarReporte(id: number, tipo: TipoConfirmacion): Promise<Re
 // GET /api/mis-reportes?pagina=1  ->  10 por página, del más reciente al más antiguo
 export function pedirMisReportes(pagina: number): Promise<Paginacion<ReporteMio>> {
   return api.get<Paginacion<ReporteMio>>(`/api/mis-reportes${armarConsulta({ pagina })}`)
+}
+
+// GET /api/reportes/{id}  ->  ReporteDetalle (lo construye Carlos). Aquí sirve para precargar el formulario de edición.
+export function pedirDetalle(id: number): Promise<ReporteDetalle> {
+  return api.get<ReporteDetalle>(`/api/reportes/${id}`)
 }
 
 // PUT /api/reportes/{id}: 409 REPORTE_NO_EDITABLE si el reporte ya no está en Recibido
