@@ -131,7 +131,7 @@ Lo que ve cualquier persona. **Nunca** incluye al autor (nombre, correo ni id).
 }
 ```
 
-- Los campos propios de la otra categoría vienen en `null` (por ejemplo `nivel_agua` en un bache).
+- Los campos propios de la otra categoría vienen en `null` (por ejemplo `nivel_agua` en un bache, y `tipo_dano` en un encharcamiento).
 - `sin_validar` es `true` solo para baches en `recibido` (RN-09: se muestran con la etiqueta "Sin validar").
 - `antiguedad_dias`: días desde `creado_en` hasta hoy, o hasta `fecha_reparacion` en un bache reparado (RN-10).
 - Los reportes `rechazado` no se devuelven en consultas públicas.
