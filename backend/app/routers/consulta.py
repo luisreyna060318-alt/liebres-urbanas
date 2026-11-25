@@ -1,4 +1,6 @@
-"""Consulta pública de reportes (HU-04.1 y HU-04.2). Sin lógica: recibe los filtros, llama al servicio y responde.
+"""Consulta pública de reportes (HU-04.1 y HU-04.2) y su detalle (HU-04.4).
+
+Sin lógica: recibe los filtros, llama al servicio y responde.
 
 Es pública: no exige sesión. Si llega un token válido de moderador o coordinador, el servicio además deja
 consultar los rechazados con estado=rechazado; un token vencido o inválido se trata como público (no da 401).
@@ -19,7 +21,7 @@ from app.core.reglas import (
     TAM_PAGINA_MAX,
 )
 from app.schemas.comun import Pagina, respuestas_error
-from app.schemas.reportes import ReportePublico
+from app.schemas.reportes import ReporteDetalle, ReportePublico
 from app.services import consulta as consulta_service
 
 router = APIRouter(prefix="/api", tags=["Consulta pública"])
@@ -64,3 +66,18 @@ def consultar_reportes(
         q=q,
     )
     return consulta_service.listar_publicos(db, usuario, filtro, pagina, tam)
+
+
+# ":int" hace que solo un número entre a esta ruta: /reportes/cercanos o /reportes/baches nunca se confunden con un id
+@router.get(
+    "/reportes/{reporte_id:int}",
+    response_model=ReporteDetalle,
+    summary="Detalle e historial de un reporte",
+    responses=respuestas_error(404),
+)
+def detalle_reporte(reporte_id: int, db: SesionDB, usuario: UsuarioOpcional):
+    """Datos del reporte, confirmaciones, estado e **historial público** del más reciente al más antiguo (sin quién
+    hizo cada cambio). Incluye `longevidad_dias` y `ultima_confirmacion`.
+
+    404 `NO_ENCONTRADO` si no existe o si está rechazado y no tienes sesión de moderador o coordinador."""
+    return consulta_service.obtener_detalle(db, usuario, reporte_id)
