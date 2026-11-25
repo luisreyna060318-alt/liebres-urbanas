@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -171,5 +171,123 @@ describe('Moderación: por revisar (HU-05.1)', () => {
     expect(await screen.findByText(/está en «Validado»/)).toBeInTheDocument()
     expect(await screen.findByText('No hay reportes por revisar.')).toBeInTheDocument()
     expect(api.de('GET /api/moderacion/bandeja')).toHaveLength(2)
+  })
+})
+
+describe('Moderación: en seguimiento (HU-05.2)', () => {
+  // Creados hace tiempo, para que "hoy" siempre sea una fecha de reparación válida
+  const VALIDADO = publico({ id: 10, folio: 'BCH-2026-000010', estado: 'validado', sin_validar: false, creado_en: '2026-01-10T18:00:00Z' })
+  const EN_REPARACION = publico({ id: 11, folio: 'BCH-2026-000011', estado: 'en_reparacion', sin_validar: false, creado_en: '2026-01-05T18:00:00Z' })
+
+  async function abrirSeguimiento(rutas: Record<string, RespuestaSimulada | RespuestaSimulada[]>) {
+    const api = simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([], 0), ...rutas })
+    renderizar()
+    const u = userEvent.setup()
+    await u.click(screen.getByRole('tab', { name: 'En seguimiento' }))
+    return { api, u }
+  }
+
+  it('las flechas del teclado cambian de pestaña', async () => {
+    simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([], 0), 'GET /api/moderacion/seguimiento': pagina([], 0) })
+    renderizar()
+    const u = userEvent.setup()
+
+    screen.getByRole('tab', { name: 'Por revisar' }).focus()
+    await u.keyboard('{ArrowRight}')
+    const seguimiento = screen.getByRole('tab', { name: 'En seguimiento' })
+    expect(seguimiento).toHaveAttribute('aria-selected', 'true')
+    expect(seguimiento).toHaveFocus()
+    expect(await screen.findByText('No hay baches validados ni en reparación.')).toBeInTheDocument()
+  })
+
+  it('cada bache ofrece solo su siguiente paso', async () => {
+    await abrirSeguimiento({ 'GET /api/moderacion/seguimiento': pagina([EN_REPARACION, VALIDADO]) })
+
+    expect(await screen.findByRole('button', { name: 'Marcar en reparación BCH-2026-000010' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Marcar reparado BCH-2026-000011' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Marcar/ })).toHaveLength(2)
+  })
+
+  it('si falla la consulta muestra el error y deja reintentar', async () => {
+    const { u } = await abrirSeguimiento({ 'GET /api/moderacion/seguimiento': ['sin_red', pagina([VALIDADO])] })
+    expect(await screen.findByText(/No se pudo conectar con el servidor/)).toBeInTheDocument()
+    await u.click(screen.getByRole('button', { name: 'Reintentar' }))
+    expect(await screen.findByRole('heading', { name: 'BCH-2026-000010' })).toBeInTheDocument()
+  })
+
+  it('marcar en reparación envía el comentario público y refresca la lista', async () => {
+    const { api, u } = await abrirSeguimiento({
+      'GET /api/moderacion/seguimiento': [pagina([VALIDADO]), pagina([{ ...VALIDADO, estado: 'en_reparacion' }])],
+      'POST /api/reportes/10/estado': { cuerpo: { ...VALIDADO, estado: 'en_reparacion' } },
+    })
+
+    await u.click(await screen.findByRole('button', { name: 'Marcar en reparación BCH-2026-000010' }))
+    expect(screen.queryByLabelText(/Fecha de reparación/)).not.toBeInTheDocument()
+    await u.type(screen.getByLabelText(/Comentario/), 'Cuadrilla asignada')
+    await u.click(screen.getByRole('button', { name: 'Confirmar: En reparación' }))
+
+    expect(await screen.findByText('El reporte BCH-2026-000010 quedó como En reparación.')).toBeInTheDocument()
+    expect(api.de('POST /api/reportes/10/estado')[0].cuerpo).toEqual({ estado: 'en_reparacion', comentario: 'Cuadrilla asignada' })
+    expect(await screen.findByRole('button', { name: 'Marcar reparado BCH-2026-000010' })).toBeInTheDocument()
+  })
+
+  it('marcar reparado pide una fecha que no sea futura (máximo hoy)', async () => {
+    const { api, u } = await abrirSeguimiento({
+      'GET /api/moderacion/seguimiento': [pagina([EN_REPARACION]), pagina([], 0)],
+      'POST /api/reportes/11/estado': { cuerpo: { ...EN_REPARACION, estado: 'reparado' } },
+    })
+
+    await u.click(await screen.findByRole('button', { name: 'Marcar reparado BCH-2026-000011' }))
+    const fecha = screen.getByLabelText(/Fecha de reparación/)
+    const hoy = fecha.getAttribute('max')!
+    expect(fecha).toHaveValue(hoy)
+    expect(fecha).toHaveAttribute('min', '2026-01-05')
+
+    fireEvent.change(fecha, { target: { value: '2999-01-01' } })
+    await u.click(screen.getByRole('button', { name: 'Confirmar: Reparado' }))
+    expect(screen.getByText('La fecha de reparación no puede ser futura')).toBeInTheDocument()
+    expect(api.de('POST /api/reportes/11/estado')).toHaveLength(0)
+
+    fireEvent.change(fecha, { target: { value: hoy } })
+    await u.click(screen.getByRole('button', { name: 'Confirmar: Reparado' }))
+    expect(await screen.findByText('El reporte BCH-2026-000011 quedó como Reparado.')).toBeInTheDocument()
+    expect(api.de('POST /api/reportes/11/estado')[0].cuerpo).toEqual({ estado: 'reparado', fecha_reparacion: hoy })
+    expect(await screen.findByText('No hay baches validados ni en reparación.')).toBeInTheDocument()
+  })
+
+  it('muestra junto a la fecha el error que manda el servidor (422)', async () => {
+    const { u } = await abrirSeguimiento({
+      'GET /api/moderacion/seguimiento': pagina([EN_REPARACION]),
+      'POST /api/reportes/11/estado': {
+        status: 422,
+        cuerpo: {
+          detail: 'Revisa los datos marcados',
+          codigo: 'VALIDACION',
+          campos: { fecha_reparacion: 'La fecha de reparación no puede ser anterior al reporte' },
+        },
+      },
+    })
+
+    await u.click(await screen.findByRole('button', { name: 'Marcar reparado BCH-2026-000011' }))
+    await u.click(screen.getByRole('button', { name: 'Confirmar: Reparado' }))
+
+    expect(await screen.findByText('La fecha de reparación no puede ser anterior al reporte')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Fecha de reparación/)).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('un salto que ya no es válido (409) se avisa y la lista se refresca', async () => {
+    const { api, u } = await abrirSeguimiento({
+      'GET /api/moderacion/seguimiento': [pagina([VALIDADO]), pagina([], 0)],
+      'POST /api/reportes/10/estado': {
+        status: 409,
+        cuerpo: { detail: 'El reporte BCH-2026-000010 está en «En reparación»', codigo: 'TRANSICION_INVALIDA' },
+      },
+    })
+
+    await u.click(await screen.findByRole('button', { name: 'Marcar en reparación BCH-2026-000010' }))
+    await u.click(screen.getByRole('button', { name: 'Confirmar: En reparación' }))
+
+    expect(await screen.findByText(/está en «En reparación»/)).toBeInTheDocument()
+    expect(api.de('GET /api/moderacion/seguimiento')).toHaveLength(2)
   })
 })
