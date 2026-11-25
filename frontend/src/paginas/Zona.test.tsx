@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
@@ -179,6 +179,59 @@ describe('¿Cómo está mi zona? (HU-04.3)', () => {
     // El bache no lleva la leyenda
     const bache = screen.getByRole('heading', { name: 'BCH-2026-000010' }).closest('article')!
     expect(within(bache).queryByText(/evita pasar por aquí/)).not.toBeInTheDocument()
+  })
+
+  it('si la ubicación del dispositivo cae fuera de Juárez (422) explica el motivo y no ofrece reintentar', async () => {
+    simularApi({
+      'GET /api/zona': {
+        status: 422,
+        cuerpo: { detail: 'El punto está fuera de Ciudad Juárez', codigo: 'FUERA_DEL_MUNICIPIO' },
+      },
+    })
+    simularGeolocalizacion({ lat: 32.5, lon: -117.0 })
+    renderizar()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
+
+    expect(
+      await screen.findByText('Tu ubicación está fuera de Ciudad Juárez; escribe una dirección de la ciudad.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Dirección')).toBeEnabled()
+  })
+
+  it('ignora la respuesta de una búsqueda anterior si ya se lanzó otra', async () => {
+    // Cada búsqueda de dirección queda pendiente hasta que la prueba la libera, en el orden que quiera
+    const pendientes: ((r: Response) => void)[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((entrada: RequestInfo | URL) => {
+        const url = String(entrada)
+        if (url.includes('/api/geo/buscar')) return new Promise<Response>((resolver) => pendientes.push(resolver))
+        return Promise.resolve(respuestaJson(zona([BACHE]).cuerpo))
+      }),
+    )
+    renderizar()
+    const campo = screen.getByLabelText('Dirección')
+    const formulario = screen.getByRole('search', { name: 'Buscar una zona' })
+
+    fireEvent.change(campo, { target: { value: 'Primera dirección' } })
+    fireEvent.submit(formulario)
+    fireEvent.change(campo, { target: { value: 'Segunda dirección' } })
+    fireEvent.submit(formulario)
+    expect(pendientes).toHaveLength(2)
+
+    // Primero llega la segunda y después la primera (más lenta)
+    pendientes[1](respuestaJson({ resultados: [GEO_TECNOLOGICO] }))
+    expect(await screen.findByText(/cerca de: Av. Tecnológico 1340/)).toBeInTheDocument()
+    pendientes[0](respuestaJson({ resultados: [GEO_SIN_COLONIA] }))
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(screen.getByText(/cerca de: Av. Tecnológico 1340/)).toBeInTheDocument()
+    expect(screen.queryByText(/Calle Sin Colonia/)).not.toBeInTheDocument()
   })
 
   it('"Usar mi ubicación" consulta con las coordenadas del dispositivo', async () => {
