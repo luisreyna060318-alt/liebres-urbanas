@@ -9,6 +9,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.errores import ErrorApi
 from app.core.geo import caja, distancia_m
 from app.core.reglas import RADIO_DUPLICADO_BACHE_M, RADIO_DUPLICADO_ENCHARCAMIENTO_M
 from app.core.tiempo import a_hora_local, ahora_utc
@@ -55,3 +56,18 @@ def cercanos_publicos(
     ahora = ahora or ahora_utc()
     hoy = a_hora_local(ahora).date()
     return [a_cercano(r, hoy, d) for r, d in buscar_cercanos(db, categoria, lat, lon, ahora)]
+
+
+def rechazar_si_hay_duplicados(db: Session, categoria: str, lat: float, lon: float, ahora: datetime) -> None:
+    """HU-02.3: 409 POSIBLE_DUPLICADO con la lista `duplicados` si hay un reporte abierto cerca.
+
+    La persona puede confirmar uno de ellos o volver a enviar con `forzar: true` (CA4: reportar de todos modos).
+    """
+    duplicados = cercanos_publicos(db, categoria, lat, lon, ahora)
+    if duplicados:
+        raise ErrorApi(
+            409,
+            "POSIBLE_DUPLICADO",
+            "Ya hay un reporte muy cerca de este punto. Confírmalo o repórtalo de todos modos",
+            extra={"duplicados": [d.model_dump(mode="json") for d in duplicados]},
+        )

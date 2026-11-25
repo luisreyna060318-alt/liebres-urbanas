@@ -98,6 +98,15 @@ class BacheEntrada(BacheEdicion):
     forzar: bool = Field(default=False, description="true = crear aunque haya un bache abierto a 30 m o menos")
 
 
+class EncharcamientoEntrada(_UbicacionEntrada):
+    """Alta de un encharcamiento (POST /api/reportes/encharcamientos). Si el nivel es «intransitable», el servicio
+    exige `hay_riesgo` (HU-03.1 CA3)."""
+
+    nivel_agua: Literal[NIVELES_AGUA] = Field(examples=["intransitable"])
+    hay_riesgo: bool | None = Field(default=None, description="¿Hay vehículos varados o personas en riesgo?")
+    forzar: bool = Field(default=False, description="true = crear aunque haya uno activo a 50 m o menos")
+
+
 class ConfirmacionEntrada(BaseModel):
     """POST /api/reportes/{id}/confirmaciones: `confirma` (bache), `sigue` o `ya_no_hay` (encharcamiento)."""
 
