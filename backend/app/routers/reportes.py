@@ -6,13 +6,13 @@ antes que las de {id}, o declarar el id como entero, para que "cercanos" no se c
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.core.deps import SesionDB, require_role
 from app.core.reglas import CATEGORIAS
 from app.models import Usuario
-from app.schemas.comun import respuestas_error
-from app.schemas.reportes import BacheEntrada, Cercano, ConfirmacionEntrada, ReporteMio, ReportePublico
+from app.schemas.comun import Pagina, respuestas_error
+from app.schemas.reportes import BacheEdicion, BacheEntrada, Cercano, ConfirmacionEntrada, ReporteMio, ReportePublico
 from app.services import cercanos as cercanos_service
 from app.services import confirmaciones as confirmaciones_service
 from app.services import reportes as reportes_service
@@ -83,3 +83,45 @@ def confirmar_reporte(reporte_id: int, datos: ConfirmacionEntrada, usuario: Ciud
     - `confirma`: solo baches abiertos; suma 1 a `confirmaciones`.
     Una respuesta por persona y por reporte; el autor no puede confirmar el suyo."""
     return confirmaciones_service.confirmar(db, usuario, reporte_id, datos.tipo)
+
+
+ERRORES_AUTOR = {
+    **respuestas_error(401, 403, 404),
+    403: {"description": "`SIN_PERMISO`: no eres el autor (o tu rol no es ciudadano)"},
+    409: {"description": "`REPORTE_NO_EDITABLE`: el reporte ya no está en «recibido»"},
+}
+
+
+@router.get(
+    "/mis-reportes", response_model=Pagina[ReporteMio], summary="Mis reportes", responses=respuestas_error(401, 403)
+)
+def mis_reportes(usuario: Ciudadano, db: SesionDB, pagina: int = Query(1, ge=1, description="Empieza en 1")):
+    """Tus baches y encharcamientos, **10 por página**, del más reciente al más antiguo.
+
+    `puede_editar` es `true` solo en «recibido»; si un moderador lo rechazó, `motivo_rechazo` dice por qué.
+    Si `total` es 0, la interfaz invita a crear el primer reporte (HU-02.5 CA4)."""
+    return reportes_service.listar_mis_reportes(db, usuario, pagina)
+
+
+@router.put(
+    "/reportes/{reporte_id}",
+    response_model=ReporteMio,
+    summary="Corregir mi reporte",
+    responses={**ERRORES_AUTOR, **respuestas_error(422)},
+)
+def editar_reporte(reporte_id: int, datos: BacheEdicion, usuario: Ciudadano, db: SesionDB):
+    """Corrige un bache **propio** mientras siga en «recibido». Mismos campos y validaciones del alta, sin `forzar`.
+    Los encharcamientos se publican activos de inmediato y no se editan (409)."""
+    return reportes_service.editar_bache(db, usuario, reporte_id, datos)
+
+
+@router.delete(
+    "/reportes/{reporte_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar mi reporte",
+    responses=ERRORES_AUTOR,
+)
+def eliminar_reporte(reporte_id: int, usuario: Ciudadano, db: SesionDB):
+    """Elimina un reporte **propio** mientras siga en «recibido» (204, sin cuerpo)."""
+    reportes_service.eliminar_reporte(db, usuario, reporte_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
