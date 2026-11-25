@@ -53,6 +53,7 @@ ENDPOINTS = [
     ("GET", "/api/mis-reportes", None, SOLO_CIUDADANO),
     ("PUT", "/api/reportes/{propio}", lambda e: _cuerpo_edicion(e["colonia_id"]), SOLO_CIUDADANO),
     ("DELETE", "/api/reportes/{propio}", None, SOLO_CIUDADANO),
+    ("GET", "/api/tablero", None, {"coordinador"}),
 ]
 # Registro y login son públicos pero se prueban aparte (crean cuentas y necesitan credenciales)
 RUTAS_PROBADAS_APARTE = {("POST", "/api/auth/registro"), ("POST", "/api/auth/login")}
