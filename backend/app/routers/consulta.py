@@ -14,9 +14,9 @@ from fastapi import APIRouter, Query
 from app.core.deps import SesionDB, UsuarioOpcional
 from app.core.reglas import (
     CATEGORIAS,
-    PAGINA_MAX,
     ESTADOS_BACHE,
     ESTADOS_ENCHARCAMIENTO,
+    PAGINA_MAX,
     SEVERIDADES,
     TAM_PAGINA_CONSULTA,
     TAM_PAGINA_MAX,
