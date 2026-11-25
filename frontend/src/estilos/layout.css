@@ -1,0 +1,189 @@
+/* Estructura de página (mobile-first): primero el celular (desde 360 px) y luego se amplía con min-width.
+   .app es un Flexbox en columna para que el pie quede abajo aunque haya poco contenido. */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Enlace "Saltar al contenido": invisible hasta que recibe el foco con el teclado */
+.saltar {
+  position: absolute;
+  left: var(--espacio-2);
+  top: -4rem;
+  display: flex;
+  align-items: center;
+  min-height: var(--alto-tactil);
+  padding: 0 var(--espacio-3);
+  background: var(--color-superficie);
+  border-radius: var(--radio);
+  z-index: 10;
+}
+
+.saltar:focus {
+  top: var(--espacio-2);
+}
+
+/* Sobre el encabezado azul el anillo ámbar oscuro se ve poco: ahí va blanco */
+.encabezado :focus-visible {
+  outline-color: var(--color-foco-claro);
+}
+
+/* --- Encabezado --- */
+.encabezado {
+  background: var(--color-marca);
+  color: #ffffff;
+}
+
+.encabezado-barra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  min-height: var(--alto-tactil);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.marca:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.marca-icono {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.sesion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2) var(--espacio-3);
+}
+
+.sesion-nombre small {
+  /* El rol se escribe con texto: no depende de un color */
+  display: block;
+  font-size: 0.875rem;
+}
+
+/* --- Navegación: los enlaces se acomodan en filas con Flexbox --- */
+.navegacion {
+  background: var(--color-marca-oscuro);
+}
+
+.navegacion ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+  list-style: none;
+  margin: 0;
+  padding: var(--espacio-2) var(--espacio-3);
+}
+
+.navegacion a {
+  display: flex;
+  align-items: center;
+  min-height: var(--alto-tactil);
+  padding: 0 var(--espacio-3);
+  border-radius: var(--radio);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.navegacion a:hover {
+  background: rgb(255 255 255 / 15%);
+  color: #ffffff;
+}
+
+/* NavLink agrega aria-current="page" a la ruta activa; además del fondo lleva subrayado (no solo color) */
+.navegacion a[aria-current='page'] {
+  background: #ffffff;
+  color: var(--color-marca);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/* --- Contenido y pie --- */
+.contenido {
+  flex: 1;
+  width: 100%;
+  max-width: var(--ancho-maximo);
+  margin: 0 auto;
+  padding: var(--espacio-3);
+}
+
+.aviso-sesion {
+  max-width: var(--ancho-maximo);
+  width: 100%;
+  margin: var(--espacio-3) auto 0;
+  padding: 0 var(--espacio-3);
+}
+
+.pie {
+  padding: var(--espacio-3);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+  border-top: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+}
+
+.pie p {
+  margin: 0 0 var(--espacio-1);
+}
+
+.pie a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--alto-tactil);
+}
+
+/* Tablet (640 px): barra del encabezado en una fila */
+@media (min-width: 640px) {
+  .encabezado-barra {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--espacio-3) var(--espacio-4);
+  }
+
+  .navegacion ul {
+    padding: var(--espacio-2) var(--espacio-4);
+  }
+
+  .contenido {
+    padding: var(--espacio-4);
+  }
+
+  .aviso-sesion {
+    padding: 0 var(--espacio-4);
+  }
+}
+
+/* Escritorio (1024 px): más aire a los lados */
+@media (min-width: 1024px) {
+  .encabezado-barra,
+  .navegacion ul {
+    padding-left: var(--espacio-5);
+    padding-right: var(--espacio-5);
+  }
+
+  .contenido {
+    padding: var(--espacio-5) var(--espacio-4);
+  }
+
+  .aviso-sesion {
+    padding: 0 var(--espacio-4);
+  }
+}

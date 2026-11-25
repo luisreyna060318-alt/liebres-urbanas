@@ -1,0 +1,22 @@
+# Dependencias y resultados de compilación
+node_modules
+dist
+dist-ssr
+coverage
+*.tsbuildinfo
+
+# Configuración local y secretos (el .env real nunca se sube)
+.env
+.env.*
+!.env.example
+*.local
+
+# Registros
+*.log
+
+# Editores y sistema
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db

@@ -1,0 +1,5 @@
+/* Punto de entrada de los estilos: Vite junta estos archivos al compilar */
+@import './variables.css';
+@import './base.css';
+@import './layout.css';
+@import './componentes.css';

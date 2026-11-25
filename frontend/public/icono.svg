@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Liebre Urbana">
+  <title>Liebre Urbana</title>
+  <rect width="64" height="64" rx="14" fill="#0b4f6c"/>
+  <!-- Orejas largas de la liebre -->
+  <ellipse cx="23" cy="17" rx="5" ry="13" transform="rotate(-8 23 17)" fill="#ffffff"/>
+  <ellipse cx="41" cy="17" rx="5" ry="13" transform="rotate(8 41 17)" fill="#ffffff"/>
+  <ellipse cx="23" cy="17" rx="2" ry="9" transform="rotate(-8 23 17)" fill="#f2b705"/>
+  <ellipse cx="41" cy="17" rx="2" ry="9" transform="rotate(8 41 17)" fill="#f2b705"/>
+  <!-- Cabeza -->
+  <circle cx="32" cy="38" r="15" fill="#ffffff"/>
+  <circle cx="26" cy="36" r="2.2" fill="#0b4f6c"/>
+  <circle cx="38" cy="36" r="2.2" fill="#0b4f6c"/>
+  <path d="M29.5 42h5l-2.5 3z" fill="#0b4f6c"/>
+  <!-- Línea de calle -->
+  <rect x="10" y="57" width="10" height="3" rx="1.5" fill="#f2b705"/>
+  <rect x="27" y="57" width="10" height="3" rx="1.5" fill="#f2b705"/>
+  <rect x="44" y="57" width="10" height="3" rx="1.5" fill="#f2b705"/>
+</svg>

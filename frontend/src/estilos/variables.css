@@ -1,0 +1,43 @@
+/* Tokens de diseño: colores, espacios y tipografía en un solo lugar.
+   Todos los pares texto/fondo se midieron y superan WCAG AA (4.5:1 para texto, 3:1 para bordes y foco). */
+:root {
+  /* Marca: azul petróleo (calle y agua) con un acento ámbar (señal de obra). */
+  --color-marca: #0b4f6c; /* encabezado y botones (blanco encima: 8.9:1) */
+  --color-marca-oscuro: #083a50;
+  --color-acento: #f2b705; /* solo decorativo: nunca lleva texto encima ni es lo único que distingue algo */
+  --color-enlace: #0b5a80; /* sobre blanco: 7.5:1 */
+  --color-enlace-hover: #083a50;
+
+  --color-fondo: #f3f6f8;
+  --color-superficie: #ffffff;
+  --color-texto: #1b2430; /* sobre el fondo: 14.4:1 */
+  --color-texto-suave: #4a5568; /* sobre el fondo: 6.9:1 */
+  --color-borde: #cfd8df; /* decorativo: tarjetas y separadores */
+  --color-borde-campo: #6b7785; /* campos de formulario: 4.6:1 sobre blanco (WCAG 1.4.11) */
+
+  --color-error: #a5251d;
+  --color-error-fondo: #fdecea;
+  --color-exito: #1b6330;
+  --color-exito-fondo: #e6f4ea;
+  --color-aviso: #6b3a00;
+  --color-aviso-fondo: #fff3d6;
+  --color-info: #0b4f6c;
+  --color-info-fondo: #e3f1f7;
+
+  --color-foco: #b45309; /* anillo de foco: 5.0:1 sobre blanco y 4.6:1 sobre el fondo */
+  --color-foco-claro: #ffffff; /* anillo de foco sobre el encabezado azul (8.9:1) */
+
+  /* Espacios (escala simple) */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.5rem;
+  --espacio-3: 1rem;
+  --espacio-4: 1.5rem;
+  --espacio-5: 2rem;
+
+  /* Forma y tipografía: fuente del sistema, sin descargar nada */
+  --radio: 0.5rem;
+  --sombra: 0 1px 3px rgb(0 0 0 / 15%);
+  --fuente: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --ancho-maximo: 72rem;
+  --alto-tactil: 2.75rem; /* 44 px: tamaño mínimo cómodo para tocar */
+}
