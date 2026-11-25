@@ -68,3 +68,19 @@ PREFIJOS_FOLIO = {"bache": "BCH", "encharcamiento": "ENC"}
 def valores_sql(valores: tuple[str, ...]) -> str:
     """Convierte ("a", "b") en "('a', 'b')" para usarlo dentro de un CHECK ... IN (...)."""
     return "(" + ", ".join(f"'{v}'" for v in valores) + ")"
+
+# --- Municipio de Juárez (RN-01) ---
+# Rectángulo (lat_min, lat_max, lon_min, lon_max) que cubre TODO el municipio de Juárez, Chihuahua.
+# Fuente: "boundingbox" del límite administrativo municipal en OpenStreetMap (relación 5605951,
+# "Juárez, Chihuahua, México"), consultado en Nominatim el 2026-11-24 (datos © colaboradores de OpenStreetMap, ODbL).
+# Es una validación aproximada y que funciona sin internet: el rectángulo también toca un poco de El Paso, Texas,
+# y del desierto vecino; por eso la búsqueda de direcciones además se limita a México (countrycodes=mx).
+MUNICIPIO_BBOX = (31.1199567, 31.7838974, -106.9516255, -106.1808825)
+
+# --- Ubicación con Nominatim (DISENO_TECNICO, sección 6) ---
+GEO_MAX_RESULTADOS = 5  # resultados de una búsqueda de dirección
+GEO_BUSQUEDA_MIN = 3  # caracteres mínimos para buscar (no se busca "mientras se escribe")
+GEO_BUSQUEDA_MAX = 200
+GEO_TIEMPO_ESPERA_S = 5  # si Nominatim no responde en 5 s -> 503
+GEO_INTERVALO_MIN_S = 1.0  # política de uso de Nominatim: máximo 1 petición por segundo
+GEO_CACHE_MIN = 60  # una misma búsqueda se responde de memoria durante 1 hora
