@@ -45,6 +45,8 @@
 /* La tabla se desplaza dentro de su contenedor en pantallas angostas (no la página completa) */
 .tabla-contenedor {
   overflow-x: auto;
+  /* Sin esto, en Chrome móvil el ancho de la tabla ensancha toda la página (desborde horizontal a 360 px) */
+  contain: layout;
 }
 
 .tabla-admin {
