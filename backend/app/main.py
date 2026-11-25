@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.errores import registrar_manejadores
-from app.routers import auth, catalogos, geo, reportes, sistema
+from app.routers import auth, catalogos, consulta, geo, reportes, sistema
 
 app = FastAPI(
     title="Liebre Urbana API",
@@ -50,3 +50,4 @@ app.include_router(auth.router)
 app.include_router(catalogos.router)
 app.include_router(geo.router)
 app.include_router(reportes.router)
+app.include_router(consulta.router)  # después de reportes: /reportes/cercanos va antes que /reportes/{id}
