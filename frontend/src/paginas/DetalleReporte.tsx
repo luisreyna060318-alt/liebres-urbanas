@@ -71,7 +71,6 @@ function Contenido({ reporte: r }: { reporte: ReporteDetalle }) {
       <p className="tarjeta-reporte-tipo">
         <span aria-hidden="true">{ICONO_CATEGORIA[r.categoria]} </span>
         {ETIQUETA_CATEGORIA[r.categoria]}
-        {r.tipo_dano && r.tipo_dano.codigo !== 'bache' && ` · ${r.tipo_dano.nombre}`}
         {r.sin_validar && <span className="etiqueta-aparte"> (Sin validar)</span>}
       </p>
       <p className="etiqueta-estado">Estado: {ETIQUETA_ESTADO[r.estado]}</p>
