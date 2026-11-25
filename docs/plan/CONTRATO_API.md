@@ -230,6 +230,33 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
+## 8. Consulta pública (C3 y C4)
+
+Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).
+Aceptan un token **opcional**: si es válido y la cuenta es de moderador o coordinador, se pueden ver los rechazados.
+Un token vencido, inválido o de una cuenta suspendida se trata como público (**no** responde 401).
+Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya aparece como `historico`.
+
+### 8.1 Consultar reportes — `GET /api/reportes` (HU-04.1 y HU-04.2)
+
+| Parámetro | Valores | Notas |
+|---|---|---|
+| `categoria` | `bache`, `encharcamiento` | |
+| `estado` | cualquiera de la sección 2 | Sin valor: solo **activos** (baches `recibido`, `validado`, `en_reparacion` y encharcamientos `activo`) |
+| `colonia_id` | entero ≥ 1 | |
+| `severidad` | `baja`, `media`, `alta` | Solo baches (los encharcamientos no tienen severidad) |
+| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` |
+| `q` | texto, hasta 100 caracteres | Parte de la calle o del folio, sin distinguir mayúsculas; `%` y `_` se buscan tal cual |
+| `pagina`, `tam` | `pagina` ≥ 1; `tam` de 1 a 100 | `tam` vale 20 por omisión |
+
+- 200 → `Pagina[ReportePublico]` (sección 6.1), del más reciente al más antiguo (`creado_en` desc, `id` desc). `total`
+  cuenta todos los resultados del filtro; una página fuera de rango devuelve `items: []` con el mismo `total`.
+- Los filtros se combinan con "y". `estado=rechazado` sin sesión de moderación responde 200 con `items: []`.
+- 422 `VALIDACION` con `campos` por parámetro: fecha mal escrita, `desde` posterior a `hasta` (`campos.hasta`),
+  valores fuera de las enumeraciones, `pagina`/`tam` fuera de rango, `q` demasiado largo.
+- El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
+  `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
+
 ## 9. ¿Cómo está mi zona? (C5)
 
 `GET /api/zona?lat=31.7001&lon=-106.4302` — **público** (sin token). Reportes **activos** a `RADIO_ZONA_KM` (1 km) o menos del punto.
