@@ -23,7 +23,8 @@ Todo error del servidor tiene esta forma:
 { "detail": "Mensaje para mostrar a la persona", "codigo": "ETIQUETA_ESTABLE", "campos": { "password": "Mensaje del campo" } }
 ```
 
-`campos` solo aparece en los errores de validación (422). Códigos HTTP usados: 400, 401, 403, 404, 409, 422, 429, 503.
+`campos` solo aparece en los errores de validación (422). Códigos HTTP usados: 400, 401, 403, 404, 409, 422, 429, 503
+(y 405/500 para errores genéricos: método no permitido y error inesperado, que nunca muestra detalles técnicos).
 
 | HTTP | `codigo` | Cuándo |
 |---|---|---|
@@ -41,7 +42,9 @@ Todo error del servidor tiene esta forma:
 | 422 | `VALIDACION` | Datos inválidos (con `campos`) |
 | 422 | `FUERA_DEL_MUNICIPIO` | Las coordenadas están fuera de Juárez |
 | 429 | `LIMITE_HORARIO` | Más de 10 reportes por hora |
-| 503 | `SERVICIO_NO_DISPONIBLE` | Nominatim u otro servicio externo no responde |
+| 503 | `SERVICIO_NO_DISPONIBLE` | Nominatim u otro servicio externo no responde (o la base de datos, en `/api/health`) |
+| 405 | `METODO_NO_PERMITIDO` | El método HTTP no existe en esa ruta |
+| 500 | `ERROR_INTERNO` | Error inesperado del servidor |
 
 ## 2. Valores permitidos (enumeraciones)
 
@@ -91,8 +94,9 @@ Validación del registro: `nombre` 2 a 80 caracteres; `correo` válido; `passwor
 
 | Endpoint | Salida |
 |---|---|
-| `GET /api/sectores` | `[ { "id": 1, "nombre": "Norte" } ]` |
-| `GET /api/colonias?q=&sector_id=&solo_activas=true&pagina=1&tam=50` | Paginación de `{ "id", "nombre", "sector": { "id", "nombre" }, "activa", "lat", "lon" }` (`tam` hasta 500 para llenar listas) |
+| `GET /api/health` | `{ "estado": "ok", "base_de_datos": "ok" }` (503 `SERVICIO_NO_DISPONIBLE` si la base no responde) |
+| `GET /api/sectores` | `[ { "id": 1, "nombre": "Centro" } ]` (orden alfabético) |
+| `GET /api/colonias?q=&sector_id=&solo_activas=true&pagina=1&tam=10` | Paginación de `{ "id", "nombre", "sector": { "id", "nombre" }, "activa", "lat", "lon" }`, en orden alfabético. `tam` vale 10 por omisión (catálogos) y acepta hasta 500 para llenar listas |
 | `GET /api/tipos-dano` | `[ { "id", "codigo", "nombre" } ]` (solo los activos) |
 | `GET /api/motivos-rechazo` | `[ { "id", "codigo", "nombre", "pide_explicacion" } ]` (solo los activos) |
 
