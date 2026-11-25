@@ -230,3 +230,13 @@ export interface NuevoEncharcamiento {
 export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
 }
+
+// --- Aviso de lluvia (sección 13 del contrato) ---
+export interface AvisoLluvia {
+  disponible: boolean // false si Open-Meteo falló: la API igual responde 200
+  hay_aviso: boolean
+  probabilidad_max_pct: number | null
+  horas: number
+  umbral_pct: number
+  consultado_en: string | null
+}
