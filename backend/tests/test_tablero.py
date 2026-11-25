@@ -276,6 +276,8 @@ def test_otros_roles_403(client, crear_usuario, rol):
         ({"sector_id": 999}, "sector_id"),
         ({"sector_id": 0}, "sector_id"),
         ({"desde": "10/11/2026"}, "desde"),
+        ({"hasta": "9999-12-31"}, "hasta"),  # antes: 500 por OverflowError al sumar días
+        ({"desde": "0001-01-01"}, "desde"),
     ],
 )
 def test_filtro_invalido_422(client, catalogo, coordinador, params, campo):
