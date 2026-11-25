@@ -53,6 +53,12 @@ ENDPOINTS = [
     ("PUT", "/api/reportes/{propio}", lambda e: _cuerpo_edicion(e["colonia_id"]), SOLO_CIUDADANO),
     ("DELETE", "/api/reportes/{propio}", None, SOLO_CIUDADANO),
 ]
+# Administración de usuarios (HU-06.2): su matriz de roles está en test_admin_usuarios.py
+RUTAS_ADMIN_USUARIOS = {
+    ("GET", "/api/usuarios"),
+    ("PUT", "/api/usuarios/{usuario_id}/rol"),
+    ("PUT", "/api/usuarios/{usuario_id}/suspension"),
+}
 # Registro y login son públicos pero se prueban aparte (crean cuentas y necesitan credenciales)
 RUTAS_PROBADAS_APARTE = {("POST", "/api/auth/registro"), ("POST", "/api/auth/login")}
 
@@ -127,7 +133,7 @@ def test_la_matriz_cubre_todas_las_rutas():
         if ruta.startswith("/api") and not ruta.startswith("/api/_pruebas")
         for metodo in metodos
     }
-    assert en_app - RUTAS_PROBADAS_APARTE == en_matriz
+    assert en_app - RUTAS_PROBADAS_APARTE - RUTAS_ADMIN_USUARIOS == en_matriz
 
 
 @pytest.mark.parametrize("rol", ["moderador", "coordinador"])
