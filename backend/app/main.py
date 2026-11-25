@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.errores import registrar_manejadores
-from app.routers import auth, catalogos, sistema
+from app.routers import auth, catalogos, geo, sistema
 
 app = FastAPI(
     title="Liebre Urbana API",
@@ -45,3 +45,4 @@ async def cabeceras_de_seguridad(request: Request, call_next):
 app.include_router(sistema.router)
 app.include_router(auth.router)
 app.include_router(catalogos.router)
+app.include_router(geo.router)

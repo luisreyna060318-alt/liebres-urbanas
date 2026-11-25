@@ -8,6 +8,8 @@ No se usa PostGIS para que todo funcione igual en PostgreSQL y en SQLite. La for
 
 import math
 
+from app.core.reglas import MUNICIPIO_BBOX
+
 RADIO_TIERRA_M = 6_371_000  # radio medio de la Tierra
 METROS_POR_GRADO_LAT = 111_320  # aproximado; se usa solo para la caja (que es un poco más grande de lo necesario)
 
@@ -34,3 +36,12 @@ def caja(lat: float, lon: float, radio_m: float) -> tuple[float, float, float, f
     # Un grado de longitud mide menos conforme nos alejamos del ecuador (cos de la latitud)
     delta_lon = margen / (METROS_POR_GRADO_LAT * max(math.cos(math.radians(lat)), 0.01))
     return lat - delta_lat, lat + delta_lat, lon - delta_lon, lon + delta_lon
+
+
+def dentro_del_municipio(lat: float, lon: float) -> bool:
+    """RN-01: True si el punto cae dentro del rectángulo del municipio de Juárez (core/reglas.py, MUNICIPIO_BBOX).
+
+    No consulta ningún servicio externo, así que la validación funciona aunque Nominatim esté caído.
+    """
+    lat_min, lat_max, lon_min, lon_max = MUNICIPIO_BBOX
+    return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max

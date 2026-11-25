@@ -110,6 +110,10 @@ Validación del registro: `nombre` 2 a 80 caracteres; `correo` válido; `passwor
 `GeoResultado` = `{ "etiqueta": "texto completo", "lat": 31.7, "lon": -106.4, "calle": "Av. Tecnológico", "colonia_id": 12 | null, "colonia_nombre": "Partido Escobedo" | null, "dentro_del_municipio": true }`.
 Si no hay coincidencias, `resultados` está vacío (no es un error). Si Nominatim falla: 503 `SERVICIO_NO_DISPONIBLE`.
 `colonia_id` es `null` cuando el nombre devuelto no coincide con el catálogo; en ese caso la persona elige la colonia en una lista.
+`calle` también puede ser `null` (Nominatim no siempre la trae). `q` necesita al menos 3 caracteres (422 `VALIDACION`
+con `campos.q`). En `inversa` el resultado conserva las coordenadas enviadas; si Nominatim no encuentra un lugar en ese punto,
+responde 200 con `etiqueta` = `"lat, lon"` y `calle`, `colonia_id` y `colonia_nombre` en `null` (la persona los captura a mano).
+`dentro_del_municipio` se calcula sin internet con el rectángulo `MUNICIPIO_BBOX` de `backend/app/core/reglas.py` (RN-01).
 
 ## 6. Reportes
 
