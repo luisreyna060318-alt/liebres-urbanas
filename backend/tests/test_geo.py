@@ -246,3 +246,27 @@ def test_ninguna_prueba_sale_a_internet(client):
     """Sin simular la red, la llamada falla (la protege el fixture sin_red de conftest.py)."""
     with pytest.raises(AssertionError, match="sin simular la red"):
         geocodificacion._llamar_http("search", {})
+
+
+def test_fila_de_espera_acotada_responde_503(client, nominatim, monkeypatch):
+    """Si otra búsqueda tiene el turno demasiado tiempo, no se espera sin límite: 503 y el hilo queda libre."""
+    monkeypatch.setattr(geocodificacion, "GEO_ESPERA_MAX_S", 0.01)
+    geocodificacion._candado.acquire()  # simulamos una búsqueda lenta en curso
+    try:
+        r = client.get("/api/geo/buscar", params={"q": "Av. Tecnológico"})
+    finally:
+        geocodificacion._candado.release()
+    assert r.status_code == 503 and r.json()["codigo"] == "SERVICIO_NO_DISPONIBLE"
+    assert nominatim.llamadas == []
+
+
+def test_lo_que_esta_en_cache_no_hace_fila(client, nominatim, monkeypatch):
+    nominatim.respuesta = [LUGAR_TECNOLOGICO]
+    client.get("/api/geo/buscar", params={"q": "Av. Tecnológico"})
+    monkeypatch.setattr(geocodificacion, "GEO_ESPERA_MAX_S", 0.01)
+    geocodificacion._candado.acquire()
+    try:
+        r = client.get("/api/geo/buscar", params={"q": "Av. Tecnológico"})
+    finally:
+        geocodificacion._candado.release()
+    assert r.status_code == 200 and len(r.json()["resultados"]) == 1
