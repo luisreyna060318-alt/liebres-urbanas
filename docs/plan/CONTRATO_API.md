@@ -143,7 +143,7 @@ Lo que ve cualquier persona. **Nunca** incluye al autor (nombre, correo ni id).
 `ReporteMio` = `ReportePublico` + `{ "puede_editar": true, "motivo_rechazo": { "nombre": "Duplicado", "texto": "..." } | null }`
 (solo para el autor; `puede_editar` es `true` únicamente en `recibido`).
 
-`ReporteDetalle` = `ReportePublico` + `{ "longevidad_dias": 5, "ultima_actividad": "2026-11-25T10:00:00Z", "historial": [ CambioEstado ] }`
+`ReporteDetalle` = `ReportePublico` + `{ "longevidad_dias": 5, "ultima_actividad": "2026-11-25T10:00:00Z", "ultima_confirmacion": "2026-11-24T08:30:00Z" | null, "historial": [ CambioEstado ] }`
 con `CambioEstado` = `{ "estado_anterior": "recibido" | null, "estado_nuevo": "validado", "comentario": "..." | null, "creado_en": "..." }`
 del más reciente al más antiguo. El historial público **no** incluye quién hizo el cambio.
 
@@ -208,16 +208,16 @@ Orden de las revisiones: 404 si no existe → 403 si no es el autor → 409 si y
 campos de un **bache** (un encharcamiento nace `activo`, así que nunca es editable ni se puede eliminar: 409). Al eliminar se
 borran también su historial y sus confirmaciones.
 
+### 6.7 Consulta pública (la construye Carlos; la forma ya queda fijada)
+
+`GET /api/reportes?categoria=&estado=&colonia_id=&severidad=&desde=&hasta=&q=&pagina=1&tam=20` → paginación de `ReportePublico`.
+`GET /api/reportes/{id}` → `ReporteDetalle`. Por omisión solo "activos": baches abiertos y encharcamientos activos.
+
 ### 6.8 Vigencia de encharcamientos
 
 No hay tareas programadas: `services/encharcamientos.expirar_vencidos(db)` pasa a `historico` los activos con `vigente_hasta`
 vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de encharcamientos, `cercanos`, `confirmaciones` y
 `mis-reportes`; los endpoints de consulta pública, detalle, zona y tablero también deben llamarlo antes de leer.
-
-### 6.7 Consulta pública (la construye Carlos; la forma ya queda fijada)
-
-`GET /api/reportes?categoria=&estado=&colonia_id=&severidad=&desde=&hasta=&q=&pagina=1&tam=20` → paginación de `ReportePublico`.
-`GET /api/reportes/{id}` → `ReporteDetalle`. Por omisión solo "activos": baches abiertos y encharcamientos activos.
 
 ## 7. Qué pide cada endpoint de rol
 
@@ -230,59 +230,84 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
-## 12. Administración de usuarios (C9)
+## 8. Consulta pública (C3 y C4)
 
-Solo el rol `coordinador` (HU-06.2). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).
+Aceptan un token **opcional**: si es válido y la cuenta es de moderador o coordinador, se pueden ver los rechazados.
+Un token vencido, inválido o de una cuenta suspendida se trata como público (**no** responde 401).
+Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya aparece como `historico`.
 
-`UsuarioAdmin` = `{ "id": 7, "nombre": "Ana Pérez", "correo": "ana@ejemplo.test", "rol": "ciudadano", "activo": true, "creado_en": "2026-11-24T21:05:00Z" }`
-(**nunca** el hash ni la contraseña). `activo: false` significa **cuenta suspendida**.
+### 8.1 Consultar reportes — `GET /api/reportes` (HU-04.1 y HU-04.2)
 
-| Endpoint | Entrada | Salida |
+| Parámetro | Valores | Notas |
 |---|---|---|
-| `GET /api/usuarios?q=&rol=&pagina=1&tam=10` | `q`: parte del nombre o del correo, sin distinguir mayúsculas; `rol`: `ciudadano`, `moderador` o `coordinador` | Paginación (10 por página; `tam` hasta 100) de `UsuarioAdmin`, en orden alfabético por nombre |
-| `PUT /api/usuarios/{id}/rol` | `{ "rol": "moderador" }` | 200 `UsuarioAdmin` |
-| `PUT /api/usuarios/{id}/suspension` | `{ "suspendido": true }` (`true` suspende, `false` reactiva) | 200 `UsuarioAdmin` |
+| `categoria` | `bache`, `encharcamiento` | |
+| `estado` | cualquiera de la sección 2 | Sin valor: solo **activos** (baches `recibido`, `validado`, `en_reparacion` y encharcamientos `activo`) |
+| `colonia_id` | entero ≥ 1 | |
+| `severidad` | `baja`, `media`, `alta` | Solo baches (los encharcamientos no tienen severidad) |
+| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` |
+| `q` | texto, hasta 100 caracteres | Parte de la calle o del folio, sin distinguir mayúsculas; `%` y `_` se buscan tal cual |
+| `pagina`, `tam` | `pagina` ≥ 1; `tam` de 1 a 100 | `tam` vale 20 por omisión |
 
-Reglas:
-- El rol y el estado de la cuenta se leen de la base en **cada** petición: un cambio surte efecto en la siguiente petición de la
-  persona afectada, aunque su token siga vigente (HU-06.2 CA2). Una cuenta suspendida recibe 403 `CUENTA_SUSPENDIDA` con su
-  token anterior y tampoco puede iniciar sesión (403 `CUENTA_SUSPENDIDA`); sus reportes se conservan. Al reactivarla vuelve a entrar.
-- No se puede quitar el rol de coordinador ni suspender al **último coordinador activo**: 409 `ULTIMO_COORDINADOR`. También
-  aplica cuando un coordinador lo intenta consigo mismo. Un coordinador suspendido no cuenta como "otro coordinador".
-  Poner el mismo rol que ya tiene, o reactivar/suspender cuentas que no son coordinadoras activas, no se bloquea.
-- Un `rol` fuera de los tres valores, o un `suspendido` que no es booleano: 422 `VALIDACION` con `campos.rol` o
-  `campos.suspendido`. Cuenta inexistente: 404 `NO_ENCONTRADO`.
+- 200 → `Pagina[ReportePublico]` (sección 6.1), del más reciente al más antiguo (`creado_en` desc, `id` desc). `total`
+  cuenta todos los resultados del filtro; una página fuera de rango devuelve `items: []` con el mismo `total`.
+- Los filtros se combinan con "y". `estado=rechazado` sin sesión de moderación responde 200 con `items: []`.
+- 422 `VALIDACION` con `campos` por parámetro: fecha mal escrita, `desde` posterior a `hasta` (`campos.hasta`),
+  valores fuera de las enumeraciones, `pagina`/`tam` fuera de rango, `q` demasiado largo.
+- El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
+  `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
 
-Código nuevo: 409 `ULTIMO_COORDINADOR`.
+### 8.2 Detalle de un reporte — `GET /api/reportes/{id}` (HU-04.4)
 
-## 11. Administración de colonias y sectores (C8)
+`{id}` es un entero (la ruta solo acepta números, así `/reportes/cercanos` y `/reportes/baches` no se confunden).
 
-Solo el rol `coordinador` (HU-06.1). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
-Las lecturas (`GET /api/sectores` y `GET /api/colonias`, sección 4) siguen siendo públicas y no cambian: el selector de los
-formularios sigue pidiendo solo las activas (`solo_activas=true` por omisión); la pantalla de administración pide
-`solo_activas=false` para ver también las inactivas.
+- 200 → `ReporteDetalle` (sección 6.1) **más un campo nuevo**:
+  `"ultima_confirmacion": "2026-11-22T18:30:00Z" | null`, la fecha de la respuesta `confirma` o `sigue` más reciente
+  (`ya_no_hay` no cuenta); `null` si nadie ha confirmado.
+- `historial`: del más reciente al más antiguo, con `estado_anterior`, `estado_nuevo`, `comentario` público y `creado_en`.
+  **No** incluye quién hizo el cambio. `ultima_actividad` es la fecha del cambio más reciente (o `creado_en` sin historial).
+- `longevidad_dias` = `antiguedad_dias` (RN-10): días desde `creado_en` (fecha de Juárez) hasta hoy, o hasta
+  `fecha_reparacion` si el bache está reparado. La fecha del reporte original es `creado_en`.
+- 404 `NO_ENCONTRADO` si no existe, **o** si está `rechazado` y quien consulta no tiene sesión de moderador o
+  coordinador (incluido su autor: él ve el rechazo y el motivo en `GET /api/mis-reportes`).
 
-| Endpoint | Entrada | Salida |
+## 9. ¿Cómo está mi zona? (C5)
+
+`GET /api/zona?lat=31.7001&lon=-106.4302` — **público** (sin token). Reportes **activos** a `RADIO_ZONA_KM` (1 km) o menos del punto.
+
+- Activos: baches abiertos (`recibido`, `validado`, `en_reparacion`) y encharcamientos `activo` y todavía vigentes. No salen
+  `reparado`, `historico` ni `rechazado`. Antes de leer se llama a `expirar_vencidos(db)` (sección 6.8).
+- Orden: primero los encharcamientos con `nivel_agua = "intransitable"` y, dentro de cada grupo, del más cercano al más lejano.
+  Para resaltarlos basta el campo `nivel_agua` de cada elemento; no hay campo extra.
+- Tope: `items` trae hasta 50 reportes (`MAX_RESULTADOS_ZONA`, en `core/reglas.py`). El recorte se hace después de ordenar,
+  así los intransitables nunca quedan fuera. `total` es la cantidad real encontrada en el radio.
+- Privacidad (RN-04): los elementos son `ReportePublico` + `distancia_m`, sin autor.
+
+Entrada (query): `lat` (-90 a 90) y `lon` (-180 a 180), obligatorias.
+
+Salida 200:
+
+```json
+{
+  "centro": { "lat": 31.7001, "lon": -106.4302 },
+  "radio_m": 1000,
+  "total": 2,
+  "items": [
+    { "id": 346, "folio": "ENC-2026-000045", "categoria": "encharcamiento", "nivel_agua": "intransitable", "...": "resto de ReportePublico", "distancia_m": 850 },
+    { "id": 345, "folio": "BCH-2026-000123", "categoria": "bache", "...": "resto de ReportePublico", "distancia_m": 120 }
+  ]
+}
+```
+
+`distancia_m` va en metros enteros (Haversine). Sin reportes: `total` 0 e `items` `[]` (200, no es un error).
+
+| HTTP | `codigo` | Cuándo |
 |---|---|---|
-| `POST /api/colonias` | `{ "nombre", "sector_id", "lat", "lon" }` (`lat` y `lon` opcionales, pero las dos o ninguna) | 201 colonia (forma de la sección 4), `activa: true` |
-| `PUT /api/colonias/{id}` | `{ "nombre", "sector_id", "lat", "lon", "activa" }` (se envía todo) | 200 colonia |
-| `DELETE /api/colonias/{id}` | — | 204; 409 `COLONIA_CON_REPORTES` si tiene reportes (solo se puede desactivar con `activa: false`) |
-| `POST /api/sectores` | `{ "nombre" }` | 201 `{ "id", "nombre" }` |
-| `PUT /api/sectores/{id}` | `{ "nombre" }` | 200 `{ "id", "nombre" }` |
+| 422 | `VALIDACION` | Falta `lat` o `lon`, no son números o están fuera de rango (con `campos`) |
+| 422 | `FUERA_DEL_MUNICIPIO` | El punto está fuera de Juárez (`MUNICIPIO_BBOX`, RN-01), igual que en el alta |
 
-Reglas:
-- `nombre` de colonia: 2 a 120 caracteres; de sector: 2 a 80. Se quitan los espacios de sobra.
-- Nombre único por sector, sin distinguir mayúsculas: 409 `COLONIA_DUPLICADA`. El mismo nombre en otro sector sí se permite.
-  El nombre de un sector es único: 409 `SECTOR_DUPLICADO`. Conservar el propio nombre al editar no es duplicado.
-  La restricción vive también en la base de datos (una carrera entre dos coordinadores responde el mismo 409).
-- `lat` y `lon` deben estar dentro del municipio de Juárez (`core/reglas.MUNICIPIO_BBOX`): 422 `VALIDACION` con `campos.lat`
-  y `campos.lon`. Si viene solo una de las dos, el error va en la que falta. `sector_id` inexistente: 422 con `campos.sector_id`.
-- `fuente` no se pide: las colonias dadas de alta aquí quedan con la fuente "Alta manual (coordinación)".
-- Colonia o sector inexistente: 404 `NO_ENCONTRADO`. Al eliminar una colonia sin reportes también se quitan las
-  colonias de interés (`usuario_colonias`) que apuntaban a ella.
-- Desactivar no toca los reportes existentes: conservan su colonia.
-
-Códigos nuevos: 409 `COLONIA_DUPLICADA`, 409 `SECTOR_DUPLICADO`, 409 `COLONIA_CON_REPORTES`.
+La pantalla `/zona` obtiene las coordenadas con `GET /api/geo/buscar` (al pulsar «Buscar», nunca al escribir) o con la
+geolocalización del navegador, y después llama a este endpoint.
 
 ## 10. Moderación y seguimiento (C6 y C7)
 
@@ -345,46 +370,82 @@ reparó"`, `"La fecha de reparación no puede ser futura"`, `"La fecha de repara
 **Historial inalterable (RN-07):** no existe ninguna ruta para modificar ni borrar filas de `historial_estados`; el ORM lanza
 error si se intenta (`HistorialInalterable`) y en PostgreSQL lo impide un trigger (migración 0001).
 
-## 8. Consulta pública (C3 y C4)
+## 11. Administración de colonias y sectores (C8)
 
-Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).
-Aceptan un token **opcional**: si es válido y la cuenta es de moderador o coordinador, se pueden ver los rechazados.
-Un token vencido, inválido o de una cuenta suspendida se trata como público (**no** responde 401).
-Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya aparece como `historico`.
+Solo el rol `coordinador` (HU-06.1). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+Las lecturas (`GET /api/sectores` y `GET /api/colonias`, sección 4) siguen siendo públicas y no cambian: el selector de los
+formularios sigue pidiendo solo las activas (`solo_activas=true` por omisión); la pantalla de administración pide
+`solo_activas=false` para ver también las inactivas.
 
-### 8.1 Consultar reportes — `GET /api/reportes` (HU-04.1 y HU-04.2)
-
-| Parámetro | Valores | Notas |
+| Endpoint | Entrada | Salida |
 |---|---|---|
-| `categoria` | `bache`, `encharcamiento` | |
-| `estado` | cualquiera de la sección 2 | Sin valor: solo **activos** (baches `recibido`, `validado`, `en_reparacion` y encharcamientos `activo`) |
-| `colonia_id` | entero ≥ 1 | |
-| `severidad` | `baja`, `media`, `alta` | Solo baches (los encharcamientos no tienen severidad) |
-| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` |
-| `q` | texto, hasta 100 caracteres | Parte de la calle o del folio, sin distinguir mayúsculas; `%` y `_` se buscan tal cual |
-| `pagina`, `tam` | `pagina` ≥ 1; `tam` de 1 a 100 | `tam` vale 20 por omisión |
+| `POST /api/colonias` | `{ "nombre", "sector_id", "lat", "lon" }` (`lat` y `lon` opcionales, pero las dos o ninguna) | 201 colonia (forma de la sección 4), `activa: true` |
+| `PUT /api/colonias/{id}` | `{ "nombre", "sector_id", "lat", "lon", "activa" }` (se envía todo) | 200 colonia |
+| `DELETE /api/colonias/{id}` | — | 204; 409 `COLONIA_CON_REPORTES` si tiene reportes (solo se puede desactivar con `activa: false`) |
+| `POST /api/sectores` | `{ "nombre" }` | 201 `{ "id", "nombre" }` |
+| `PUT /api/sectores/{id}` | `{ "nombre" }` | 200 `{ "id", "nombre" }` |
 
-- 200 → `Pagina[ReportePublico]` (sección 6.1), del más reciente al más antiguo (`creado_en` desc, `id` desc). `total`
-  cuenta todos los resultados del filtro; una página fuera de rango devuelve `items: []` con el mismo `total`.
-- Los filtros se combinan con "y". `estado=rechazado` sin sesión de moderación responde 200 con `items: []`.
-- 422 `VALIDACION` con `campos` por parámetro: fecha mal escrita, `desde` posterior a `hasta` (`campos.hasta`),
-  valores fuera de las enumeraciones, `pagina`/`tam` fuera de rango, `q` demasiado largo.
-- El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
-  `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
+Reglas:
+- `nombre` de colonia: 2 a 120 caracteres; de sector: 2 a 80. Se quitan los espacios de sobra.
+- Nombre único por sector, sin distinguir mayúsculas: 409 `COLONIA_DUPLICADA`. El mismo nombre en otro sector sí se permite.
+  El nombre de un sector es único: 409 `SECTOR_DUPLICADO`. Conservar el propio nombre al editar no es duplicado.
+  La restricción vive también en la base de datos (una carrera entre dos coordinadores responde el mismo 409).
+- `lat` y `lon` deben estar dentro del municipio de Juárez (`core/reglas.MUNICIPIO_BBOX`): 422 `VALIDACION` con `campos.lat`
+  y `campos.lon`. Si viene solo una de las dos, el error va en la que falta. `sector_id` inexistente: 422 con `campos.sector_id`.
+- `fuente` no se pide: las colonias dadas de alta aquí quedan con la fuente "Alta manual (coordinación)".
+- Colonia o sector inexistente: 404 `NO_ENCONTRADO`. Al eliminar una colonia sin reportes también se quitan las
+  colonias de interés (`usuario_colonias`) que apuntaban a ella.
+- Desactivar no toca los reportes existentes: conservan su colonia.
 
-### 8.2 Detalle de un reporte — `GET /api/reportes/{id}` (HU-04.4)
+Códigos nuevos: 409 `COLONIA_DUPLICADA`, 409 `SECTOR_DUPLICADO`, 409 `COLONIA_CON_REPORTES`.
 
-`{id}` es un entero (la ruta solo acepta números, así `/reportes/cercanos` y `/reportes/baches` no se confunden).
+## 12. Administración de usuarios (C9)
 
-- 200 → `ReporteDetalle` (sección 6.1) **más un campo nuevo**:
-  `"ultima_confirmacion": "2026-11-22T18:30:00Z" | null`, la fecha de la respuesta `confirma` o `sigue` más reciente
-  (`ya_no_hay` no cuenta); `null` si nadie ha confirmado.
-- `historial`: del más reciente al más antiguo, con `estado_anterior`, `estado_nuevo`, `comentario` público y `creado_en`.
-  **No** incluye quién hizo el cambio. `ultima_actividad` es la fecha del cambio más reciente (o `creado_en` sin historial).
-- `longevidad_dias` = `antiguedad_dias` (RN-10): días desde `creado_en` (fecha de Juárez) hasta hoy, o hasta
-  `fecha_reparacion` si el bache está reparado. La fecha del reporte original es `creado_en`.
-- 404 `NO_ENCONTRADO` si no existe, **o** si está `rechazado` y quien consulta no tiene sesión de moderador o
-  coordinador (incluido su autor: él ve el rechazo y el motivo en `GET /api/mis-reportes`).
+Solo el rol `coordinador` (HU-06.2). Sin token: 401 `NO_AUTENTICADO`; ciudadano o moderador: 403 `SIN_PERMISO`.
+
+`UsuarioAdmin` = `{ "id": 7, "nombre": "Ana Pérez", "correo": "ana@ejemplo.test", "rol": "ciudadano", "activo": true, "creado_en": "2026-11-24T21:05:00Z" }`
+(**nunca** el hash ni la contraseña). `activo: false` significa **cuenta suspendida**.
+
+| Endpoint | Entrada | Salida |
+|---|---|---|
+| `GET /api/usuarios?q=&rol=&pagina=1&tam=10` | `q`: parte del nombre o del correo, sin distinguir mayúsculas; `rol`: `ciudadano`, `moderador` o `coordinador` | Paginación (10 por página; `tam` hasta 100) de `UsuarioAdmin`, en orden alfabético por nombre |
+| `PUT /api/usuarios/{id}/rol` | `{ "rol": "moderador" }` | 200 `UsuarioAdmin` |
+| `PUT /api/usuarios/{id}/suspension` | `{ "suspendido": true }` (`true` suspende, `false` reactiva) | 200 `UsuarioAdmin` |
+
+Reglas:
+- El rol y el estado de la cuenta se leen de la base en **cada** petición: un cambio surte efecto en la siguiente petición de la
+  persona afectada, aunque su token siga vigente (HU-06.2 CA2). Una cuenta suspendida recibe 403 `CUENTA_SUSPENDIDA` con su
+  token anterior y tampoco puede iniciar sesión (403 `CUENTA_SUSPENDIDA`); sus reportes se conservan. Al reactivarla vuelve a entrar.
+- No se puede quitar el rol de coordinador ni suspender al **último coordinador activo**: 409 `ULTIMO_COORDINADOR`. También
+  aplica cuando un coordinador lo intenta consigo mismo. Un coordinador suspendido no cuenta como "otro coordinador".
+  Poner el mismo rol que ya tiene, o reactivar/suspender cuentas que no son coordinadoras activas, no se bloquea.
+- Un `rol` fuera de los tres valores, o un `suspendido` que no es booleano: 422 `VALIDACION` con `campos.rol` o
+  `campos.suspendido`. Cuenta inexistente: 404 `NO_ENCONTRADO`.
+
+Código nuevo: 409 `ULTIMO_COORDINADOR`.
+
+## 13. Aviso de lluvia (C11)
+
+| Endpoint | Quién | Salida |
+|---|---|---|
+| `GET /api/clima/aviso` | Público (sin token) | `AvisoLluvia` |
+
+`AvisoLluvia` = `{ "disponible": true, "hay_aviso": true, "probabilidad_max_pct": 45, "horas": 12, "umbral_pct": 30, "consultado_en": "2026-11-25T21:30:00Z" }`.
+
+- **Entrada:** ninguna (sin parámetros ni cuerpo). El servidor consulta Open-Meteo (`https://api.open-meteo.com/v1/forecast`, sin llave)
+  para un punto fijo del Centro de Ciudad Juárez (`31.74, -106.49`), con `hourly=precipitation_probability` y la zona
+  `America/Ciudad_Juarez`.
+- **Regla:** `probabilidad_max_pct` es la MÁXIMA de las próximas `horas` (12) horas, empezando por la hora en punto actual (la hora en
+  curso cuenta; no se miran horas pasadas ni posteriores). `hay_aviso` es `true` cuando `probabilidad_max_pct >= umbral_pct` (30):
+  29 % no avisa, 30 % sí. `horas` y `umbral_pct` salen de `core/reglas.py` (`HORAS_PRONOSTICO`, `UMBRAL_LLUVIA_PCT`).
+- **Caché:** el resultado se guarda 1 hora en memoria (`CACHE_PRONOSTICO_HORAS`); `consultado_en` (UTC) indica cuándo se consultó
+  Open-Meteo. Un fallo solo se recuerda 30 s, para no quedarse sin pronóstico una hora entera.
+- **Si el servicio falla** (error de red, más de 5 s sin responder, estado HTTP de error, JSON inválido o sin datos de la ventana) NO es
+  un 503: la plataforma sigue y responde **200** con `{ "disponible": false, "hay_aviso": false, "probabilidad_max_pct": null, "horas": 12, "umbral_pct": 30, "consultado_en": null }`.
+  La interfaz muestra entonces «Pronóstico no disponible».
+- **Errores:** ninguno propio. La respuesta no trae datos personales ni de ningún reporte (RN-04).
+- **Interfaz:** `AvisoLluvia` (en `Layout`, arriba del contenido) muestra un aviso con `role="status"` y un enlace a `/zona` solo si
+  `hay_aviso`; sin lluvia no muestra nada; si `disponible` es `false` (o la petición falla) muestra «Pronóstico no disponible».
 
 ## 14. Tablero de indicadores (C10)
 
@@ -446,64 +507,3 @@ encharcamientos `activo` e `historico` (los históricos **sí** cuentan, HU-03.2
 - Errores: 401 `NO_AUTENTICADO` sin sesión; 403 `SIN_PERMISO` para ciudadano y moderador; 422 `VALIDACION` con
   `campos.hasta` si `desde` > `hasta`, `campos.sector_id` si el sector no existe o es < 1, y `campos.desde`/`campos.hasta`
   si la fecha está mal escrita.
-
-## 9. ¿Cómo está mi zona? (C5)
-
-`GET /api/zona?lat=31.7001&lon=-106.4302` — **público** (sin token). Reportes **activos** a `RADIO_ZONA_KM` (1 km) o menos del punto.
-
-- Activos: baches abiertos (`recibido`, `validado`, `en_reparacion`) y encharcamientos `activo` y todavía vigentes. No salen
-  `reparado`, `historico` ni `rechazado`. Antes de leer se llama a `expirar_vencidos(db)` (sección 6.8).
-- Orden: primero los encharcamientos con `nivel_agua = "intransitable"` y, dentro de cada grupo, del más cercano al más lejano.
-  Para resaltarlos basta el campo `nivel_agua` de cada elemento; no hay campo extra.
-- Tope: `items` trae hasta 50 reportes (`MAX_RESULTADOS_ZONA`, en `core/reglas.py`). El recorte se hace después de ordenar,
-  así los intransitables nunca quedan fuera. `total` es la cantidad real encontrada en el radio.
-- Privacidad (RN-04): los elementos son `ReportePublico` + `distancia_m`, sin autor.
-
-Entrada (query): `lat` (-90 a 90) y `lon` (-180 a 180), obligatorias.
-
-Salida 200:
-
-```json
-{
-  "centro": { "lat": 31.7001, "lon": -106.4302 },
-  "radio_m": 1000,
-  "total": 2,
-  "items": [
-    { "id": 346, "folio": "ENC-2026-000045", "categoria": "encharcamiento", "nivel_agua": "intransitable", "...": "resto de ReportePublico", "distancia_m": 850 },
-    { "id": 345, "folio": "BCH-2026-000123", "categoria": "bache", "...": "resto de ReportePublico", "distancia_m": 120 }
-  ]
-}
-```
-
-`distancia_m` va en metros enteros (Haversine). Sin reportes: `total` 0 e `items` `[]` (200, no es un error).
-
-| HTTP | `codigo` | Cuándo |
-|---|---|---|
-| 422 | `VALIDACION` | Falta `lat` o `lon`, no son números o están fuera de rango (con `campos`) |
-| 422 | `FUERA_DEL_MUNICIPIO` | El punto está fuera de Juárez (`MUNICIPIO_BBOX`, RN-01), igual que en el alta |
-
-La pantalla `/zona` obtiene las coordenadas con `GET /api/geo/buscar` (al pulsar «Buscar», nunca al escribir) o con la
-geolocalización del navegador, y después llama a este endpoint.
-
-## 13. Aviso de lluvia (C11)
-
-| Endpoint | Quién | Salida |
-|---|---|---|
-| `GET /api/clima/aviso` | Público (sin token) | `AvisoLluvia` |
-
-`AvisoLluvia` = `{ "disponible": true, "hay_aviso": true, "probabilidad_max_pct": 45, "horas": 12, "umbral_pct": 30, "consultado_en": "2026-11-25T21:30:00Z" }`.
-
-- **Entrada:** ninguna (sin parámetros ni cuerpo). El servidor consulta Open-Meteo (`https://api.open-meteo.com/v1/forecast`, sin llave)
-  para un punto fijo del Centro de Ciudad Juárez (`31.74, -106.49`), con `hourly=precipitation_probability` y la zona
-  `America/Ciudad_Juarez`.
-- **Regla:** `probabilidad_max_pct` es la MÁXIMA de las próximas `horas` (12) horas, empezando por la hora en punto actual (la hora en
-  curso cuenta; no se miran horas pasadas ni posteriores). `hay_aviso` es `true` cuando `probabilidad_max_pct >= umbral_pct` (30):
-  29 % no avisa, 30 % sí. `horas` y `umbral_pct` salen de `core/reglas.py` (`HORAS_PRONOSTICO`, `UMBRAL_LLUVIA_PCT`).
-- **Caché:** el resultado se guarda 1 hora en memoria (`CACHE_PRONOSTICO_HORAS`); `consultado_en` (UTC) indica cuándo se consultó
-  Open-Meteo. Un fallo solo se recuerda 30 s, para no quedarse sin pronóstico una hora entera.
-- **Si el servicio falla** (error de red, más de 5 s sin responder, estado HTTP de error, JSON inválido o sin datos de la ventana) NO es
-  un 503: la plataforma sigue y responde **200** con `{ "disponible": false, "hay_aviso": false, "probabilidad_max_pct": null, "horas": 12, "umbral_pct": 30, "consultado_en": null }`.
-  La interfaz muestra entonces «Pronóstico no disponible».
-- **Errores:** ninguno propio. La respuesta no trae datos personales ni de ningún reporte (RN-04).
-- **Interfaz:** `AvisoLluvia` (en `Layout`, arriba del contenido) muestra un aviso con `role="status"` y un enlace a `/zona` solo si
-  `hay_aviso`; sin lluvia no muestra nada; si `disponible` es `false` (o la petición falla) muestra «Pronóstico no disponible».
