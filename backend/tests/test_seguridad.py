@@ -44,6 +44,7 @@ ENDPOINTS = [
     ("GET", "/api/geo/buscar?q=Av.%20Tecnologico", None, PUBLICO),
     ("GET", "/api/geo/inversa?lat=31.7&lon=-106.43", None, PUBLICO),
     ("GET", "/api/reportes?q=calle", None, PUBLICO),
+    ("GET", "/api/reportes/{ajeno}", None, PUBLICO),
     ("GET", "/api/zona?lat=31.7&lon=-106.43", None, PUBLICO),
     ("GET", "/api/clima/aviso", None, PUBLICO),
     ("POST", "/api/auth/refresh", None, CUALQUIER_ROL),

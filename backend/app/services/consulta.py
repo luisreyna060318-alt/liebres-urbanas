@@ -15,18 +15,20 @@ que la persona ve en la lista con los mismos filtros (HU-07.1 CA5). Ejemplo para
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime, time, timedelta
 
-from sqlalchemy import Select, and_, or_, select
+from sqlalchemy import Select, and_, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.core.errores import error_validacion
+from app.core.errores import ErrorApi, error_validacion
 from app.core.paginacion import paginar
-from app.core.tiempo import ZONA_JUAREZ, hoy_local
-from app.models import Colonia, Reporte, Usuario
-from app.schemas.reportes import ESTADOS_BACHE_ABIERTOS, a_reporte_publico
+from app.core.tiempo import ZONA_JUAREZ, como_utc, hoy_local
+from app.models import Colonia, Confirmacion, Reporte, Usuario
+from app.schemas.reportes import ESTADOS_BACHE_ABIERTOS, ReporteDetalle, a_reporte_detalle, a_reporte_publico
 from app.services.encharcamientos import expirar_vencidos
 
 # Roles que pueden ver los reportes rechazados (filtrando estado=rechazado). El público nunca los ve (HU-04.1 CA4).
 ROLES_VEN_RECHAZADOS = ("moderador", "coordinador")
+# Respuestas que dicen "el daño sigue ahí" (para la fecha de la confirmación más reciente, HU-04.4)
+TIPOS_QUE_CONFIRMAN = ("confirma", "sigue")
 
 
 @dataclass
@@ -113,3 +115,23 @@ def listar_publicos(db: Session, usuario: Usuario | None, filtro: FiltroReportes
     hoy = hoy_local()
     resultado["items"] = [a_reporte_publico(r, hoy) for r in resultado["items"]]
     return resultado
+
+
+# --- Detalle e historial (HU-04.4) -------------------------------------------------------------------
+def obtener_detalle(db: Session, usuario: Usuario | None, reporte_id: int) -> ReporteDetalle:
+    """GET /api/reportes/{id}: datos, historial público y fechas de un reporte.
+
+    404 si no existe, y también si está rechazado y quien consulta no es de moderación: así el público no puede
+    saber que existió (el autor ve su rechazado y el motivo en "Mis reportes").
+    """
+    expirar_vencidos(db)
+    reporte = db.get(Reporte, reporte_id)
+    if reporte is None or (reporte.estado == "rechazado" and not puede_ver_rechazados(usuario)):
+        raise ErrorApi(404, "NO_ENCONTRADO", "El reporte no existe")
+    # Confirmación más reciente de que el daño sigue ahí ("ya_no_hay" es lo contrario, no cuenta)
+    ultima_confirmacion = db.scalar(
+        select(func.max(Confirmacion.creado_en)).where(
+            Confirmacion.reporte_id == reporte.id, Confirmacion.tipo.in_(TIPOS_QUE_CONFIRMAN)
+        )
+    )
+    return a_reporte_detalle(reporte, hoy_local(), como_utc(ultima_confirmacion) if ultima_confirmacion else None)

@@ -372,6 +372,20 @@ Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya a
 - El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
   `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
 
+### 8.2 Detalle de un reporte — `GET /api/reportes/{id}` (HU-04.4)
+
+`{id}` es un entero (la ruta solo acepta números, así `/reportes/cercanos` y `/reportes/baches` no se confunden).
+
+- 200 → `ReporteDetalle` (sección 6.1) **más un campo nuevo**:
+  `"ultima_confirmacion": "2026-11-22T18:30:00Z" | null`, la fecha de la respuesta `confirma` o `sigue` más reciente
+  (`ya_no_hay` no cuenta); `null` si nadie ha confirmado.
+- `historial`: del más reciente al más antiguo, con `estado_anterior`, `estado_nuevo`, `comentario` público y `creado_en`.
+  **No** incluye quién hizo el cambio. `ultima_actividad` es la fecha del cambio más reciente (o `creado_en` sin historial).
+- `longevidad_dias` = `antiguedad_dias` (RN-10): días desde `creado_en` (fecha de Juárez) hasta hoy, o hasta
+  `fecha_reparacion` si el bache está reparado. La fecha del reporte original es `creado_en`.
+- 404 `NO_ENCONTRADO` si no existe, **o** si está `rechazado` y quien consulta no tiene sesión de moderador o
+  coordinador (incluido su autor: él ve el rechazo y el motivo en `GET /api/mis-reportes`).
+
 ## 14. Tablero de indicadores (C10)
 
 ### 14.1 `GET /api/tablero?desde=&hasta=&sector_id=` (HU-07.1, solo `coordinador`)
