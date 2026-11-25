@@ -22,6 +22,8 @@ interface Props {
   maxLength?: number
   filas?: number // solo para tipo "textarea"
   requerido?: boolean
+  modoEntrada?: 'text' | 'decimal' | 'numeric' // teclado que se abre en el celular (por ejemplo "decimal" para coordenadas)
+  alPresionarEnter?: () => void // en campos de texto: ejecuta una acción (como "Buscar") en vez de enviar el formulario
 }
 
 export default function Campo({
@@ -38,6 +40,8 @@ export default function Campo({
   maxLength,
   filas = 4,
   requerido = false,
+  modoEntrada,
+  alPresionarEnter,
 }: Props) {
   // Ids de los textos de apoyo, para que el lector de pantalla los lea junto con el campo
   const idAyuda = `${id}-ayuda`
@@ -81,7 +85,14 @@ export default function Campo({
           type={tipo}
           autoComplete={autoComplete}
           maxLength={maxLength}
+          inputMode={modoEntrada}
           onChange={(e) => onCambio(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && alPresionarEnter) {
+              e.preventDefault() // sin esto, Enter enviaría todo el formulario que contiene al campo
+              alPresionarEnter()
+            }
+          }}
         />
       )}
 
