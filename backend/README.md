@@ -44,11 +44,16 @@ Con un PostgreSQL corriendo y `DATABASE_URL` apuntando a él (desde la raíz):
 
 ```bash
 backend/.venv/Scripts/alembic.exe -c db/alembic.ini upgrade head     # crea las 11 tablas y los triggers
-backend/.venv/Scripts/python.exe db/seed.py                          # catálogos y cuentas de demostración
+backend/.venv/Scripts/python.exe db/seed.py                          # catálogos, cuentas, colonias y 500 reportes de demostración
 backend/.venv/Scripts/alembic.exe -c db/alembic.ini downgrade base   # (opcional) deshace todo
 ```
 
-La semilla es idempotente: puede correrse varias veces y solo agrega lo que falta.
+La semilla es idempotente: puede correrse varias veces y solo agrega lo que falta. Corre en este orden: catálogos,
+cuentas de demostración, colonias (desde `db/datos/colonias_juarez.csv`; si falta, termina con un mensaje claro) y
+500 reportes ficticios en las últimas 12 semanas (siempre los mismos, semilla fija; solo se cargan si la tabla de
+reportes está vacía). También crea 30 cuentas ciudadanas ficticias (`ciudadano01@liebreurbana.test` ... `30`) cuya
+contraseña es aleatoria y desconocida: no sirven para entrar. Las pruebas usan colonias inventadas de
+`backend/tests/datos/`, no el catálogo real.
 
 ### Cuentas de demostración (datos ficticios)
 

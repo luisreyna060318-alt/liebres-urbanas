@@ -1,6 +1,6 @@
 // Textos en español para los valores del contrato (la API manda códigos como "media_llanta").
 // Cada valor se muestra con palabras: nunca se deja solo un color o un ícono.
-import type { Carril, Categoria, Estado, NivelAgua, Profundidad, Tamano } from '../api/tipos.ts'
+import type { Carril, Categoria, Estado, NivelAgua, Profundidad, Severidad, Tamano } from '../api/tipos.ts'
 import type { OpcionCampo } from '../componentes/Campo.tsx'
 
 // Las leyendas del tamaño son las del requerimiento (HU-02.2)
@@ -11,6 +11,13 @@ export const ETIQUETA_TAMANO: Record<Tamano, string> = {
 }
 
 export const ETIQUETA_PROFUNDIDAD: Record<Profundidad, string> = {
+  baja: 'Baja',
+  media: 'Media',
+  alta: 'Alta',
+}
+
+// La severidad la calcula el servidor (solo baches)
+export const ETIQUETA_SEVERIDAD: Record<Severidad, string> = {
   baja: 'Baja',
   media: 'Media',
   alta: 'Alta',

@@ -1,0 +1,218 @@
+[
+  {
+    "vista": "consulta",
+    "ruta": "/",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "consulta",
+    "ruta": "/",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle",
+    "ruta": "/reportes/1",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle",
+    "ruta": "/reportes/1",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "zona",
+    "ruta": "/zona",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "zona",
+    "ruta": "/zona",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "login",
+    "ruta": "/login",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "login",
+    "ruta": "/login",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "registro",
+    "ruta": "/registro",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "registro",
+    "ruta": "/registro",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "privacidad",
+    "ruta": "/privacidad",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "privacidad",
+    "ruta": "/privacidad",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "reportar",
+    "ruta": "/reportar",
+    "rol": "ciudadano",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "reportar",
+    "ruta": "/reportar",
+    "rol": "ciudadano",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "mis-reportes",
+    "ruta": "/mis-reportes",
+    "rol": "ciudadano",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "mis-reportes",
+    "ruta": "/mis-reportes",
+    "rol": "ciudadano",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "moderacion",
+    "ruta": "/moderacion",
+    "rol": "moderador",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "moderacion",
+    "ruta": "/moderacion",
+    "rol": "moderador",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "tablero",
+    "ruta": "/tablero",
+    "rol": "coordinador",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "tablero",
+    "ruta": "/tablero",
+    "rol": "coordinador",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "admin-colonias",
+    "ruta": "/admin/colonias",
+    "rol": "coordinador",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "admin-colonias",
+    "ruta": "/admin/colonias",
+    "rol": "coordinador",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "admin-usuarios",
+    "ruta": "/admin/usuarios",
+    "rol": "coordinador",
+    "dispositivo": "movil",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "admin-usuarios",
+    "ruta": "/admin/usuarios",
+    "rol": "coordinador",
+    "dispositivo": "escritorio",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  }
+]

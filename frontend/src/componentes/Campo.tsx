@@ -13,7 +13,7 @@ interface Props {
   etiqueta: ReactNode
   valor: string
   onCambio: (valor: string) => void
-  tipo?: 'text' | 'email' | 'password' | 'select' | 'textarea'
+  tipo?: 'text' | 'email' | 'password' | 'date' | 'select' | 'textarea'
   opciones?: OpcionCampo[] // solo para tipo "select"
   textoOpcionVacia?: string // primera opción del select (valor ""), por ejemplo "Elige…" o "Todas"
   error?: string

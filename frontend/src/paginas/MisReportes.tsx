@@ -73,6 +73,7 @@ export default function MisReportes() {
         textoVacio="Aún no tienes reportes. Cuando reportes un bache o un encharcamiento, aparecerá aquí."
         onReintentar={lista.recargar}
       >
+        <h2 className="solo-lectores">Lista de tus reportes</h2>
         <ul className="lista-reportes">
           {items.map((r) => (
             <li key={r.id}>

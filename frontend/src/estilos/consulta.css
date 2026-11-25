@@ -1,0 +1,55 @@
+/* Consulta pública (HU-04.1 y HU-04.2) y detalle de un reporte (HU-04.4) */
+
+/* Filtros: una columna en el celular (360 px), una rejilla de 2 o 3 columnas en pantallas anchas */
+.filtros-consulta {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 60rem;
+  margin-bottom: var(--espacio-4);
+}
+
+.filtros-consulta-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  align-items: flex-end;
+}
+
+@media (min-width: 40rem) {
+  .filtros-consulta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* La búsqueda ocupa todo el ancho: es el filtro más usado */
+  .filtros-consulta > .campo:first-child,
+  .filtros-consulta-botones {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64rem) {
+  .filtros-consulta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Historial del detalle: una línea de tiempo simple, del más reciente al más antiguo */
+.historial-reporte {
+  max-width: 40rem;
+  margin: 0 0 var(--espacio-3);
+  padding-left: var(--espacio-4);
+  border-left: 3px solid var(--color-borde);
+  list-style: none;
+}
+
+.historial-reporte li {
+  padding: var(--espacio-2) 0;
+}
+
+.historial-reporte p {
+  margin: 0;
+}
+
+.historial-comentario {
+  color: var(--color-texto-suave);
+}
