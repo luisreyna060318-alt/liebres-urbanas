@@ -70,14 +70,13 @@ export function reporteCercano(parcial: Partial<ReporteCercano> = {}): ReporteCe
   return { ...publico, id: 77, folio: 'BCH-2026-000050', confirmaciones: 2, antiguedad_dias: 3, distancia_m: 12, ...parcial }
 }
 
-// Un encharcamiento activo (como lo responde POST /api/reportes/encharcamientos). El contrato no dice qué trae `tipo_dano`
-// en un encharcamiento; la interfaz no lo usa para esta categoría.
+// Un encharcamiento activo (como lo responde POST /api/reportes/encharcamientos): `tipo_dano` es null (contrato).
 export function encharcamientoMio(parcial: Partial<ReporteMio> = {}): ReporteMio {
   return reporteMio({
     id: 500,
     folio: 'ENC-2026-000045',
     categoria: 'encharcamiento',
-    tipo_dano: { codigo: 'encharcamiento', nombre: 'Encharcamiento' } as unknown as ReporteMio['tipo_dano'],
+    tipo_dano: null,
     severidad: null,
     tamano: null,
     profundidad: null,

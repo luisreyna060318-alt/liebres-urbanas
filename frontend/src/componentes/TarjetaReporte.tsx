@@ -17,7 +17,7 @@ interface Props {
 
 export default function TarjetaReporte({ reporte, acciones, mostrarFecha = false, children }: Props) {
   // "Bache", o "Bache · Hundimiento" cuando el daño es de otro tipo
-  const subtipo = reporte.categoria === 'bache' && reporte.tipo_dano.codigo !== 'bache' ? ` · ${reporte.tipo_dano.nombre}` : ''
+  const subtipo = reporte.categoria === 'bache' && reporte.tipo_dano && reporte.tipo_dano.codigo !== 'bache' ? ` · ${reporte.tipo_dano.nombre}` : ''
 
   return (
     <article className="tarjeta tarjeta-reporte">

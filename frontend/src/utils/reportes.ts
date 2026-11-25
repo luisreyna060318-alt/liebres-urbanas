@@ -138,7 +138,7 @@ export function ubicacionDeReporte(r: ReportePublico): DatosUbicacion {
 
 export function bacheDeReporte(r: ReportePublico): DatosBache {
   return {
-    tipo_dano_codigo: r.tipo_dano.codigo,
+    tipo_dano_codigo: r.tipo_dano?.codigo ?? 'bache',
     tamano: r.tamano ?? '',
     profundidad: r.profundidad ?? '',
     carril: r.carril ?? '',
