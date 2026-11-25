@@ -12,7 +12,7 @@ from app.main import app
 from app.models import Reporte
 from app.schemas.geo import GeoBusqueda, GeoResultado
 from app.schemas.reportes import CambioEstado, Cercano, ReporteDetalle, ReporteMio, ReportePublico
-from app.services import geocodificacion
+from app.services import clima, geocodificacion
 from tests.conftest import HASH_PRUEBA, LLAVES_PROHIBIDAS, datos_bache, encabezado_de, llaves_de, punto
 
 ROLES = ("ciudadano", "moderador", "coordinador")
@@ -43,6 +43,7 @@ ENDPOINTS = [
     ("GET", "/api/motivos-rechazo", None, PUBLICO),
     ("GET", "/api/geo/buscar?q=Av.%20Tecnologico", None, PUBLICO),
     ("GET", "/api/geo/inversa?lat=31.7&lon=-106.43", None, PUBLICO),
+    ("GET", "/api/clima/aviso", None, PUBLICO),
     ("POST", "/api/auth/refresh", None, CUALQUIER_ROL),
     ("GET", "/api/auth/yo", None, CUALQUIER_ROL),
     ("POST", "/api/reportes/baches", lambda e: datos_bache(e["colonia_id"], 20), SOLO_CIUDADANO),
@@ -60,6 +61,8 @@ RUTAS_PROBADAS_APARTE = {("POST", "/api/auth/registro"), ("POST", "/api/auth/log
 @pytest.fixture(autouse=True)
 def nominatim_falso(monkeypatch):
     monkeypatch.setattr(geocodificacion, "_llamar_http", lambda ruta, parametros: [] if ruta == "search" else {})
+    clima.limpiar_estado()  # sin caché de otras pruebas; con {} el aviso responde 200 "no disponible"
+    monkeypatch.setattr(clima, "_llamar_http", lambda parametros: {})
 
 
 @pytest.fixture()
