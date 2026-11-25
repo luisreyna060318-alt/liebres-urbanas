@@ -15,8 +15,8 @@ import { useAuth } from '../context/AuthContexto.ts'
 import { useApi } from '../hooks/useApi.ts'
 import { useTitulo } from '../hooks/useTitulo.ts'
 import { formatoFecha } from '../utils/fechas.ts'
+import { ETIQUETA_ROL } from '../utils/menu.ts'
 
-const ETIQUETA_ROL: Record<Rol, string> = { ciudadano: 'Ciudadano', moderador: 'Moderador', coordinador: 'Coordinador' }
 const OPCIONES_ROL = ROLES.map((r) => ({ valor: r, etiqueta: ETIQUETA_ROL[r] }))
 
 // Lo que espera confirmación: cambiar el rol de una cuenta o suspenderla/reactivarla
@@ -41,6 +41,8 @@ export default function AdminUsuarios() {
   )
 
   const [pendiente, setPendiente] = useState<Pendiente | null>(null)
+  // Rol que se va eligiendo en cada fila. Elegirlo no cambia nada: el cambio se pide con "Cambiar rol" y se confirma.
+  const [rolElegido, setRolElegido] = useState<Record<number, Rol>>({})
   const [ocupado, setOcupado] = useState(false)
   const [mensaje, setMensaje] = useState<Mensaje | null>(null)
 
@@ -57,6 +59,11 @@ export default function AdminUsuarios() {
     setQ('')
     setRolFiltro('')
     setPagina(1)
+  }
+
+  // La fila vuelve a mostrar el rol real de la cuenta (al cancelar o al terminar el cambio)
+  function olvidarRol(id: number) {
+    setRolElegido(({ [id]: _descartado, ...resto }) => resto)
   }
 
   async function confirmar(cuenta: UsuarioAdmin, accion: Pendiente) {
@@ -77,6 +84,7 @@ export default function AdminUsuarios() {
     } finally {
       setOcupado(false)
       setPendiente(null)
+      olvidarRol(cuenta.id)
       lista.recargar() // se vuelve a leer del servidor, que es quien decide cómo quedó cada cuenta
     }
   }
@@ -146,19 +154,29 @@ export default function AdminUsuarios() {
                     <label className="solo-lectores" htmlFor={`rol-${u.id}`}>
                       Rol de {u.nombre}
                     </label>
-                    <select
-                      id={`rol-${u.id}`}
-                      className="selector-rol"
-                      value={u.rol}
-                      disabled={ocupado}
-                      onChange={(e) => setPendiente({ id: u.id, tipo: 'rol', rol: e.target.value as Rol })}
-                    >
-                      {OPCIONES_ROL.map((o) => (
-                        <option key={o.valor} value={o.valor}>
-                          {o.etiqueta}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="rol-acciones">
+                      {/* El select solo elige; con teclado las flechas recorren los roles sin disparar la pregunta */}
+                      <select
+                        id={`rol-${u.id}`}
+                        className="selector-rol"
+                        value={rolElegido[u.id] ?? u.rol}
+                        disabled={ocupado || pendiente?.id === u.id}
+                        onChange={(e) => setRolElegido((previo) => ({ ...previo, [u.id]: e.target.value as Rol }))}
+                      >
+                        {OPCIONES_ROL.map((o) => (
+                          <option key={o.valor} value={o.valor}>
+                            {o.etiqueta}
+                          </option>
+                        ))}
+                      </select>
+                      <Boton
+                        variante="secundario"
+                        disabled={ocupado || pendiente?.id === u.id || (rolElegido[u.id] ?? u.rol) === u.rol}
+                        onClick={() => setPendiente({ id: u.id, tipo: 'rol', rol: rolElegido[u.id] ?? u.rol })}
+                      >
+                        Cambiar rol <span className="solo-lectores">de {u.nombre}</span>
+                      </Boton>
+                    </div>
                   </td>
                   <td>{u.activo ? 'Activa' : 'Suspendida'}</td>
                   <td>{formatoFecha(u.creado_en)}</td>
@@ -171,7 +189,10 @@ export default function AdminUsuarios() {
                         textoCargando="Guardando…"
                         ocupado={ocupado}
                         alConfirmar={() => void confirmar(u, pendiente)}
-                        alCancelar={() => setPendiente(null)}
+                        alCancelar={() => {
+                          setPendiente(null)
+                          olvidarRol(u.id)
+                        }}
                       />
                     ) : (
                       <Boton
