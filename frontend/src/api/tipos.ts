@@ -243,3 +243,52 @@ export interface FiltroReportes {
   pagina?: number
   tam?: number // 20 por omisión
 }
+
+// --- Tablero de indicadores (sección 14): GET /api/tablero, solo coordinador ---
+export interface FiltroTablero {
+  desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
+  hasta?: string
+  sector_id?: number
+}
+
+export interface TotalEstado {
+  categoria: Categoria
+  estado: Estado
+  total: number
+}
+
+export interface ColoniaBreve {
+  id: number
+  nombre: string
+}
+
+export interface SemanaTablero {
+  inicio: string // lunes "AAAA-MM-DD" (hora de Juárez)
+  total: number
+}
+
+export interface BacheLongevo {
+  id: number
+  folio: string
+  calle: string
+  colonia: ColoniaBreve
+  estado: Estado
+  antiguedad_dias: number
+}
+
+export interface Tablero {
+  filtro: { desde: string | null; hasta: string | null; sector_id: number | null }
+  totales: {
+    total: number // sin los rechazados
+    bache: number
+    encharcamiento: number
+    por_estado: TotalEstado[]
+    rechazados: number
+  }
+  top_colonias: { colonia: ColoniaBreve; abiertos: number }[]
+  tiempo_promedio_reparacion_dias: number | null
+  reparados_medidos: number
+  por_semana: SemanaTablero[] // 12 semanas, de la más antigua a la más reciente
+  mas_longevos: BacheLongevo[]
+  longevidad_por_colonia: { colonia: ColoniaBreve; abiertos: number; promedio_dias: number }[]
+}

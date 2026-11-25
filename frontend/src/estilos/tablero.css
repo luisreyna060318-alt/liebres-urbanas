@@ -1,0 +1,146 @@
+/* Tablero de indicadores (HU-07.1) */
+
+.filtros-tablero {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 48rem;
+  margin-bottom: var(--espacio-4);
+}
+
+.filtros-tablero-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  align-items: flex-end;
+}
+
+/* Tarjetas de totales: una columna en 360 px, varias en pantallas anchas */
+.tablero-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--espacio-3);
+  padding: 0;
+  margin: 0 0 var(--espacio-4);
+  list-style: none;
+}
+
+.tablero-tarjeta {
+  padding: var(--espacio-3);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-left: 4px solid var(--color-marca);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.tablero-cifra {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-marca);
+}
+
+.tablero-estados {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--espacio-3);
+  margin-bottom: var(--espacio-4);
+}
+
+.tablero-lista-estados {
+  margin: 0;
+}
+
+.tablero-lista-estados > div {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--espacio-1) 0;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tablero-lista-estados dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Tablas: en 360 px se desplazan a lo ancho dentro de su caja, la página no */
+.tabla-desplazable {
+  overflow-x: auto;
+  margin-bottom: var(--espacio-4);
+}
+
+.tabla-tablero {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-superficie);
+}
+
+.tabla-tablero caption {
+  padding: var(--espacio-2) 0;
+  text-align: left;
+  color: var(--color-texto-suave);
+}
+
+.tabla-tablero th,
+.tabla-tablero td {
+  padding: var(--espacio-2);
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+/* Gráfica semanal: ancho mínimo para que las etiquetas se lean; en el celular se desplaza */
+.grafica-semanal {
+  margin: 0 0 var(--espacio-4);
+}
+
+.grafica-desplazable {
+  overflow-x: auto;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+
+.grafica-desplazable:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.grafica-svg {
+  display: block;
+  width: 100%;
+  min-width: 36rem;
+  height: auto;
+  font-family: var(--fuente);
+  font-size: 12px;
+}
+
+.grafica-svg text {
+  fill: var(--color-texto);
+}
+
+.grafica-guia line {
+  stroke: var(--color-borde);
+}
+
+.grafica-barra rect {
+  fill: var(--color-marca);
+}
+
+.grafica-valor {
+  font-weight: 700;
+}
+
+.grafica-semanal figcaption {
+  margin: var(--espacio-2) 0;
+  color: var(--color-texto-suave);
+}
+
+@media (min-width: 40rem) {
+  .filtros-tablero {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filtros-tablero-botones {
+    grid-column: 1 / -1;
+  }
+}
