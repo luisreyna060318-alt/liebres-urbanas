@@ -176,6 +176,22 @@ def test_borrar_colonia_con_reportes_da_409_y_solo_se_puede_desactivar(client, d
     assert db.get(Colonia, colonia.id).activa is False
 
 
+def test_borrar_colonia_en_carrera_con_un_reporte_nuevo_da_409(db, crear_reporte):
+    """Si el reporte llega entre el conteo y el borrado, la llave foránea falla al confirmar: 409, no 500."""
+    from unittest.mock import patch
+
+    from app.core.errores import ErrorApi
+    from app.services import catalogos
+
+    reporte = crear_reporte("bache")
+    colonia_id = reporte.colonia_id
+    # El conteo "no ve" el reporte (como si se hubiera creado justo después de contar)
+    with patch.object(db, "scalar", return_value=0), pytest.raises(ErrorApi) as error:
+        catalogos.borrar_colonia(db, colonia_id)
+    assert error.value.status_code == 409 and error.value.codigo == "COLONIA_CON_REPORTES"
+    assert db.get(Colonia, colonia_id) is not None  # se deshizo el borrado
+
+
 # --- Sectores --------------------------------------------------------------------------------------
 def test_alta_y_renombrado_de_sector(client, admin):
     r = client.post("/api/sectores", json={"nombre": " Sector  Nuevo "}, headers=admin)

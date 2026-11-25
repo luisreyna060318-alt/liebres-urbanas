@@ -101,7 +101,17 @@ def borrar_colonia(db: Session, colonia_id: int) -> None:
     # Las colonias de interés de las personas apuntan a ésta: se quitan primero (en PostgreSQL ya iría en cascada)
     db.execute(delete(UsuarioColonia).where(UsuarioColonia.colonia_id == colonia.id))
     db.delete(colonia)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Carrera: alguien creó un reporte en esta colonia entre el conteo y el borrado. La llave foránea de
+        # `reportes` lo impide; se responde el mismo 409 en lugar de un 500.
+        db.rollback()
+        raise ErrorApi(
+            409,
+            "COLONIA_CON_REPORTES",
+            "Esta colonia tiene reportes y no se puede eliminar. Desactívala para que deje de ofrecerse",
+        ) from None
 
 
 def _sector_o_404(db: Session, sector_id: int) -> Sector:
