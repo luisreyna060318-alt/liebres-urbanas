@@ -5,10 +5,11 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.errores import error_validacion
+from app.core.errores import ErrorApi, error_validacion
 from app.core.tiempo import a_hora_local, ahora_utc
 from app.models import Reporte, TipoDano, Usuario
 from app.schemas.reportes import BacheEdicion, BacheEntrada, ReporteMio, a_reporte_mio
+from app.services.cercanos import cercanos_publicos
 from app.services.estados import registrar_estado_inicial
 from app.services.folios import generar_folio, prefijo_de
 from app.services.validaciones import validar_colonia, validar_limite_horario, validar_municipio
@@ -80,6 +81,21 @@ def validar_bache(db: Session, datos: BacheEdicion) -> TipoDano:
     return tipo
 
 
+def rechazar_si_hay_duplicados(db: Session, categoria: str, lat: float, lon: float, ahora: datetime) -> None:
+    """HU-02.3: 409 POSIBLE_DUPLICADO con la lista `duplicados` si hay un reporte abierto cerca.
+
+    La persona puede confirmar uno de ellos o volver a enviar con `forzar: true` (CA4: reportar de todos modos).
+    """
+    duplicados = cercanos_publicos(db, categoria, lat, lon, ahora)
+    if duplicados:
+        raise ErrorApi(
+            409,
+            "POSIBLE_DUPLICADO",
+            "Ya hay un reporte muy cerca de este punto. Confírmalo o repórtalo de todos modos",
+            extra={"duplicados": [d.model_dump(mode="json") for d in duplicados]},
+        )
+
+
 def crear_bache(db: Session, autor: Usuario, datos: BacheEntrada, ahora: datetime | None = None) -> ReporteMio:
     """Crea un bache en «recibido» con folio BCH-AAAA-NNNNNN y su primera fila del historial (HU-02.1 CA3).
 
@@ -88,6 +104,8 @@ def crear_bache(db: Session, autor: Usuario, datos: BacheEntrada, ahora: datetim
     ahora = ahora or ahora_utc()
     tipo = validar_bache(db, datos)
     validar_limite_horario(db, autor, ahora)
+    if not datos.forzar:
+        rechazar_si_hay_duplicados(db, "bache", datos.lat, datos.lon, ahora)
 
     reporte = Reporte(categoria="bache", autor_id=autor.id, estado="recibido", confirmaciones=0, creado_en=ahora)
     _aplicar_datos_de_bache(reporte, datos, tipo)
