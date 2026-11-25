@@ -12,4 +12,5 @@ afterEach(() => {
   olvidarReglas()
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  Reflect.deleteProperty(navigator, 'geolocation') // lo define simularGeolocalizacion
 })
