@@ -230,6 +230,44 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
+## 9. ¿Cómo está mi zona? (C5)
+
+`GET /api/zona?lat=31.7001&lon=-106.4302` — **público** (sin token). Reportes **activos** a `RADIO_ZONA_KM` (1 km) o menos del punto.
+
+- Activos: baches abiertos (`recibido`, `validado`, `en_reparacion`) y encharcamientos `activo` y todavía vigentes. No salen
+  `reparado`, `historico` ni `rechazado`. Antes de leer se llama a `expirar_vencidos(db)` (sección 6.8).
+- Orden: primero los encharcamientos con `nivel_agua = "intransitable"` y, dentro de cada grupo, del más cercano al más lejano.
+  Para resaltarlos basta el campo `nivel_agua` de cada elemento; no hay campo extra.
+- Tope: `items` trae hasta 50 reportes (`MAX_RESULTADOS_ZONA`, en `core/reglas.py`). El recorte se hace después de ordenar,
+  así los intransitables nunca quedan fuera. `total` es la cantidad real encontrada en el radio.
+- Privacidad (RN-04): los elementos son `ReportePublico` + `distancia_m`, sin autor.
+
+Entrada (query): `lat` (-90 a 90) y `lon` (-180 a 180), obligatorias.
+
+Salida 200:
+
+```json
+{
+  "centro": { "lat": 31.7001, "lon": -106.4302 },
+  "radio_m": 1000,
+  "total": 2,
+  "items": [
+    { "id": 346, "folio": "ENC-2026-000045", "categoria": "encharcamiento", "nivel_agua": "intransitable", "...": "resto de ReportePublico", "distancia_m": 850 },
+    { "id": 345, "folio": "BCH-2026-000123", "categoria": "bache", "...": "resto de ReportePublico", "distancia_m": 120 }
+  ]
+}
+```
+
+`distancia_m` va en metros enteros (Haversine). Sin reportes: `total` 0 e `items` `[]` (200, no es un error).
+
+| HTTP | `codigo` | Cuándo |
+|---|---|---|
+| 422 | `VALIDACION` | Falta `lat` o `lon`, no son números o están fuera de rango (con `campos`) |
+| 422 | `FUERA_DEL_MUNICIPIO` | El punto está fuera de Juárez (`MUNICIPIO_BBOX`, RN-01), igual que en el alta |
+
+La pantalla `/zona` obtiene las coordenadas con `GET /api/geo/buscar` (al pulsar «Buscar», nunca al escribir) o con la
+geolocalización del navegador, y después llama a este endpoint.
+
 ## 13. Aviso de lluvia (C11)
 
 | Endpoint | Quién | Salida |
