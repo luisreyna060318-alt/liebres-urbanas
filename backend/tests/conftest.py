@@ -159,3 +159,62 @@ def crear_reporte(db, ciudadano):
         return reporte
 
     return _crear
+
+
+# --- Datos para las pruebas de reportes (L7 en adelante) -------------------------------------------
+# Punto dentro de Ciudad Juárez. Para que dos reportes NO sean duplicados, sepáralos 0.001 grados de latitud
+# (unos 111 m): punto(1), punto(2)...
+LAT_BASE, LON_BASE = 31.7000, -106.4300
+
+
+def punto(n: int = 0) -> tuple[float, float]:
+    return LAT_BASE + n * 0.001, LON_BASE
+
+
+@pytest.fixture()
+def catalogo(db):
+    """Sector, una colonia activa, una desactivada y los 4 tipos de daño. Devuelve un diccionario.
+    (No combinar con el fixture crear_reporte, que crea su propio tipo "bache".)"""
+    sector = Sector(nombre="Centro")
+    db.add(sector)
+    db.flush()
+    colonia = Colonia(nombre="Partido Escobedo", sector_id=sector.id)
+    inactiva = Colonia(nombre="Colonia Cerrada", sector_id=sector.id, activa=False)
+    tipos = [
+        TipoDano(codigo=codigo, nombre=nombre)
+        for codigo, nombre in [
+            ("bache", "Bache"),
+            ("hundimiento", "Hundimiento"),
+            ("grieta", "Grieta"),
+            ("alcantarilla_sin_tapa", "Alcantarilla sin tapa"),
+        ]
+    ]
+    db.add_all([colonia, inactiva, *tipos])
+    db.commit()
+    return {"sector": sector, "colonia": colonia, "inactiva": inactiva, "tipos": {t.codigo: t for t in tipos}}
+
+
+def datos_bache(colonia_id: int, n: int = 0, /, **cambios) -> dict:
+    """Cuerpo válido para POST /api/reportes/baches en punto(n); `cambios` reemplaza campos."""
+    lat, lon = punto(n)
+    datos = {
+        "tipo_dano_codigo": "bache", "lat": lat, "lon": lon, "calle": "Av. Tecnológico", "colonia_id": colonia_id,
+        "descripcion": "Hueco junto al semáforo", "tamano": "mediano", "profundidad": "media", "carril": "derecho",
+        "senalizado": None, "forzar": False,
+    }
+    datos.update(cambios)
+    return datos
+
+
+# Llaves que NUNCA deben aparecer en una respuesta pública (RN-04) ni en ninguna respuesta (password_hash)
+LLAVES_PROHIBIDAS = {"autor", "autor_id", "usuario_id", "correo", "nombre_autor", "password", "password_hash", "actor",
+                     "actor_id"}
+
+
+def llaves_de(valor) -> set[str]:
+    """Todas las llaves de un JSON (recorre diccionarios y listas anidados)."""
+    if isinstance(valor, dict):
+        return set(valor) | set().union(*(llaves_de(v) for v in valor.values()))
+    if isinstance(valor, list):
+        return set().union(*(llaves_de(v) for v in valor)) if valor else set()
+    return set()
