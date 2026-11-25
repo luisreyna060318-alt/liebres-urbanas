@@ -12,7 +12,8 @@ agregan a este archivo; las formas de `ReportePublico` y de la paginación ya so
 - Fechas y horas: ISO 8601 en UTC con `Z` (`"2026-11-24T21:05:00Z"`). El frontend las muestra con
   `Intl.DateTimeFormat` y `timeZone: "America/Ciudad_Juarez"`. `fecha_reparacion` es solo fecha (`"2026-11-20"`).
 - Coordenadas: `lat` y `lon` como números decimales (grados).
-- Paginación: `?pagina=1&tam=20`. Respuesta `{"items": [...], "total": 137, "pagina": 1, "tam": 20}`.
+- Paginación: `?pagina=1&tam=20`. Respuesta `{"items": [...], "total": 137, "pagina": 1, "tam": 20}`. `pagina` va de 1 a 10 000
+  (`PAGINA_MAX`); un valor mayor responde 422 `VALIDACION`.
 - Nombres de campos en `snake_case` y sin acentos ni eñes (`tamano`, `senalizado`).
 
 ### Errores
@@ -88,7 +89,7 @@ Validación del registro: `nombre` 2 a 80 caracteres; `correo` válido; `passwor
   "radio_duplicado_bache_m": 30, "radio_duplicado_encharcamiento_m": 50, "vigencia_encharcamiento_horas": 6,
   "desmentidos_para_cerrar": 3, "radio_zona_km": 1, "max_reportes_por_hora": 10, "descripcion_max": 500,
   "password_min": 8, "inactividad_min": 30, "tam_pagina_consulta": 20, "tam_pagina_mis_reportes": 10,
-  "umbral_lluvia_pct": 30, "zona_horaria": "America/Ciudad_Juarez"
+  "umbral_lluvia_pct": 30, "comentario_max": 500, "zona_horaria": "America/Ciudad_Juarez"
 }
 ```
 
@@ -252,7 +253,7 @@ Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya a
 - 200 → `Pagina[ReportePublico]` (sección 6.1), del más reciente al más antiguo (`creado_en` desc, `id` desc). `total`
   cuenta todos los resultados del filtro; una página fuera de rango devuelve `items: []` con el mismo `total`.
 - Los filtros se combinan con "y". `estado=rechazado` sin sesión de moderación responde 200 con `items: []`.
-- 422 `VALIDACION` con `campos` por parámetro: fecha mal escrita, `desde` posterior a `hasta` (`campos.hasta`),
+- 422 `VALIDACION` con `campos` por parámetro: fecha mal escrita o fuera del rango 2000-01-01 a 2100-12-31, `desde` posterior a `hasta` (`campos.hasta`),
   valores fuera de las enumeraciones, `pagina`/`tam` fuera de rango, `q` demasiado largo.
 - El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
   `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
