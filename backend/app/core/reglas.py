@@ -1,0 +1,70 @@
+"""Reglas de negocio y valores permitidos, documentados en UN solo lugar (DISENO_TECNICO, sección 4).
+
+El cliente permite ajustar estas cifras si se documentan y se respetan en toda la plataforma: por eso los
+servicios, los esquemas, las restricciones de la base y el endpoint GET /api/reglas (que usa el frontend)
+leen de aquí en lugar de repetir los números.
+"""
+
+# --- Duplicados, vigencia y zona ---
+RADIO_DUPLICADO_BACHE_M = 30
+RADIO_DUPLICADO_ENCHARCAMIENTO_M = 50
+VIGENCIA_ENCHARCAMIENTO_HORAS = 6  # desde la creación o desde la última confirmación "sigue"
+DESMENTIDOS_PARA_CERRAR = 3  # personas distintas que dicen "ya no hay agua"
+RADIO_ZONA_KM = 1  # "¿Cómo está mi zona?"
+
+# --- Límites ---
+MAX_REPORTES_POR_HORA = 10  # por cuenta; se cuenta en la base de datos
+DESCRIPCION_MAX = 500  # caracteres
+COMENTARIO_MAX = 500  # comentario público de un cambio de estado
+PASSWORD_MIN = 8  # con letras y números
+NOMBRE_MIN = 2
+NOMBRE_MAX = 80
+
+# --- Sesión ---
+INACTIVIDAD_MIN = 30  # el token dura 30 min; el frontend lo renueva (refresh) mientras hay actividad
+
+# --- Paginación ---
+TAM_PAGINA_MIS_REPORTES = 10
+TAM_PAGINA_CONSULTA = 20
+TAM_PAGINA_CATALOGOS = 10  # catálogos y usuarios
+TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
+TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
+
+# --- Clima y puntos recurrentes ---
+UMBRAL_LLUVIA_PCT = 30  # probabilidad máxima en las próximas 12 h para mostrar el aviso
+HORAS_PRONOSTICO = 12
+CACHE_PRONOSTICO_HORAS = 1
+PUNTO_RECURRENTE_DIAS = 3  # P1: días distintos del año...
+PUNTO_RECURRENTE_RADIO_M = 50  # ...dentro de este radio
+
+# --- Zona horaria (RN-02): se guarda en UTC y se muestra en la hora de Juárez ---
+ZONA_HORARIA = "America/Ciudad_Juarez"
+
+# =====================================================================================================
+# Valores permitidos (CONTRATO_API, sección 2). Se guardan sin acentos; la interfaz muestra la etiqueta.
+# Las restricciones CHECK de la base de datos se arman con estas mismas tuplas.
+# =====================================================================================================
+ROLES = ("ciudadano", "moderador", "coordinador")
+ROL_INICIAL = "ciudadano"  # toda cuenta nueva nace ciudadana (HU-01.1 CA1)
+
+CATEGORIAS = ("bache", "encharcamiento")
+TIPOS_DANO = ("bache", "hundimiento", "grieta", "alcantarilla_sin_tapa")
+TAMANOS = ("chico", "mediano", "grande")
+PROFUNDIDADES = ("baja", "media", "alta")
+CARRILES = ("orilla", "izquierdo", "derecho", "varios")
+SEVERIDADES = ("baja", "media", "alta")
+NIVELES_AGUA = ("a_un_lado", "cubre_carril", "media_llanta", "intransitable")
+
+ESTADOS_BACHE = ("recibido", "validado", "en_reparacion", "reparado", "rechazado")
+ESTADOS_ENCHARCAMIENTO = ("activo", "historico", "rechazado")
+ESTADO_INICIAL = {"bache": "recibido", "encharcamiento": "activo"}
+
+TIPOS_CONFIRMACION = ("confirma", "sigue", "ya_no_hay")
+
+# Prefijo del folio por categoría: BCH-2026-000123, ENC-2026-000045 (RN-03)
+PREFIJOS_FOLIO = {"bache": "BCH", "encharcamiento": "ENC"}
+
+
+def valores_sql(valores: tuple[str, ...]) -> str:
+    """Convierte ("a", "b") en "('a', 'b')" para usarlo dentro de un CHECK ... IN (...)."""
+    return "(" + ", ".join(f"'{v}'" for v in valores) + ")"
