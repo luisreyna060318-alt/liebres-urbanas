@@ -2,6 +2,7 @@
 import { api, armarConsulta } from './cliente.ts'
 import type {
   Categoria,
+  FiltroReportes,
   NuevaConfirmacion,
   NuevoBache,
   NuevoEncharcamiento,
@@ -41,6 +42,12 @@ export function confirmarReporte(id: number, tipo: TipoConfirmacion): Promise<Re
 // GET /api/mis-reportes?pagina=1  ->  10 por página, del más reciente al más antiguo
 export function pedirMisReportes(pagina: number): Promise<Paginacion<ReporteMio>> {
   return api.get<Paginacion<ReporteMio>>(`/api/mis-reportes${armarConsulta({ pagina })}`)
+}
+
+// GET /api/reportes?categoria=&estado=&colonia_id=&severidad=&desde=&hasta=&q=&pagina=  ->  20 por página, sin autor.
+// Es pública: si hay sesión se manda el token y el servidor decide si se pueden ver los rechazados (solo moderación).
+export function pedirReportes(filtro: FiltroReportes = {}): Promise<Paginacion<ReportePublico>> {
+  return api.get<Paginacion<ReportePublico>>(`/api/reportes${armarConsulta({ ...filtro })}`)
 }
 
 // GET /api/reportes/{id}  ->  ReporteDetalle (lo construye Carlos). Aquí sirve para precargar el formulario de edición.

@@ -1,0 +1,24 @@
+cp,nombre,tipo_asentamiento,sector,lat,lon
+32000,Centro,Colonia,Centro,31.73860,-106.48465
+32010,Cuauhtémoc,Colonia,Centro,31.74460,-106.47696
+32160,Durango,Colonia,Centro,31.74217,-106.50467
+32300,Hidalgo,Colonia,Norponiente,31.74655,-106.46583
+32140,Postal,Colonia,Norponiente,31.74571,-106.50888
+32280,Azteca,Colonia,Norponiente,31.69538,-106.46950
+32410,Puerta del Sol,Fraccionamiento,Nororiente,31.74932,-106.42489
+32500,Tecnológico,Fraccionamiento,Nororiente,31.72184,-106.42043
+32618,Pradera Dorada,Fraccionamiento,Nororiente,31.69784,-106.41795
+32680,Lomas de San José,Colonia,Surponiente,31.66129,-106.43593
+32651,Lomas del Rey,Fraccionamiento,Surponiente,31.66880,-106.43319
+32660,Del Real,Fraccionamiento,Suroriente,31.66934,-106.41992
+32662,Erendira,Colonia,Suroriente,31.67246,-106.41225
+32663,Prados de Santa Anita,Colonia,Suroriente,31.67661,-106.41475
+32685,Ciénega Residencial,Fraccionamiento,Surponiente,31.65699,-106.43567
+32685,Urbiquinta Granada,Fraccionamiento,Surponiente,31.65487,-106.43647
+32690,El Granjero,Colonia,Suroriente,31.65615,-106.40643
+32693,Pie de Casa (El Granjero),Fraccionamiento,Suroriente,31.65997,-106.39823
+32580,Salvarcar,Colonia,Suroriente,31.64867,-106.37125
+32696,Paseos del Alba,Fraccionamiento,Suroriente,31.63454,-106.41835
+32594,Riveras del Bravo,Fraccionamiento,Suroriente,31.62395,-106.31405
+32674,Granjas Polo Gamboa,Colonia,Surponiente,31.59897,-106.45937
+32674,Granjas Santa Elena,Colonia,Surponiente,31.59156,-106.48392

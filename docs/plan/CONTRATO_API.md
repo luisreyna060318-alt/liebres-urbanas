@@ -265,3 +265,91 @@ coordinador) → 422 `VALIDACION` de forma (cuerpo, longitudes) → 404 `NO_ENCO
 no está en un estado que lo permita; el mensaje dice en qué estado está, por ejemplo
 `"El reporte BCH-2026-000123 está en «Validado»: solo se validan baches que siguen en «Recibido»"`) → 422 `VALIDACION` del
 motivo.
+
+## 8. Consulta pública (C3 y C4)
+
+Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).
+Aceptan un token **opcional**: si es válido y la cuenta es de moderador o coordinador, se pueden ver los rechazados.
+Un token vencido, inválido o de una cuenta suspendida se trata como público (**no** responde 401).
+Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya aparece como `historico`.
+
+### 8.1 Consultar reportes — `GET /api/reportes` (HU-04.1 y HU-04.2)
+
+| Parámetro | Valores | Notas |
+|---|---|---|
+| `categoria` | `bache`, `encharcamiento` | |
+| `estado` | cualquiera de la sección 2 | Sin valor: solo **activos** (baches `recibido`, `validado`, `en_reparacion` y encharcamientos `activo`) |
+| `colonia_id` | entero ≥ 1 | |
+| `severidad` | `baja`, `media`, `alta` | Solo baches (los encharcamientos no tienen severidad) |
+| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` |
+| `q` | texto, hasta 100 caracteres | Parte de la calle o del folio, sin distinguir mayúsculas; `%` y `_` se buscan tal cual |
+| `pagina`, `tam` | `pagina` ≥ 1; `tam` de 1 a 100 | `tam` vale 20 por omisión |
+
+- 200 → `Pagina[ReportePublico]` (sección 6.1), del más reciente al más antiguo (`creado_en` desc, `id` desc). `total`
+  cuenta todos los resultados del filtro; una página fuera de rango devuelve `items: []` con el mismo `total`.
+- Los filtros se combinan con "y". `estado=rechazado` sin sesión de moderación responde 200 con `items: []`.
+- 422 `VALIDACION` con `campos` por parámetro: fecha mal escrita, `desde` posterior a `hasta` (`campos.hasta`),
+  valores fuera de las enumeraciones, `pagina`/`tam` fuera de rango, `q` demasiado largo.
+- El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
+  `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
+
+## 9. ¿Cómo está mi zona? (C5)
+
+`GET /api/zona?lat=31.7001&lon=-106.4302` — **público** (sin token). Reportes **activos** a `RADIO_ZONA_KM` (1 km) o menos del punto.
+
+- Activos: baches abiertos (`recibido`, `validado`, `en_reparacion`) y encharcamientos `activo` y todavía vigentes. No salen
+  `reparado`, `historico` ni `rechazado`. Antes de leer se llama a `expirar_vencidos(db)` (sección 6.8).
+- Orden: primero los encharcamientos con `nivel_agua = "intransitable"` y, dentro de cada grupo, del más cercano al más lejano.
+  Para resaltarlos basta el campo `nivel_agua` de cada elemento; no hay campo extra.
+- Tope: `items` trae hasta 50 reportes (`MAX_RESULTADOS_ZONA`, en `core/reglas.py`). El recorte se hace después de ordenar,
+  así los intransitables nunca quedan fuera. `total` es la cantidad real encontrada en el radio.
+- Privacidad (RN-04): los elementos son `ReportePublico` + `distancia_m`, sin autor.
+
+Entrada (query): `lat` (-90 a 90) y `lon` (-180 a 180), obligatorias.
+
+Salida 200:
+
+```json
+{
+  "centro": { "lat": 31.7001, "lon": -106.4302 },
+  "radio_m": 1000,
+  "total": 2,
+  "items": [
+    { "id": 346, "folio": "ENC-2026-000045", "categoria": "encharcamiento", "nivel_agua": "intransitable", "...": "resto de ReportePublico", "distancia_m": 850 },
+    { "id": 345, "folio": "BCH-2026-000123", "categoria": "bache", "...": "resto de ReportePublico", "distancia_m": 120 }
+  ]
+}
+```
+
+`distancia_m` va en metros enteros (Haversine). Sin reportes: `total` 0 e `items` `[]` (200, no es un error).
+
+| HTTP | `codigo` | Cuándo |
+|---|---|---|
+| 422 | `VALIDACION` | Falta `lat` o `lon`, no son números o están fuera de rango (con `campos`) |
+| 422 | `FUERA_DEL_MUNICIPIO` | El punto está fuera de Juárez (`MUNICIPIO_BBOX`, RN-01), igual que en el alta |
+
+La pantalla `/zona` obtiene las coordenadas con `GET /api/geo/buscar` (al pulsar «Buscar», nunca al escribir) o con la
+geolocalización del navegador, y después llama a este endpoint.
+
+## 13. Aviso de lluvia (C11)
+
+| Endpoint | Quién | Salida |
+|---|---|---|
+| `GET /api/clima/aviso` | Público (sin token) | `AvisoLluvia` |
+
+`AvisoLluvia` = `{ "disponible": true, "hay_aviso": true, "probabilidad_max_pct": 45, "horas": 12, "umbral_pct": 30, "consultado_en": "2026-11-25T21:30:00Z" }`.
+
+- **Entrada:** ninguna (sin parámetros ni cuerpo). El servidor consulta Open-Meteo (`https://api.open-meteo.com/v1/forecast`, sin llave)
+  para un punto fijo del Centro de Ciudad Juárez (`31.74, -106.49`), con `hourly=precipitation_probability` y la zona
+  `America/Ciudad_Juarez`.
+- **Regla:** `probabilidad_max_pct` es la MÁXIMA de las próximas `horas` (12) horas, empezando por la hora en punto actual (la hora en
+  curso cuenta; no se miran horas pasadas ni posteriores). `hay_aviso` es `true` cuando `probabilidad_max_pct >= umbral_pct` (30):
+  29 % no avisa, 30 % sí. `horas` y `umbral_pct` salen de `core/reglas.py` (`HORAS_PRONOSTICO`, `UMBRAL_LLUVIA_PCT`).
+- **Caché:** el resultado se guarda 1 hora en memoria (`CACHE_PRONOSTICO_HORAS`); `consultado_en` (UTC) indica cuándo se consultó
+  Open-Meteo. Un fallo solo se recuerda 30 s, para no quedarse sin pronóstico una hora entera.
+- **Si el servicio falla** (error de red, más de 5 s sin responder, estado HTTP de error, JSON inválido o sin datos de la ventana) NO es
+  un 503: la plataforma sigue y responde **200** con `{ "disponible": false, "hay_aviso": false, "probabilidad_max_pct": null, "horas": 12, "umbral_pct": 30, "consultado_en": null }`.
+  La interfaz muestra entonces «Pronóstico no disponible».
+- **Errores:** ninguno propio. La respuesta no trae datos personales ni de ningún reporte (RN-04).
+- **Interfaz:** `AvisoLluvia` (en `Layout`, arriba del contenido) muestra un aviso con `role="status"` y un enlace a `/zona` solo si
+  `hay_aviso`; sin lluvia no muestra nada; si `disponible` es `false` (o la petición falla) muestra «Pronóstico no disponible».

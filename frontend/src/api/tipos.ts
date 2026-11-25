@@ -247,3 +247,36 @@ export interface RechazarEntrada {
   motivo_texto?: string // obligatorio si el motivo tiene pide_explicacion
   comentario?: string
 }
+
+// --- Consulta pública (sección 8): GET /api/reportes. Todo es opcional; sin `estado` llegan solo los activos ---
+export interface FiltroReportes {
+  categoria?: Categoria
+  estado?: Estado
+  colonia_id?: number
+  severidad?: Severidad
+  desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
+  hasta?: string
+  q?: string // parte de la calle o del folio
+  pagina?: number
+  tam?: number // 20 por omisión
+}
+
+// --- ¿Cómo está mi zona? (sección 9) ---
+// GET /api/zona: reportes activos a 1 km, intransitables primero y luego por distancia.
+// `total` puede ser mayor que items.length cuando se alcanza el tope.
+export interface ZonaRespuesta {
+  centro: { lat: number; lon: number }
+  radio_m: number
+  total: number
+  items: ReporteCercano[]
+}
+
+// --- Aviso de lluvia (sección 13 del contrato) ---
+export interface AvisoLluvia {
+  disponible: boolean // false si Open-Meteo falló: la API igual responde 200
+  hay_aviso: boolean
+  probabilidad_max_pct: number | null
+  horas: number
+  umbral_pct: number
+  consultado_en: string | null
+}
