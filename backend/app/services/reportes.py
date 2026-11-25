@@ -11,7 +11,8 @@ from app.core.reglas import TAM_PAGINA_MIS_REPORTES
 from app.core.tiempo import a_hora_local, ahora_utc, hoy_local
 from app.models import Reporte, TipoDano, Usuario
 from app.schemas.reportes import BacheEdicion, BacheEntrada, ReporteMio, a_reporte_mio
-from app.services.cercanos import cercanos_publicos
+from app.services.cercanos import cercanos_publicos, rechazar_si_hay_duplicados
+from app.services.encharcamientos import expirar_vencidos
 from app.services.estados import registrar_estado_inicial
 from app.services.folios import generar_folio, prefijo_de
 from app.services.validaciones import validar_colonia, validar_limite_horario, validar_municipio
@@ -83,21 +84,6 @@ def validar_bache(db: Session, datos: BacheEdicion) -> TipoDano:
     return tipo
 
 
-def rechazar_si_hay_duplicados(db: Session, categoria: str, lat: float, lon: float, ahora: datetime) -> None:
-    """HU-02.3: 409 POSIBLE_DUPLICADO con la lista `duplicados` si hay un reporte abierto cerca.
-
-    La persona puede confirmar uno de ellos o volver a enviar con `forzar: true` (CA4: reportar de todos modos).
-    """
-    duplicados = cercanos_publicos(db, categoria, lat, lon, ahora)
-    if duplicados:
-        raise ErrorApi(
-            409,
-            "POSIBLE_DUPLICADO",
-            "Ya hay un reporte muy cerca de este punto. Confírmalo o repórtalo de todos modos",
-            extra={"duplicados": [d.model_dump(mode="json") for d in duplicados]},
-        )
-
-
 def crear_bache(db: Session, autor: Usuario, datos: BacheEntrada, ahora: datetime | None = None) -> ReporteMio:
     """Crea un bache en «recibido» con folio BCH-AAAA-NNNNNN y su primera fila del historial (HU-02.1 CA3).
 
@@ -119,6 +105,12 @@ def crear_bache(db: Session, autor: Usuario, datos: BacheEntrada, ahora: datetim
     return a_reporte_mio(reporte, a_hora_local(ahora).date())
 
 
+def cercanos_para_formulario(db: Session, categoria: str, lat: float, lon: float) -> list:
+    """GET /api/reportes/cercanos: primero vence los encharcamientos caducados y luego busca (HU-02.3, HU-03.1 CA4)."""
+    expirar_vencidos(db)
+    return cercanos_publicos(db, categoria, lat, lon)
+
+
 # --- Mis reportes (HU-02.5) -----------------------------------------------------------------------
 def listar_mis_reportes(db: Session, autor: Usuario, pagina: int) -> dict:
     """Reportes de la persona (baches y encharcamientos), 10 por página, del más reciente al más antiguo."""
@@ -128,6 +120,7 @@ def listar_mis_reportes(db: Session, autor: Usuario, pagina: int) -> dict:
         .where(Reporte.autor_id == autor.id)
         .order_by(Reporte.creado_en.desc(), Reporte.id.desc())
     )
+    expirar_vencidos(db)  # así sus encharcamientos vencidos ya aparecen como «historico»
     resultado = paginar(db, consulta, pagina, TAM_PAGINA_MIS_REPORTES)
     hoy = hoy_local()
     resultado["items"] = [a_reporte_mio(r, hoy) for r in resultado["items"]]
