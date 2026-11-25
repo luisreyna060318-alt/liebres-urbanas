@@ -230,6 +230,42 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
+## 10. Moderación y seguimiento (C6 y C7)
+
+Todos los cambios de estado pasan por `registrar_cambio_estado()`: el historial guarda el estado anterior y el nuevo,
+**quién** lo hizo (`actor_id`), la fecha y hora y el comentario. El historial **público** (`ReporteDetalle.historial`)
+muestra el comentario pero **no** a la persona que hizo el cambio (RN-04). Las respuestas usan `ReportePublico` (sin autor).
+Los endpoints llaman a `expirar_vencidos(db)` antes de leer.
+
+### 10.1 Bandeja — `GET /api/moderacion/bandeja?colonia_id=&tipo_dano_codigo=&pagina=1` (rol moderador)
+
+Paginación (**10 por página**) de `ReportePublico`: solo **baches en `recibido`**, del **más antiguo al más reciente**
+(`creado_en` ascendente). `colonia_id` y `tipo_dano_codigo` son opcionales; un código que no existe devuelve una lista vacía.
+Sin resultados → `{"items": [], "total": 0, ...}` (la interfaz muestra "No hay reportes por revisar").
+
+### 10.2 Validar — `POST /api/reportes/{id}/validar` (rol moderador)
+
+Entrada `{ "comentario": "Visto en sitio" }` (opcional, público, hasta 500 caracteres; vacío = sin comentario).
+200 → `ReportePublico` con `estado: "validado"`.
+
+### 10.3 Rechazar — `POST /api/reportes/{id}/rechazar` (rol moderador)
+
+```json
+{ "motivo_rechazo_id": 5, "motivo_texto": "Está dentro de un estacionamiento privado", "comentario": null }
+```
+
+- `motivo_rechazo_id` es obligatorio y debe ser un motivo **activo** (422 `campos.motivo_rechazo_id`).
+- `motivo_texto` (hasta 500) es obligatorio si el motivo tiene `pide_explicacion` (422 `campos.motivo_texto`).
+- `comentario` es opcional y público (hasta 500).
+- Se rechaza un **bache en `recibido`** o un **encharcamiento `activo` o `historico`** (RN-06: en cualquier momento).
+- 200 → `ReportePublico` con `estado: "rechazado"`. El autor ve el motivo en `ReporteMio.motivo_rechazo` (`/api/mis-reportes`).
+
+**Errores de 10.2 y 10.3, en este orden:** 401 / 403 `SIN_PERMISO` (cualquier rol distinto de moderador, también el
+coordinador) → 422 `VALIDACION` de forma (cuerpo, longitudes) → 404 `NO_ENCONTRADO` → 409 `TRANSICION_INVALIDA` (el reporte
+no está en un estado que lo permita; el mensaje dice en qué estado está, por ejemplo
+`"El reporte BCH-2026-000123 está en «Validado»: solo se validan baches que siguen en «Recibido»"`) → 422 `VALIDACION` del
+motivo.
+
 ## 8. Consulta pública (C3 y C4)
 
 Completa la sección 6.7. Los dos endpoints son **públicos**: no exigen sesión y nunca incluyen al autor (RN-04).

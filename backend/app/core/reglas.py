@@ -28,6 +28,7 @@ INACTIVIDAD_MIN = 30  # el token dura 30 min; el frontend lo renueva (refresh) m
 TAM_PAGINA_MIS_REPORTES = 10
 TAM_PAGINA_CONSULTA = 20
 TAM_PAGINA_CATALOGOS = 10  # catálogos y usuarios
+TAM_PAGINA_MODERACION = 10  # bandeja de revisión y seguimiento de reparaciones
 TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
 TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
 

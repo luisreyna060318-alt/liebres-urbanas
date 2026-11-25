@@ -231,6 +231,23 @@ export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
 }
 
+// --- Moderación y seguimiento (sección 10) ---
+export interface FiltroModeracion {
+  colonia_id?: number
+  tipo_dano_codigo?: string
+  pagina?: number
+}
+
+export interface ValidarEntrada {
+  comentario?: string // público: aparece en el historial
+}
+
+export interface RechazarEntrada {
+  motivo_rechazo_id: number
+  motivo_texto?: string // obligatorio si el motivo tiene pide_explicacion
+  comentario?: string
+}
+
 // --- Consulta pública (sección 8): GET /api/reportes. Todo es opcional; sin `estado` llegan solo los activos ---
 export interface FiltroReportes {
   categoria?: Categoria
