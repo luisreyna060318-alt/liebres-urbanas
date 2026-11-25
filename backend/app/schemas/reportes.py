@@ -35,6 +35,7 @@ from app.core.reglas import (
     PROFUNDIDADES,
     SEVERIDADES,
     TAMANOS,
+    TIPOS_CONFIRMACION,
 )
 from app.core.tiempo import a_hora_local
 from app.models import Reporte
@@ -95,6 +96,12 @@ class BacheEntrada(BacheEdicion):
     """Alta de un bache (POST /api/reportes/baches)."""
 
     forzar: bool = Field(default=False, description="true = crear aunque haya un bache abierto a 30 m o menos")
+
+
+class ConfirmacionEntrada(BaseModel):
+    """POST /api/reportes/{id}/confirmaciones: `confirma` (bache), `sigue` o `ya_no_hay` (encharcamiento)."""
+
+    tipo: Literal[TIPOS_CONFIRMACION] = Field(examples=["confirma"])
 
 
 # =====================================================================================================
