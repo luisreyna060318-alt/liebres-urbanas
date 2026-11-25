@@ -230,3 +230,16 @@ export interface NuevoEncharcamiento {
 export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
 }
+
+// --- Consulta pública (sección 8): GET /api/reportes. Todo es opcional; sin `estado` llegan solo los activos ---
+export interface FiltroReportes {
+  categoria?: Categoria
+  estado?: Estado
+  colonia_id?: number
+  severidad?: Severidad
+  desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
+  hasta?: string
+  q?: string // parte de la calle o del folio
+  pagina?: number
+  tam?: number // 20 por omisión
+}
