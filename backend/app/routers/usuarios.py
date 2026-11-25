@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import SesionDB, require_role
-from app.core.reglas import TAM_PAGINA_CATALOGOS, TAM_PAGINA_MAX
+from app.core.reglas import PAGINA_MAX, TAM_PAGINA_CATALOGOS, TAM_PAGINA_MAX
 from app.schemas.comun import Pagina, respuestas_error
 from app.schemas.usuarios import CambioRolEntrada, Rol, SuspensionEntrada, UsuarioAdmin
 from app.services import usuarios as usuarios_service
@@ -25,7 +25,7 @@ def listar_usuarios(
     db: SesionDB,
     q: str | None = Query(None, max_length=100, description="Parte del nombre o del correo, sin distinguir mayúsculas"),
     rol: Annotated[Rol | None, Query(description="Solo las cuentas con este rol")] = None,
-    pagina: int = Query(1, ge=1, description="Página, empieza en 1"),
+    pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Página, empieza en 1"),
     tam: int = Query(TAM_PAGINA_CATALOGOS, ge=1, le=TAM_PAGINA_MAX, description="Elementos por página"),
 ):
     """Cuentas en orden alfabético, 10 por página. Nunca incluye la contraseña ni su hash."""

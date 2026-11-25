@@ -37,6 +37,7 @@ TAM_PAGINA_CATALOGOS = 10  # catálogos y usuarios
 TAM_PAGINA_MODERACION = 10  # bandeja de revisión y seguimiento de reparaciones
 TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
 TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
+PAGINA_MAX = 10000  # ?pagina= más alto que se acepta: evita pedirle a la base un OFFSET enorme (error 500)
 
 # --- Filtros por fecha (consulta y tablero) ---
 # Rango razonable para ?desde= y ?hasta=. Fuera de él responde 422 en lugar de fallar al sumar un día a 9999-12-31.

@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Query
 
 from app.core.deps import SesionDB
-from app.core.reglas import TAM_PAGINA_CATALOGOS, TAM_PAGINA_MAX_COLONIAS
+from app.core.reglas import PAGINA_MAX, TAM_PAGINA_CATALOGOS, TAM_PAGINA_MAX_COLONIAS
 from app.schemas.catalogos import ColoniaSalida, MotivoRechazoSalida, SectorSalida, TipoDanoSalida
 from app.schemas.comun import Pagina, respuestas_error
 from app.services import catalogos as catalogos_service
@@ -25,7 +25,7 @@ def listar_colonias(
     q: str | None = Query(None, max_length=100, description="Parte del nombre, sin distinguir mayúsculas"),
     sector_id: int | None = Query(None, description="Solo las de este sector"),
     solo_activas: bool = Query(True, description="false incluye las desactivadas (administración)"),
-    pagina: int = Query(1, ge=1, description="Página, empieza en 1"),
+    pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Página, empieza en 1"),
     tam: int = Query(
         TAM_PAGINA_CATALOGOS,
         ge=1,
