@@ -11,6 +11,7 @@ RADIO_DUPLICADO_ENCHARCAMIENTO_M = 50
 VIGENCIA_ENCHARCAMIENTO_HORAS = 6  # desde la creación o desde la última confirmación "sigue"
 DESMENTIDOS_PARA_CERRAR = 3  # personas distintas que dicen "ya no hay agua"
 RADIO_ZONA_KM = 1  # "¿Cómo está mi zona?"
+MAX_RESULTADOS_ZONA = 50  # tope de reportes que devuelve GET /api/zona (el total real va aparte)
 
 # --- Límites ---
 MAX_REPORTES_POR_HORA = 10  # por cuenta; se cuenta en la base de datos

@@ -1,0 +1,21 @@
+/* Franja del aviso de lluvia (arriba del contenido, en todas las pantallas) */
+.aviso-clima {
+  width: 100%;
+  max-width: var(--ancho-maximo);
+  margin: var(--espacio-3) auto 0;
+  padding: 0 var(--espacio-3);
+}
+
+/* Pronóstico caído: texto pequeño y sin alarma, solo informa (contraste 6.9:1 sobre el fondo) */
+.pronostico-no-disponible {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-texto-suave);
+  text-align: right;
+}
+
+@media (min-width: 640px) {
+  .aviso-clima {
+    padding: 0 var(--espacio-4);
+  }
+}

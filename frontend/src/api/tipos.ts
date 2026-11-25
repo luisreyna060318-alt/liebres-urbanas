@@ -243,3 +243,23 @@ export interface FiltroReportes {
   pagina?: number
   tam?: number // 20 por omisión
 }
+
+// --- ¿Cómo está mi zona? (sección 9) ---
+// GET /api/zona: reportes activos a 1 km, intransitables primero y luego por distancia.
+// `total` puede ser mayor que items.length cuando se alcanza el tope.
+export interface ZonaRespuesta {
+  centro: { lat: number; lon: number }
+  radio_m: number
+  total: number
+  items: ReporteCercano[]
+}
+
+// --- Aviso de lluvia (sección 13 del contrato) ---
+export interface AvisoLluvia {
+  disponible: boolean // false si Open-Meteo falló: la API igual responde 200
+  hay_aviso: boolean
+  probabilidad_max_pct: number | null
+  horas: number
+  umbral_pct: number
+  consultado_en: string | null
+}
