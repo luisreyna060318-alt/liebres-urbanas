@@ -566,6 +566,7 @@ def cargar_reportes_demo(db: Session, hoy: datetime | None = None, semilla: int 
     """
     if db.scalar(select(func.count()).select_from(Reporte)):
         return 0
+    db.flush()  # que se vean las colonias o cuentas recién agregadas en esta misma sesión
     hoy = como_utc(hoy) if hoy else ahora_utc()
     rng = random.Random(semilla)
 
