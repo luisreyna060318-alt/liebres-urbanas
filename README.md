@@ -6,7 +6,7 @@ conviene evitar cuando llueve y dan seguimiento a la reparación; los voluntario
 Proyecto final de **Programación Web (AEB-1055)**, Instituto Tecnológico de Ciudad Juárez, agosto a diciembre de 2026.
 El cliente (A.C. "Calles Seguras Juárez") es ficticio y se creó con fines académicos.
 
-> Estado: **en planeación**. Este README se completa conforme avanza el proyecto.
+> Estado: **en desarrollo**. Las historias se integran por pull requests con revisión cruzada; este README se completa antes de `v1.0.0`.
 
 ## Integrantes y roles
 
@@ -31,9 +31,32 @@ Cada quien es dueño de sus historias de punta a punta; el reparto completo est�
 React + TypeScript (Vite) · FastAPI · PostgreSQL (SQLAlchemy y Alembic) · Docker Compose · GitHub Actions ·
 Despliegue en Vercel (frontend), Render (backend) y Neon (base de datos).
 
+## Cómo correr el proyecto
+
+Requiere Docker Desktop encendido.
+
+```
+copy .env.example .env
+docker compose up --build
+```
+
+- Frontend: <http://localhost:8080>
+- API y documentación (OpenAPI): <http://localhost:8000/docs>
+
+El primer arranque crea las tablas (migraciones de Alembic) y carga los datos de demostración, que son ficticios.
+Si los puertos 8000 u 8080 ya están ocupados, cámbialos en `infra/docker-compose.yml`.
+
+## Usuarios de prueba
+
+Son cuentas de **demostración** (ficticias y públicas, definidas en `.env.example`); no se usan en ningún otro lugar.
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Ciudadano | `ciudadano@liebreurbana.test` | `Demo-Ciudadano-2026` |
+| Moderador | `moderador@liebreurbana.test` | `Demo-Moderador-2026` |
+| Coordinador | `coordinador@liebreurbana.test` | `Demo-Coordinador-2026` |
+
 ## Pendiente de completar antes de `v1.0.0`
 
 - URL pública del despliegue
-- Cómo correr el proyecto con `docker compose up`
-- Usuarios de prueba (uno por rol)
 - Insignia del CI
