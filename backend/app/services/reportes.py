@@ -1,12 +1,14 @@
-"""Baches: alta con sus reglas por tipo de daño (HU-02.1 y HU-02.2)."""
+"""Baches: alta con sus reglas por tipo de daño (HU-02.1 y HU-02.2) y "Mis reportes" (HU-02.5)."""
 
 from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.errores import ErrorApi, error_validacion
-from app.core.tiempo import a_hora_local, ahora_utc
+from app.core.paginacion import paginar
+from app.core.reglas import TAM_PAGINA_MIS_REPORTES
+from app.core.tiempo import a_hora_local, ahora_utc, hoy_local
 from app.models import Reporte, TipoDano, Usuario
 from app.schemas.reportes import BacheEdicion, BacheEntrada, ReporteMio, a_reporte_mio
 from app.services.cercanos import cercanos_publicos
@@ -115,3 +117,58 @@ def crear_bache(db: Session, autor: Usuario, datos: BacheEntrada, ahora: datetim
     db.commit()
     db.refresh(reporte)
     return a_reporte_mio(reporte, a_hora_local(ahora).date())
+
+
+# --- Mis reportes (HU-02.5) -----------------------------------------------------------------------
+def listar_mis_reportes(db: Session, autor: Usuario, pagina: int) -> dict:
+    """Reportes de la persona (baches y encharcamientos), 10 por página, del más reciente al más antiguo."""
+    consulta = (
+        select(Reporte)
+        .options(joinedload(Reporte.tipo_dano), joinedload(Reporte.colonia), joinedload(Reporte.motivo_rechazo))
+        .where(Reporte.autor_id == autor.id)
+        .order_by(Reporte.creado_en.desc(), Reporte.id.desc())
+    )
+    resultado = paginar(db, consulta, pagina, TAM_PAGINA_MIS_REPORTES)
+    hoy = hoy_local()
+    resultado["items"] = [a_reporte_mio(r, hoy) for r in resultado["items"]]
+    return resultado
+
+
+def _propio_y_editable(db: Session, usuario: Usuario, reporte_id: int) -> Reporte:
+    """Solo el autor y solo mientras el reporte siga en «recibido» (HU-02.5 CA3, RN-07).
+
+    404 si no existe, 403 SIN_PERMISO si es de otra persona, 409 REPORTE_NO_EDITABLE si ya cambió de estado.
+    Un encharcamiento nace «activo» (RN-06), así que nunca es editable.
+    """
+    reporte = db.get(Reporte, reporte_id)
+    if reporte is None:
+        raise ErrorApi(404, "NO_ENCONTRADO", "El reporte no existe")
+    if reporte.autor_id != usuario.id:
+        raise ErrorApi(403, "SIN_PERMISO", "Solo quien creó el reporte puede modificarlo")
+    if reporte.estado != "recibido":
+        raise ErrorApi(
+            409, "REPORTE_NO_EDITABLE", "Este reporte ya fue revisado y no se puede modificar ni eliminar"
+        )
+    return reporte
+
+
+def editar_bache(db: Session, usuario: Usuario, reporte_id: int, datos: BacheEdicion) -> ReporteMio:
+    """Corrige un bache propio en «recibido» con las mismas validaciones del alta (sin buscar duplicados).
+
+    El folio, el estado, las confirmaciones y `creado_en` no cambian; la severidad se vuelve a calcular.
+    """
+    reporte = _propio_y_editable(db, usuario, reporte_id)
+    tipo = validar_bache(db, datos)
+    _aplicar_datos_de_bache(reporte, datos, tipo)
+    db.commit()
+    db.refresh(reporte)
+    return a_reporte_mio(reporte, hoy_local())
+
+
+def eliminar_reporte(db: Session, usuario: Usuario, reporte_id: int) -> None:
+    """Borra un reporte propio en «recibido». Su historial y sus confirmaciones se van con él por
+    ON DELETE CASCADE (el trigger de PostgreSQL de la migración 0001 solo permite ese borrado en cascada).
+    Un reporte que ya salió de «recibido» nunca se borra (RN-07): queda su historia."""
+    reporte = _propio_y_editable(db, usuario, reporte_id)
+    db.delete(reporte)
+    db.commit()
