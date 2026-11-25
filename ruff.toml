@@ -1,0 +1,10 @@
+# Revisión de estilo con ruff (también se ejecuta en CI): ruff check backend db
+line-length = 120
+target-version = "py312"
+# "app" vive en backend/: así ruff lo reconoce como código propio al ordenar los imports
+src = ["backend"]
+# Las migraciones las genera Alembic; no se les aplica el estilo
+extend-exclude = ["db/migrations/versions", "backend/.venv"]
+
+[lint]
+select = ["E", "F", "I", "B"]

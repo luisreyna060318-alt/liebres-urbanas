@@ -1,0 +1,11 @@
+# Punto de entrada de Docker Compose: permite escribir solo "docker compose up" desde la raíz del repositorio.
+# Incluye los servicios de infra/docker-compose.yml y les pasa las variables del archivo .env de la raíz.
+# (La opción env_file dentro de "include" requiere Docker Compose 2.24 o más nuevo.)
+#   copy .env.example .env      (en Git Bash o macOS/Linux: cp .env.example .env)
+#   docker compose up --build
+# Nombre fijo del proyecto: así las imágenes y el volumen se llaman igual sin importar el nombre de la carpeta.
+name: liebre-urbana
+
+include:
+  - path: infra/docker-compose.yml
+    env_file: .env

@@ -1,0 +1,29 @@
+# Blueprint de Render: describe el backend para no configurarlo a mano en el panel.
+# Uso: en Render, New + > Blueprint > elige este repositorio. Render pide los valores marcados con "sync: false".
+# Guía paso a paso: infra/DEPLOY.md
+services:
+  - type: web
+    name: liebre-urbana-api
+    runtime: docker
+    plan: free
+    region: virginia                     # la misma región que el proyecto de Neon (menos latencia)
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .                     # la raíz del repo: la imagen necesita backend/ y db/
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENTORNO
+        value: produccion                # con esto el backend se niega a arrancar con la clave de ejemplo
+      - key: SECRET_KEY
+        generateValue: true              # Render genera una clave aleatoria larga; nadie la ve ni se sube a Git
+      - key: DATABASE_URL
+        sync: false                      # la pegas tú: la cadena de conexión de Neon (con prefijo postgresql+psycopg://)
+      - key: CORS_ORIGINS
+        sync: false                      # la URL pública del frontend (Vercel), sin diagonal final
+      - key: SEED_ON_START
+        value: "true"                    # carga los datos de demostración (ficticios) si la base está vacía
+      - key: SEED_CIUDADANO_PASSWORD
+        sync: false                      # contraseñas de DEMOSTRACIÓN (ficticias), nunca una contraseña real tuya
+      - key: SEED_MODERADOR_PASSWORD
+        sync: false
+      - key: SEED_COORDINADOR_PASSWORD
+        sync: false

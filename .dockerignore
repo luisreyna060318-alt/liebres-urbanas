@@ -1,0 +1,28 @@
+# Lo que NO debe entrar a las imágenes de Docker (ni al contexto de construcción)
+# Este archivo aplica a las imágenes que se construyen desde la RAÍZ (el backend).
+
+# Secretos: nunca dentro de una imagen
+.env
+.env.*
+!.env.example
+
+# Control de versiones y herramientas
+.git
+.github
+.claude
+.vscode
+
+# Dependencias y cachés locales (la imagen instala las suyas)
+**/.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/dist
+
+# Lo que el backend no necesita
+frontend
+docs
+infra
+backend/tests
+*.md
