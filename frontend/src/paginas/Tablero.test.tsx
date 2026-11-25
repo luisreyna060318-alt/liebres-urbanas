@@ -79,9 +79,9 @@ describe('Tablero de indicadores (HU-07.1)', () => {
     expect(screen.getByText(/rechazados \(no suman en el total\)/)).toHaveTextContent('2')
     expect(screen.getByText('3.5 días')).toBeInTheDocument()
 
-    const baches = screen.getByRole('heading', { name: 'Bache por estado' }).parentElement!
+    const baches = screen.getByRole('heading', { name: 'Baches por estado' }).parentElement!
     expect(within(baches).getByText('En reparación')).toBeInTheDocument()
-    const charcos = screen.getByRole('heading', { name: 'Encharcamiento por estado' }).parentElement!
+    const charcos = screen.getByRole('heading', { name: 'Encharcamientos por estado' }).parentElement!
     expect(within(charcos).getByText('Histórico').nextSibling).toHaveTextContent('2')
 
     const top = screen.getByRole('table', { name: /10 colonias con más baches/ })
@@ -163,6 +163,52 @@ describe('Tablero de indicadores (HU-07.1)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }))
     await screen.findByText('reportes en total')
     expect(api.de('GET /api/tablero').at(-1)!.url.search).toBe('')
+  })
+})
+
+describe('Tablero: foco y formulario', () => {
+  it('aplicar no desmonta el formulario: conserva el foco y pide los sectores una sola vez', async () => {
+    const api = simularApi({ 'GET /api/tablero': { cuerpo: tablero() }, 'GET /api/sectores': SECTORES })
+    renderizar()
+    await screen.findByText('reportes en total')
+    await screen.findByRole('option', { name: 'Sur' })
+    const u = userEvent.setup()
+
+    await u.selectOptions(screen.getByLabelText('Sector'), 'Sur')
+    const aplicar = screen.getByRole('button', { name: 'Aplicar' })
+    await u.click(aplicar)
+    await screen.findByText('reportes en total')
+
+    expect(aplicar).toBeInTheDocument()
+    expect(aplicar).toHaveFocus()
+    expect(screen.getByLabelText('Sector')).toHaveValue('2')
+    expect(api.de('GET /api/sectores')).toHaveLength(1)
+  })
+
+  it('"Limpiar filtros" reinicia también los campos escritos sin aplicar', async () => {
+    const api = simularApi({ 'GET /api/tablero': { cuerpo: tablero() }, 'GET /api/sectores': SECTORES })
+    renderizar()
+    await screen.findByText('reportes en total')
+    await screen.findByRole('option', { name: 'Sur' })
+    const u = userEvent.setup()
+
+    await u.type(screen.getByLabelText('Desde'), '2026-11-10')
+    await u.selectOptions(screen.getByLabelText('Sector'), 'Sur')
+    const limpiar = screen.getByRole('button', { name: 'Limpiar filtros' })
+    await u.click(limpiar)
+
+    expect(screen.getByLabelText('Desde')).toHaveValue('')
+    expect(screen.getByLabelText('Sector')).toHaveValue('')
+    expect(limpiar).toHaveFocus()
+    expect(api.de('GET /api/sectores')).toHaveLength(1)
+  })
+
+  it('la gráfica pone el pie descriptivo antes del contenido, no en medio', async () => {
+    simularApi({ 'GET /api/tablero': { cuerpo: tablero() }, 'GET /api/sectores': SECTORES })
+    renderizar()
+    const pie = await screen.findByText(/Cada barra es una semana/)
+    expect(pie.tagName).toBe('FIGCAPTION')
+    expect(pie.parentElement!.firstElementChild).toBe(pie)
   })
 })
 
