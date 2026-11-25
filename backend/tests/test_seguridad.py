@@ -246,3 +246,11 @@ def test_cabeceras_de_seguridad_en_las_respuestas(client, ciudadano):
     assert r.headers["X-Content-Type-Options"] == "nosniff"
     assert r.headers["X-Frame-Options"] == "DENY"
     assert r.headers["Cache-Control"] == "no-store"
+
+
+def test_hsts_solo_en_produccion(client, monkeypatch):
+    from app.core.config import settings
+
+    assert "Strict-Transport-Security" not in client.get("/api/reglas").headers
+    monkeypatch.setattr(settings, "entorno", "produccion")
+    assert client.get("/api/reglas").headers["Strict-Transport-Security"].startswith("max-age=")

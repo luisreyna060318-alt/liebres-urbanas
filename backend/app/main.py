@@ -39,6 +39,9 @@ async def cabeceras_de_seguridad(request: Request, call_next):
     respuesta.headers["Referrer-Policy"] = "no-referrer"
     if request.url.path.startswith("/api"):
         respuesta.headers["Cache-Control"] = "no-store"  # puede haber datos personales: sin caché
+    if settings.es_produccion:
+        # HSTS: el navegador solo vuelve a entrar por HTTPS (en la laptop se usa http://, por eso solo en producción)
+        respuesta.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return respuesta
 
 
