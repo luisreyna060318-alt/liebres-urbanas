@@ -51,12 +51,13 @@ async function capturarBacheCompleto(u: Usuario) {
 const enviar = (u: Usuario) => u.click(screen.getByRole('button', { name: 'Enviar reporte' }))
 
 describe('Reportar: elegir qué reportar', () => {
-  it('no muestra el formulario hasta elegir bache y deja el encharcamiento como "Próximamente"', async () => {
+  it('no muestra ningún formulario hasta elegir qué reportar', async () => {
     simularApi(CATALOGOS)
     renderizar()
 
     expect(screen.queryByLabelText(/Tipo de daño/)).not.toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: /Encharcamiento \(Próximamente\)/ })).toBeDisabled()
+    expect(screen.queryByRole('form', { name: /Reportar/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Encharcamiento/ })).toBeEnabled()
 
     await abrirFormularioBache(userEvent.setup())
     expect(screen.getByRole('button', { name: 'Enviar reporte' })).toBeInTheDocument()
