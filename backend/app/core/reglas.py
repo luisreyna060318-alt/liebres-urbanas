@@ -11,6 +11,7 @@ RADIO_DUPLICADO_ENCHARCAMIENTO_M = 50
 VIGENCIA_ENCHARCAMIENTO_HORAS = 6  # desde la creación o desde la última confirmación "sigue"
 DESMENTIDOS_PARA_CERRAR = 3  # personas distintas que dicen "ya no hay agua"
 RADIO_ZONA_KM = 1  # "¿Cómo está mi zona?"
+MAX_RESULTADOS_ZONA = 50  # tope de reportes que devuelve GET /api/zona (el total real va aparte)
 
 # --- Límites ---
 MAX_REPORTES_POR_HORA = 10  # por cuenta; se cuenta en la base de datos
@@ -19,6 +20,10 @@ COMENTARIO_MAX = 500  # comentario público de un cambio de estado
 PASSWORD_MIN = 8  # con letras y números
 NOMBRE_MIN = 2
 NOMBRE_MAX = 80
+NOMBRE_COLONIA_MIN = 2  # administración de colonias y sectores (HU-06.1)
+NOMBRE_COLONIA_MAX = 120
+NOMBRE_SECTOR_MAX = 80
+FUENTE_COLONIA_MANUAL = "Alta manual (coordinación)"  # `fuente` de las colonias que crea el coordinador (RNF-09)
 
 # --- Sesión ---
 INACTIVIDAD_MIN = 30  # el token dura 30 min; el frontend lo renueva (refresh) mientras hay actividad
@@ -27,6 +32,7 @@ INACTIVIDAD_MIN = 30  # el token dura 30 min; el frontend lo renueva (refresh) m
 TAM_PAGINA_MIS_REPORTES = 10
 TAM_PAGINA_CONSULTA = 20
 TAM_PAGINA_CATALOGOS = 10  # catálogos y usuarios
+TAM_PAGINA_MODERACION = 10  # bandeja de revisión y seguimiento de reparaciones
 TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
 TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
 

@@ -1,0 +1,50 @@
+/* ¿Cómo está mi zona? (HU-04.3) */
+.zona-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  max-width: 40rem;
+  margin-bottom: var(--espacio-4);
+}
+
+.zona-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}
+
+.zona-avisos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+  max-width: 40rem;
+  margin-bottom: var(--espacio-3);
+}
+
+.zona-elegir {
+  max-width: 40rem;
+  margin-bottom: var(--espacio-3);
+}
+
+.zona-resumen {
+  max-width: 40rem;
+  margin: 0 0 var(--espacio-3);
+}
+
+/* Un encharcamiento intransitable se distingue por borde grueso, fondo y una leyenda en texto (no solo por el color) */
+.zona-intransitable .tarjeta {
+  border: 3px solid var(--color-error);
+  background: var(--color-error-fondo);
+}
+
+.zona-leyenda-intransitable {
+  padding: var(--espacio-1) var(--espacio-2);
+  font-weight: 700;
+  color: var(--color-error);
+  border: 2px solid currentcolor;
+  border-radius: var(--radio);
+}
+
+.zona-nivel-agua {
+  font-weight: 600;
+}
