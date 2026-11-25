@@ -102,7 +102,7 @@ correctos según la categoría.
 | `colonias` única por `(sector_id, nombre)` | `UniqueConstraint` | HU-06.1 CA3 |
 | `reportes.folio` único; el consecutivo sale de `folio_contadores` con bloqueo de fila | `UniqueConstraint` + `SELECT … FOR UPDATE` | RN-03 |
 | `reportes.creado_en` no cambia nunca | Trigger en PostgreSQL + el esquema de entrada no lo acepta | RN-10 |
-| `historial_estados` solo se inserta | Trigger que rechaza `UPDATE` y `DELETE` + evento de SQLAlchemy + ninguna ruta | RN-07, HU-05.2 CA4 |
+| `historial_estados` solo se inserta (`actor_id` NULL = "sistema") | Trigger que rechaza `UPDATE` y `DELETE` + evento de SQLAlchemy + ninguna ruta. Única excepción: el borrado en cascada al eliminar el reporte completo (HU-02.5, solo en Recibido) | RN-07, HU-05.2 CA4 |
 | `descripcion` ≤ 500 caracteres | `CHECK` + Pydantic | HU-02.2 CA4 |
 | Categoría y campos coherentes | `CHECK` | HU-02.2 |
 | Índices en `(categoria, estado)`, `(colonia_id)`, `(creado_en)`, `(lat, lon)` | Migración | RNF-06 |
@@ -235,7 +235,7 @@ En las pruebas ambos servicios se simulan.
 
 | Medida | Dónde |
 |---|---|
-| Contraseñas con `bcrypt`; el hash no aparece en ningún esquema de salida | `core/seguridad.py`, esquemas |
+| Contraseñas con `bcrypt`; el hash no aparece en ningún esquema de salida | `core/security.py`, esquemas |
 | JWT de 30 min que firma `SECRET_KEY` (variable de entorno); el backend se niega a arrancar en producción con la clave de ejemplo | `core/config.py` |
 | **Autorización en el servidor**: dependencia `require_role(...)` en cada endpoint protegido y comprobación de autoría en editar y borrar | `routers/`, `services/` |
 | El rol y el estado `activo` del usuario se leen de la base de datos en cada petición | dependencia `usuario_actual` |
