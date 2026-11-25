@@ -1,0 +1,39 @@
+# Secretos y configuración local (nunca se suben)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.log
+coverage/
+
+# Docker y datos locales
+*.sqlite3
+*.db
+pgdata/
+
+# Editores y sistema
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos temporales de documentos
+~$*
+*.tmp

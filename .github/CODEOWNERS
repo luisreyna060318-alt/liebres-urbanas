@@ -1,0 +1,3 @@
+# Pide revisión automática a las dos personas del equipo en cada pull request.
+# GitHub no se la pide a quien abre el PR, así que cada PR le llega a la otra persona.
+* @LimonesCarlos @luisreyna060318-alt
