@@ -23,7 +23,8 @@ Todo error del servidor tiene esta forma:
 { "detail": "Mensaje para mostrar a la persona", "codigo": "ETIQUETA_ESTABLE", "campos": { "password": "Mensaje del campo" } }
 ```
 
-`campos` solo aparece en los errores de validación (422). Códigos HTTP usados: 400, 401, 403, 404, 409, 422, 429, 503.
+`campos` solo aparece en los errores de validación (422). Códigos HTTP usados: 400, 401, 403, 404, 409, 422, 429, 503
+(y 405/500 para errores genéricos: método no permitido y error inesperado, que nunca muestra detalles técnicos).
 
 | HTTP | `codigo` | Cuándo |
 |---|---|---|
@@ -41,7 +42,9 @@ Todo error del servidor tiene esta forma:
 | 422 | `VALIDACION` | Datos inválidos (con `campos`) |
 | 422 | `FUERA_DEL_MUNICIPIO` | Las coordenadas están fuera de Juárez |
 | 429 | `LIMITE_HORARIO` | Más de 10 reportes por hora |
-| 503 | `SERVICIO_NO_DISPONIBLE` | Nominatim u otro servicio externo no responde |
+| 503 | `SERVICIO_NO_DISPONIBLE` | Nominatim u otro servicio externo no responde (o la base de datos, en `/api/health`) |
+| 405 | `METODO_NO_PERMITIDO` | El método HTTP no existe en esa ruta |
+| 500 | `ERROR_INTERNO` | Error inesperado del servidor |
 
 ## 2. Valores permitidos (enumeraciones)
 
@@ -91,8 +94,9 @@ Validación del registro: `nombre` 2 a 80 caracteres; `correo` válido; `passwor
 
 | Endpoint | Salida |
 |---|---|
-| `GET /api/sectores` | `[ { "id": 1, "nombre": "Norte" } ]` |
-| `GET /api/colonias?q=&sector_id=&solo_activas=true&pagina=1&tam=50` | Paginación de `{ "id", "nombre", "sector": { "id", "nombre" }, "activa", "lat", "lon" }` (`tam` hasta 500 para llenar listas) |
+| `GET /api/health` | `{ "estado": "ok", "base_de_datos": "ok" }` (503 `SERVICIO_NO_DISPONIBLE` si la base no responde) |
+| `GET /api/sectores` | `[ { "id": 1, "nombre": "Centro" } ]` (orden alfabético) |
+| `GET /api/colonias?q=&sector_id=&solo_activas=true&pagina=1&tam=10` | Paginación de `{ "id", "nombre", "sector": { "id", "nombre" }, "activa", "lat", "lon" }`, en orden alfabético. `tam` vale 10 por omisión (catálogos) y acepta hasta 500 para llenar listas |
 | `GET /api/tipos-dano` | `[ { "id", "codigo", "nombre" } ]` (solo los activos) |
 | `GET /api/motivos-rechazo` | `[ { "id", "codigo", "nombre", "pide_explicacion" } ]` (solo los activos) |
 
@@ -106,6 +110,10 @@ Validación del registro: `nombre` 2 a 80 caracteres; `correo` válido; `passwor
 `GeoResultado` = `{ "etiqueta": "texto completo", "lat": 31.7, "lon": -106.4, "calle": "Av. Tecnológico", "colonia_id": 12 | null, "colonia_nombre": "Partido Escobedo" | null, "dentro_del_municipio": true }`.
 Si no hay coincidencias, `resultados` está vacío (no es un error). Si Nominatim falla: 503 `SERVICIO_NO_DISPONIBLE`.
 `colonia_id` es `null` cuando el nombre devuelto no coincide con el catálogo; en ese caso la persona elige la colonia en una lista.
+`calle` también puede ser `null` (Nominatim no siempre la trae). `q` necesita al menos 3 caracteres (422 `VALIDACION`
+con `campos.q`). En `inversa` el resultado conserva las coordenadas enviadas; si Nominatim no encuentra un lugar en ese punto,
+responde 200 con `etiqueta` = `"lat, lon"` y `calle`, `colonia_id` y `colonia_nombre` en `null` (la persona los captura a mano).
+`dentro_del_municipio` se calcula sin internet con el rectángulo `MUNICIPIO_BBOX` de `backend/app/core/reglas.py` (RN-01).
 
 ## 6. Reportes
 
@@ -127,7 +135,7 @@ Lo que ve cualquier persona. **Nunca** incluye al autor (nombre, correo ni id).
 }
 ```
 
-- Los campos propios de la otra categoría vienen en `null` (por ejemplo `nivel_agua` en un bache).
+- Los campos propios de la otra categoría vienen en `null` (por ejemplo `nivel_agua` en un bache, y `tipo_dano` en un encharcamiento).
 - `sin_validar` es `true` solo para baches en `recibido` (RN-09: se muestran con la etiqueta "Sin validar").
 - `antiguedad_dias`: días desde `creado_en` hasta hoy, o hasta `fecha_reparacion` en un bache reparado (RN-10).
 - Los reportes `rechazado` no se devuelven en consultas públicas.
@@ -155,7 +163,10 @@ del más reciente al más antiguo. El historial público **no** incluye quién h
 - `descripcion` es opcional (hasta 500 caracteres). `calle` y `colonia_id` se pueden corregir antes de enviar.
 - Si existe un bache abierto a 30 m o menos y `forzar` no es `true` → **409** `POSIBLE_DUPLICADO` con
   `"duplicados": [ ReportePublico + { "distancia_m": 12 } ]`. Con `forzar: true` se crea uno nuevo (HU-02.3 CA4).
-- 201 → `ReporteMio` con folio, `creado_en` asignado por el servidor y estado `recibido`.
+- 201 → `ReporteMio` con folio, `creado_en` asignado por el servidor y estado `recibido`. Si la entrada trae `creado_en`,
+  `estado`, `severidad` o `confirmaciones`, se ignoran. `senalizado` solo se guarda en `alcantarilla_sin_tapa`; en
+  `hundimiento` y `grieta` `profundidad` es opcional (si llega, cuenta para la severidad).
+- Errores en este orden: 422 `VALIDACION` (con `campos`), 422 `FUERA_DEL_MUNICIPIO`, 429 `LIMITE_HORARIO`, 409 `POSIBLE_DUPLICADO`.
 
 ### 6.3 Crear un encharcamiento — `POST /api/reportes/encharcamientos` (rol ciudadano)
 
@@ -180,6 +191,9 @@ Entrada `{ "tipo": "confirma" | "sigue" | "ya_no_hay" }`. Salida 201 `ReportePub
 - `sigue` solo en encharcamientos activos; suma 6 h a la vigencia **desde ese momento**.
 - `ya_no_hay` solo en encharcamientos activos; con el tercer desmentido de personas distintas el reporte pasa a `historico`.
 - Una persona responde una sola vez por reporte (409 `YA_CONFIRMADO`); no puede responder el suyo (403 `ES_TU_REPORTE`).
+- Reporte inexistente o rechazado → 404 `NO_ENCONTRADO`. Tipo que no corresponde a la categoría → 422 `VALIDACION`
+  (`campos.tipo`). Reporte ya cerrado (bache `reparado`, encharcamiento `historico` o vencido) → 409 `TRANSICION_INVALIDA`.
+- `ya_no_hay` no suma a `confirmaciones`; `sigue` y `confirma` sí. Cada respuesta se guarda con su fecha y hora.
 
 ### 6.6 Mis reportes
 
@@ -190,6 +204,15 @@ Entrada `{ "tipo": "confirma" | "sigue" | "ya_no_hay" }`. Salida 201 `ReportePub
 | `DELETE /api/reportes/{id}` | — | 204; 409 `REPORTE_NO_EDITABLE` |
 
 Solo el autor puede editar o eliminar (403 `SIN_PERMISO` para otra persona).
+Orden de las revisiones: 404 si no existe → 403 si no es el autor → 409 si ya no está en `recibido`. El `PUT` recibe los
+campos de un **bache** (un encharcamiento nace `activo`, así que nunca es editable ni se puede eliminar: 409). Al eliminar se
+borran también su historial y sus confirmaciones.
+
+### 6.8 Vigencia de encharcamientos
+
+No hay tareas programadas: `services/encharcamientos.expirar_vencidos(db)` pasa a `historico` los activos con `vigente_hasta`
+vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de encharcamientos, `cercanos`, `confirmaciones` y
+`mis-reportes`; los endpoints de consulta pública, detalle, zona y tablero también deben llamarlo antes de leer.
 
 ### 6.7 Consulta pública (la construye Carlos; la forma ya queda fijada)
 

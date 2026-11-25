@@ -1,0 +1,46 @@
+flowchart TB
+  N["<b>Navegador</b><br/>React + TypeScript (Vite)"]
+
+  V["<b>Vercel</b> (producción)<br/>archivos estáticos de React<br/>(vercel.json: reescritura a index.html)"]
+  API["<b>API FastAPI en Render</b> (Docker)<br/>routers (HTTP) → services (reglas) → models (SQLAlchemy)<br/>JWT + bcrypt · Pydantic · CORS solo al dominio de Vercel<br/>Alembic: migraciones al arrancar"]
+  DB[("<b>PostgreSQL</b><br/>Neon")]
+
+  subgraph EXT["Servicios externos"]
+    direction LR
+    OM["<b>Open-Meteo</b><br/>pronóstico de lluvia"]
+    NOM["<b>Nominatim / OpenStreetMap</b><br/>geocodificación: dirección y coordenadas"]
+  end
+
+  subgraph LOCAL["Local: Docker Compose"]
+    direction LR
+    LF["<b>frontend</b><br/>nginx :8080"]
+    LB["<b>backend</b><br/>FastAPI :8000"]
+    LD[("<b>PostgreSQL</b><br/>contenedor")]
+    LF -->|"HTTP · JSON"| LB
+    LB -->|SQLAlchemy| LD
+  end
+
+  GH["<b>GitHub Actions</b> (CI en cada push y PR)<br/>ruff · pytest · lint y build del frontend · Vitest"]
+  X1["<b>Regla de seguridad:</b> el navegador NUNCA habla directo con la base de datos<br/>ni con Nominatim ni con Open-Meteo. Todo pasa por la API, que valida y autoriza."]
+
+  N -->|"descarga la aplicación (HTTPS)"| V
+  N ==>|"HTTPS · JSON · token JWT"| API
+  API -->|"SQLAlchemy (conexión directa)"| DB
+  API -->|"HTTPS · pronóstico"| OM
+  API -->|"HTTPS · máx. 1 pedido por segundo"| NOM
+  N -.->|"plan B: mismo flujo en la laptop"| LF
+  GH -.->|"valida el código antes de fusionar"| API
+  X1 ~~~ N
+
+  classDef nota fill:#fff8e1,stroke:#f9a825,color:#5d4037,stroke-dasharray: 4 3
+  classDef cliente fill:#e3f2fd,stroke:#1565c0,color:#0d2a4a
+  classDef api fill:#e8f5e9,stroke:#2e7d32,color:#14391a
+  classDef dato fill:#f3e5f5,stroke:#6a1b9a,color:#2e0d3b
+  classDef ext fill:#eceff1,stroke:#546e7a,color:#263238
+  classDef grupo fill:#fafafa,stroke:#9e9e9e,color:#212121
+  class X1 nota
+  class N,V,LF cliente
+  class API,LB api
+  class DB,LD dato
+  class NOM,OM,GH ext
+  class EXT,LOCAL grupo

@@ -1,0 +1,110 @@
+erDiagram
+  SECTORES ||--o{ COLONIAS : "agrupa (1:N)"
+  COLONIAS ||--o{ REPORTES : "ubica (1:N)"
+  USUARIOS ||--o{ REPORTES : "crea (1:N)"
+  TIPOS_DANO |o--o{ REPORTES : "clasifica baches"
+  MOTIVOS_RECHAZO |o--o{ REPORTES : "justifica rechazo"
+  REPORTES ||--o{ HISTORIAL_ESTADOS : "registra (1:N)"
+  USUARIOS |o--o{ HISTORIAL_ESTADOS : "realiza (actor)"
+  USUARIOS ||--o{ CONFIRMACIONES : "emite"
+  REPORTES ||--o{ CONFIRMACIONES : "recibe"
+  USUARIOS ||--o{ USUARIO_COLONIAS : "elige"
+  COLONIAS ||--o{ USUARIO_COLONIAS : "es elegida"
+  USUARIOS ||--o{ NOTIFICACIONES : "recibe"
+  REPORTES ||--o{ NOTIFICACIONES : "origina"
+
+  SECTORES {
+    int id PK
+    string nombre UK
+  }
+  COLONIAS {
+    int id PK
+    string nombre "UK con sector_id"
+    int sector_id FK
+    bool activa
+    float lat
+    float lon
+    string fuente
+  }
+  USUARIOS {
+    int id PK
+    string nombre
+    string correo UK "unico lower(correo)"
+    string password_hash
+    string rol
+    bool activo
+    datetime acepto_privacidad_en
+    datetime creado_en
+  }
+  TIPOS_DANO {
+    int id PK
+    string codigo UK
+    string nombre
+    bool activo
+  }
+  MOTIVOS_RECHAZO {
+    int id PK
+    string codigo UK
+    string nombre
+    bool pide_explicacion
+    bool activo
+  }
+  REPORTES {
+    int id PK
+    string folio UK
+    string categoria "bache o encharcamiento"
+    int tipo_dano_id FK "solo baches"
+    int autor_id FK
+    int colonia_id FK
+    string calle
+    float lat
+    float lon
+    string descripcion
+    string severidad "solo baches"
+    string tamano "solo baches"
+    string profundidad "solo baches"
+    string carril "solo baches"
+    bool senalizado "solo baches"
+    date fecha_reparacion "solo baches"
+    string nivel_agua "solo encharcamientos"
+    bool hay_riesgo "solo encharcamientos"
+    datetime vigente_hasta "solo encharcamientos"
+    string estado
+    int confirmaciones
+    datetime creado_en
+    int motivo_rechazo_id FK
+    string motivo_texto
+  }
+  HISTORIAL_ESTADOS {
+    int id PK
+    int reporte_id FK
+    string estado_anterior
+    string estado_nuevo
+    int actor_id FK "NULL = sistema"
+    string comentario
+    datetime creado_en
+  }
+  CONFIRMACIONES {
+    int id PK
+    int reporte_id FK "UK con usuario_id"
+    int usuario_id FK
+    string tipo
+    datetime creado_en
+  }
+  USUARIO_COLONIAS {
+    int usuario_id PK, FK
+    int colonia_id PK, FK
+  }
+  NOTIFICACIONES {
+    int id PK
+    int usuario_id FK
+    int reporte_id FK
+    string mensaje
+    bool leida
+    datetime creado_en
+  }
+  FOLIO_CONTADORES {
+    string prefijo PK
+    int anio PK
+    int ultimo
+  }

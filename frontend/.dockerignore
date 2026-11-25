@@ -1,0 +1,18 @@
+# Lo que NO debe entrar al contexto de construcción de la imagen del frontend
+
+# Secretos y configuración local: nunca dentro de una imagen
+.env
+.env.*
+!.env.example
+
+# La imagen instala sus dependencias y compila por su cuenta
+node_modules
+dist
+.vite
+coverage
+
+# Archivos que la imagen no necesita
+Dockerfile
+.dockerignore
+*.log
+*.md

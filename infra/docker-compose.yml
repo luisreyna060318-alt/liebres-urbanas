@@ -1,0 +1,76 @@
+# Servicios de Liebre Urbana: base de datos (PostgreSQL), backend (FastAPI) y frontend (React servido por nginx).
+#
+# Se usa desde la RAÍZ del repositorio, con el archivo compose.yaml que incluye este:
+#   copy .env.example .env        (una sola vez; después edita .env si quieres otras claves)
+#   docker compose up --build
+#
+# Después abre http://localhost:8080 (frontend) o http://localhost:8000/docs (API).
+# Las variables ${...} se leen del archivo .env de la raíz (ver compose.yaml).
+# El nombre del proyecto Compose (liebre-urbana) se define en compose.yaml, no aquí.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Solo las 3 variables que PostgreSQL necesita (no se le pasa todo el .env, para que no vea la SECRET_KEY)
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # Solo accesible desde esta computadora (127.0.0.1), nunca desde la red. Sirve para mirar las tablas.
+    # Si ya tienes un PostgreSQL local usando el 5432, pon DB_HOST_PORT=5433 (u otro libre) en .env.
+    # Solo cambia el puerto de tu computadora: entre contenedores sigue siendo el 5432.
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ..                      # la raíz del repo: la imagen necesita backend/ y db/
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy     # el backend arranca cuando PostgreSQL ya acepta conexiones
+    environment:
+      ENTORNO: ${ENTORNO:-desarrollo}
+      SECRET_KEY: ${SECRET_KEY}
+      # Dentro de Docker la base de datos se llama "db" (el nombre del servicio de arriba).
+      # Se arma con las mismas variables POSTGRES_* para no repetir la contraseña en dos lugares.
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      # El navegador abre el frontend en el 8080 (Compose) o en el 5173 (npm run dev): se permiten los dos
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173}
+      # Datos de demostración (ficticios) y cuentas de prueba al arrancar; la semilla no duplica si ya hay datos
+      SEED_ON_START: ${SEED_ON_START:-true}
+      SEED_CIUDADANO_CORREO: ${SEED_CIUDADANO_CORREO:-}
+      SEED_CIUDADANO_PASSWORD: ${SEED_CIUDADANO_PASSWORD:-}
+      SEED_MODERADOR_CORREO: ${SEED_MODERADOR_CORREO:-}
+      SEED_MODERADOR_PASSWORD: ${SEED_MODERADOR_PASSWORD:-}
+      SEED_COORDINADOR_CORREO: ${SEED_COORDINADOR_CORREO:-}
+      SEED_COORDINADOR_PASSWORD: ${SEED_COORDINADOR_PASSWORD:-}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        # Vite escribe esta URL dentro del código al compilar. Es la que usa el NAVEGADOR (no el contenedor),
+        # por eso es localhost:8000 (el puerto del backend publicado en tu computadora) y no "backend".
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy     # el frontend arranca cuando la API ya responde
+    # nginx dentro del contenedor escucha en el 8080; en tu computadora se abre en http://localhost:8080,
+    # que es uno de los orígenes que CORS_ORIGINS permite en el backend.
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
