@@ -32,3 +32,24 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* Historial del detalle: una línea de tiempo simple, del más reciente al más antiguo */
+.historial-reporte {
+  max-width: 40rem;
+  margin: 0 0 var(--espacio-3);
+  padding-left: var(--espacio-4);
+  border-left: 3px solid var(--color-borde);
+  list-style: none;
+}
+
+.historial-reporte li {
+  padding: var(--espacio-2) 0;
+}
+
+.historial-reporte p {
+  margin: 0;
+}
+
+.historial-comentario {
+  color: var(--color-texto-suave);
+}

@@ -198,6 +198,7 @@ export interface CambioEstado {
 export interface ReporteDetalle extends ReportePublico {
   longevidad_dias: number
   ultima_actividad: string
+  ultima_confirmacion?: string | null // confirmación más reciente («confirma» o «sigue»); null si no hay (sección 8.2)
   historial: CambioEstado[]
 }
 
