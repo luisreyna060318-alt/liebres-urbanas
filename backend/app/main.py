@@ -15,6 +15,7 @@ from app.routers import (
     moderacion,
     reportes,
     sistema,
+    tablero,
     usuarios,
     zona,
 )
@@ -65,4 +66,5 @@ app.include_router(reportes.router)
 app.include_router(usuarios.router)
 app.include_router(moderacion.router)
 app.include_router(consulta.router)  # después de reportes: /reportes/cercanos va antes que /reportes/{id}
+app.include_router(tablero.router)
 app.include_router(zona.router)

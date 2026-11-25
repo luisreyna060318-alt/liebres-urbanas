@@ -372,6 +372,67 @@ Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya a
 - El filtrado vive en una sola función, `services/consulta.consulta_reportes(FiltroReportes)`, que también acepta
   `sector_id` (todavía no expuesto aquí). El tablero (HU-07.1) debe usarla para que sus cifras coincidan con la consulta.
 
+## 14. Tablero de indicadores (C10)
+
+### 14.1 `GET /api/tablero?desde=&hasta=&sector_id=` (HU-07.1, solo `coordinador`)
+
+| Parámetro | Valores | Notas |
+|---|---|---|
+| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` (igual que la sección 8.1) |
+| `sector_id` | entero ≥ 1 | Solo los reportes de las colonias de ese sector |
+
+**Una sola función de filtrado.** Todas las cifras salen de `services/consulta.consulta_reportes(FiltroReportes)` con
+`desde`, `hasta` y `sector_id`; el tablero solo cuenta y agrupa su resultado. Por eso cada conteo por estado coincide
+con `GET /api/reportes?categoria=..&estado=..&desde=..&hasta=..` (HU-07.1 CA5). Antes de leer llama a `expirar_vencidos(db)`.
+
+**Qué cuenta.** Todos los estados salvo `rechazado`: baches `recibido`, `validado`, `en_reparacion`, `reparado` y
+encharcamientos `activo` e `historico` (los históricos **sí** cuentan, HU-03.2 CA3). Los rechazados van aparte en
+`totales.rechazados` y no suman en `total`. "Abierto" = bache en `recibido`, `validado` o `en_reparacion`.
+
+```json
+{
+  "filtro": { "desde": "2026-09-01", "hasta": null, "sector_id": 3 },
+  "totales": {
+    "total": 120, "bache": 90, "encharcamiento": 30, "rechazados": 4,
+    "por_estado": [
+      { "categoria": "bache", "estado": "recibido", "total": 20 },
+      { "categoria": "bache", "estado": "validado", "total": 30 },
+      { "categoria": "bache", "estado": "en_reparacion", "total": 10 },
+      { "categoria": "bache", "estado": "reparado", "total": 30 },
+      { "categoria": "encharcamiento", "estado": "activo", "total": 5 },
+      { "categoria": "encharcamiento", "estado": "historico", "total": 25 }
+    ]
+  },
+  "top_colonias": [ { "colonia": { "id": 12, "nombre": "Partido Escobedo" }, "abiertos": 8 } ],
+  "tiempo_promedio_reparacion_dias": 6.4,
+  "reparados_medidos": 28,
+  "por_semana": [ { "inicio": "2026-09-07", "total": 0 }, { "inicio": "2026-09-14", "total": 9 } ],
+  "mas_longevos": [
+    { "id": 345, "folio": "BCH-2026-000123", "calle": "Av. Tecnológico",
+      "colonia": { "id": 12, "nombre": "Partido Escobedo" }, "estado": "validado", "antiguedad_dias": 41 }
+  ],
+  "longevidad_por_colonia": [ { "colonia": { "id": 12, "nombre": "Partido Escobedo" }, "abiertos": 8, "promedio_dias": 17.3 } ]
+}
+```
+
+- `por_estado` trae siempre los 6 pares (categoría, estado), en ese orden, aunque valgan 0.
+- `top_colonias`: hasta 10 colonias con más baches abiertos; empate → por nombre (alfabético) y luego por `id`.
+- `tiempo_promedio_reparacion_dias`: promedio, con un decimal, de los días entre la fila del historial que pasó el bache a
+  `validado` y la que lo pasó a `reparado` (diferencia de fecha y hora, en días con fracción). Solo baches `reparado`
+  dentro del filtro que tengan las dos filas; `reparados_medidos` dice cuántos. `null` si no hay ninguno.
+- `por_semana`: siempre **12** semanas de lunes a domingo (hora de Juárez), de la más antigua a la más reciente, con ceros.
+  La serie termina en la semana de `hasta` o, si no se envió, en la semana actual; `desde` **no** recorta la serie, pero
+  sí el conteo (las semanas anteriores a `desde` quedan en 0). Respeta `sector_id`.
+- `mas_longevos`: los 10 baches abiertos con `creado_en` más antiguo (empate por `id`). `antiguedad_dias` sigue RN-10
+  (días desde `creado_en`, en fecha de Juárez, hasta hoy).
+- `longevidad_por_colonia`: todas las colonias con baches abiertos, con su antigüedad promedio (RN-10, un decimal),
+  de la más alta a la más baja (empate por nombre).
+- Sin autor ni datos personales en ninguna parte (RN-04). Los valores 10 y 12 viven en `core/reglas.py`
+  (`TABLERO_TOP_COLONIAS`, `TABLERO_MAS_LONGEVOS`, `TABLERO_SEMANAS`).
+- Errores: 401 `NO_AUTENTICADO` sin sesión; 403 `SIN_PERMISO` para ciudadano y moderador; 422 `VALIDACION` con
+  `campos.hasta` si `desde` > `hasta`, `campos.sector_id` si el sector no existe o es < 1, y `campos.desde`/`campos.hasta`
+  si la fecha está mal escrita.
+
 ## 9. ¿Cómo está mi zona? (C5)
 
 `GET /api/zona?lat=31.7001&lon=-106.4302` — **público** (sin token). Reportes **activos** a `RADIO_ZONA_KM` (1 km) o menos del punto.

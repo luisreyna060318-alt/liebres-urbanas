@@ -55,6 +55,7 @@ ENDPOINTS = [
     ("GET", "/api/mis-reportes", None, SOLO_CIUDADANO),
     ("PUT", "/api/reportes/{propio}", lambda e: _cuerpo_edicion(e["colonia_id"]), SOLO_CIUDADANO),
     ("DELETE", "/api/reportes/{propio}", None, SOLO_CIUDADANO),
+    ("GET", "/api/tablero", None, {"coordinador"}),
     # Moderación (HU-05.1): solo el moderador, según la tabla de endpoints #26 a #28
     ("GET", "/api/moderacion/bandeja", None, {"moderador"}),
     ("POST", "/api/reportes/{ajeno}/validar", lambda e: {}, {"moderador"}),

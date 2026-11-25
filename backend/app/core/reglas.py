@@ -36,6 +36,11 @@ TAM_PAGINA_MODERACION = 10  # bandeja de revisión y seguimiento de reparaciones
 TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
 TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
 
+# --- Tablero de indicadores (HU-07.1) ---
+TABLERO_TOP_COLONIAS = 10  # colonias con más baches abiertos
+TABLERO_MAS_LONGEVOS = 10  # baches abiertos más antiguos
+TABLERO_SEMANAS = 12  # semanas de la gráfica de reportes por semana (empiezan en lunes, hora de Juárez)
+
 # --- Clima y puntos recurrentes ---
 UMBRAL_LLUVIA_PCT = 30  # probabilidad máxima en las próximas 12 h para mostrar el aviso
 HORAS_PRONOSTICO = 12
