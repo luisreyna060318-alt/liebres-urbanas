@@ -233,6 +233,21 @@ def test_la_restriccion_de_la_base_tambien_protege(db, catalogo):
     assert error.value.status_code == 409 and error.value.codigo == "COLONIA_DUPLICADA"
 
 
+def test_la_restriccion_exacta_de_sectores_tambien_responde_409(db, catalogo):
+    """Mismo respaldo para sectores: con el nombre idéntico la restricción única salta y se responde 409.
+    (Con otras mayúsculas la base no lo detecta: ver la limitación documentada en services/catalogos._guardar.)"""
+    from unittest.mock import patch
+
+    from app.core.errores import ErrorApi
+    from app.schemas.catalogos import SectorEntrada
+    from app.services import catalogos
+
+    with patch.object(catalogos, "_revisar_nombre_de_sector"), pytest.raises(ErrorApi) as error:
+        catalogos.crear_sector(db, SectorEntrada(nombre=catalogo["sector"].nombre))
+    assert error.value.status_code == 409 and error.value.codigo == "SECTOR_DUPLICADO"
+    assert db.scalar(select(func.count()).select_from(Sector)) == 1  # se deshizo el alta
+
+
 # --- Roles -----------------------------------------------------------------------------------------
 RUTAS = [
     ("post", "/api/colonias", {"nombre": "Colonia X", "sector_id": 1}),
