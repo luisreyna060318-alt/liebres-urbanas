@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { textoAntiguedad, textoDistancia } from './etiquetas.ts'
-import { armarBache, BACHE_VACIO, camposDeTipo, numeroDe, validarBache, validarDescripcion, validarUbicacion } from './reportes.ts'
-import type { DatosBache, DatosUbicacion } from './reportes.ts'
+import {
+  armarBache,
+  armarEncharcamiento,
+  BACHE_VACIO,
+  camposDeTipo,
+  ENCHARCAMIENTO_VACIO,
+  numeroDe,
+  validarBache,
+  validarDescripcion,
+  validarEncharcamiento,
+  validarUbicacion,
+} from './reportes.ts'
+import type { DatosBache, DatosEncharcamiento, DatosUbicacion } from './reportes.ts'
 
 const UBICACION: DatosUbicacion = { calle: 'Av. Tecnológico', colonia_id: '12', lat: '31.7001', lon: '-106.4302' }
 
@@ -89,5 +100,37 @@ describe('textos de antigüedad y distancia', () => {
   it('distancia en metros o kilómetros', () => {
     expect(textoDistancia(12.4)).toBe('a 12 m')
     expect(textoDistancia(1250)).toBe('a 1.3 km')
+  })
+})
+
+describe('validación del encharcamiento (HU-03.1)', () => {
+  const media: DatosEncharcamiento = { ...ENCHARCAMIENTO_VACIO, nivel_agua: 'media_llanta' }
+
+  it('exige el nivel del agua', () => {
+    expect(validarEncharcamiento(UBICACION, ENCHARCAMIENTO_VACIO, 500)).toEqual({ nivel_agua: 'Elige qué tan alta está el agua.' })
+    expect(validarEncharcamiento(UBICACION, media, 500)).toEqual({})
+  })
+
+  it('"Intransitable" exige responder si hay vehículos varados o personas en riesgo', () => {
+    const intransitable: DatosEncharcamiento = { ...ENCHARCAMIENTO_VACIO, nivel_agua: 'intransitable' }
+    expect(validarEncharcamiento(UBICACION, intransitable, 500)).toEqual({
+      hay_riesgo: 'Responde si hay vehículos varados o personas en riesgo.',
+    })
+    expect(validarEncharcamiento(UBICACION, { ...intransitable, hay_riesgo: 'no' }, 500)).toEqual({})
+  })
+
+  it('armarEncharcamiento manda hay_riesgo solo con "intransitable"', () => {
+    expect(armarEncharcamiento(UBICACION, { ...media, hay_riesgo: 'si' })).toEqual({
+      lat: 31.7001,
+      lon: -106.4302,
+      calle: 'Av. Tecnológico',
+      colonia_id: 12,
+      descripcion: '',
+      nivel_agua: 'media_llanta',
+      hay_riesgo: null, // una respuesta vieja no viaja si el nivel ya no es intransitable
+      forzar: false,
+    })
+    const peligro: DatosEncharcamiento = { ...ENCHARCAMIENTO_VACIO, nivel_agua: 'intransitable', hay_riesgo: 'si' }
+    expect(armarEncharcamiento(UBICACION, peligro, true)).toMatchObject({ hay_riesgo: true, forzar: true })
   })
 })

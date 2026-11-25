@@ -1,7 +1,16 @@
 // Datos y validaciones de los formularios de reporte. Dan respuesta inmediata en el cliente con las mismas reglas
 // del servidor (contrato, secciones 6.2 y 6.3); el servidor vuelve a validar todo.
 // Los errores se indexan con el nombre del campo de la API, así se mezclan con los `campos` que devuelva el servidor.
-import type { Carril, NuevoBache, Profundidad, ReportePublico, Tamano, TipoDanoCodigo } from '../api/tipos.ts'
+import type {
+  Carril,
+  NivelAgua,
+  NuevoBache,
+  NuevoEncharcamiento,
+  Profundidad,
+  ReportePublico,
+  Tamano,
+  TipoDanoCodigo,
+} from '../api/tipos.ts'
 
 export type Errores = Record<string, string>
 
@@ -135,5 +144,44 @@ export function bacheDeReporte(r: ReportePublico): DatosBache {
     carril: r.carril ?? '',
     senalizado: r.senalizado === null ? '' : r.senalizado ? 'si' : 'no',
     descripcion: r.descripcion,
+  }
+}
+
+// --- Encharcamiento (HU-03.1) ---
+export interface DatosEncharcamiento {
+  nivel_agua: NivelAgua | ''
+  hay_riesgo: 'si' | 'no' | '' // solo se pregunta cuando el nivel es "intransitable"
+  descripcion: string
+}
+
+export const ENCHARCAMIENTO_VACIO: DatosEncharcamiento = { nivel_agua: '', hay_riesgo: '', descripcion: '' }
+
+// "Intransitable" obliga a responder si hay vehículos varados o personas en riesgo (HU-03.1 CA3)
+export function preguntaRiesgoVisible(d: DatosEncharcamiento): boolean {
+  return d.nivel_agua === 'intransitable'
+}
+
+export function validarEncharcamiento(u: DatosUbicacion, d: DatosEncharcamiento, descripcionMax: number): Errores {
+  const errores: Errores = { ...validarUbicacion(u) }
+  if (!d.nivel_agua) errores.nivel_agua = 'Elige qué tan alta está el agua.'
+  if (preguntaRiesgoVisible(d) && !d.hay_riesgo) {
+    errores.hay_riesgo = 'Responde si hay vehículos varados o personas en riesgo.'
+  }
+  const descripcion = validarDescripcion(d.descripcion, descripcionMax)
+  if (descripcion) errores.descripcion = descripcion
+  return errores
+}
+
+// Cuerpo de POST /api/reportes/encharcamientos. `hay_riesgo` solo viaja con "intransitable"; en los demás niveles va en null.
+export function armarEncharcamiento(u: DatosUbicacion, d: DatosEncharcamiento, forzar = false): NuevoEncharcamiento {
+  return {
+    lat: numeroDe(u.lat),
+    lon: numeroDe(u.lon),
+    calle: u.calle.trim(),
+    colonia_id: Number(u.colonia_id),
+    descripcion: d.descripcion.trim(),
+    nivel_agua: d.nivel_agua as NivelAgua,
+    hay_riesgo: preguntaRiesgoVisible(d) ? d.hay_riesgo === 'si' : null,
+    forzar,
   }
 }
