@@ -267,3 +267,26 @@ Salida 200:
 
 La pantalla `/zona` obtiene las coordenadas con `GET /api/geo/buscar` (al pulsar «Buscar», nunca al escribir) o con la
 geolocalización del navegador, y después llama a este endpoint.
+
+## 13. Aviso de lluvia (C11)
+
+| Endpoint | Quién | Salida |
+|---|---|---|
+| `GET /api/clima/aviso` | Público (sin token) | `AvisoLluvia` |
+
+`AvisoLluvia` = `{ "disponible": true, "hay_aviso": true, "probabilidad_max_pct": 45, "horas": 12, "umbral_pct": 30, "consultado_en": "2026-11-25T21:30:00Z" }`.
+
+- **Entrada:** ninguna (sin parámetros ni cuerpo). El servidor consulta Open-Meteo (`https://api.open-meteo.com/v1/forecast`, sin llave)
+  para un punto fijo del Centro de Ciudad Juárez (`31.74, -106.49`), con `hourly=precipitation_probability` y la zona
+  `America/Ciudad_Juarez`.
+- **Regla:** `probabilidad_max_pct` es la MÁXIMA de las próximas `horas` (12) horas, empezando por la hora en punto actual (la hora en
+  curso cuenta; no se miran horas pasadas ni posteriores). `hay_aviso` es `true` cuando `probabilidad_max_pct >= umbral_pct` (30):
+  29 % no avisa, 30 % sí. `horas` y `umbral_pct` salen de `core/reglas.py` (`HORAS_PRONOSTICO`, `UMBRAL_LLUVIA_PCT`).
+- **Caché:** el resultado se guarda 1 hora en memoria (`CACHE_PRONOSTICO_HORAS`); `consultado_en` (UTC) indica cuándo se consultó
+  Open-Meteo. Un fallo solo se recuerda 30 s, para no quedarse sin pronóstico una hora entera.
+- **Si el servicio falla** (error de red, más de 5 s sin responder, estado HTTP de error, JSON inválido o sin datos de la ventana) NO es
+  un 503: la plataforma sigue y responde **200** con `{ "disponible": false, "hay_aviso": false, "probabilidad_max_pct": null, "horas": 12, "umbral_pct": 30, "consultado_en": null }`.
+  La interfaz muestra entonces «Pronóstico no disponible».
+- **Errores:** ninguno propio. La respuesta no trae datos personales ni de ningún reporte (RN-04).
+- **Interfaz:** `AvisoLluvia` (en `Layout`, arriba del contenido) muestra un aviso con `role="status"` y un enlace a `/zona` solo si
+  `hay_aviso`; sin lluvia no muestra nada; si `disponible` es `false` (o la petición falla) muestra «Pronóstico no disponible».

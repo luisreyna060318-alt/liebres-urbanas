@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.errores import registrar_manejadores
-from app.routers import auth, catalogos, geo, reportes, sistema, zona
+from app.routers import auth, catalogos, clima, geo, reportes, sistema, zona
 
 app = FastAPI(
     title="Liebre Urbana API",
@@ -29,7 +29,6 @@ app.add_middleware(
 
 registrar_manejadores(app)
 
-
 @app.middleware("http")
 async def cabeceras_de_seguridad(request: Request, call_next):
     """Cabeceras que el navegador respeta en TODAS las respuestas (OWASP A02)."""
@@ -44,10 +43,10 @@ async def cabeceras_de_seguridad(request: Request, call_next):
         respuesta.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return respuesta
 
-
 app.include_router(sistema.router)
 app.include_router(auth.router)
 app.include_router(catalogos.router)
 app.include_router(geo.router)
+app.include_router(clima.router)
 app.include_router(reportes.router)
 app.include_router(zona.router)
