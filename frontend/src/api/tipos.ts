@@ -230,3 +230,13 @@ export interface NuevoEncharcamiento {
 export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
 }
+
+// --- ¿Cómo está mi zona? (sección 9) ---
+// GET /api/zona: reportes activos a 1 km, intransitables primero y luego por distancia.
+// `total` puede ser mayor que items.length cuando se alcanza el tope.
+export interface ZonaRespuesta {
+  centro: { lat: number; lon: number }
+  radio_m: number
+  total: number
+  items: ReporteCercano[]
+}
