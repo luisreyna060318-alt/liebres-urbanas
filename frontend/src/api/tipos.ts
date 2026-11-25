@@ -230,3 +230,20 @@ export interface NuevoEncharcamiento {
 export interface NuevaConfirmacion {
   tipo: TipoConfirmacion
 }
+
+// --- Moderación y seguimiento (sección 10) ---
+export interface FiltroModeracion {
+  colonia_id?: number
+  tipo_dano_codigo?: string
+  pagina?: number
+}
+
+export interface ValidarEntrada {
+  comentario?: string // público: aparece en el historial
+}
+
+export interface RechazarEntrada {
+  motivo_rechazo_id: number
+  motivo_texto?: string // obligatorio si el motivo tiene pide_explicacion
+  comentario?: string
+}
