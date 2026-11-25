@@ -5,6 +5,7 @@ import AdminColonias from './paginas/AdminColonias.tsx'
 import AdminUsuarios from './paginas/AdminUsuarios.tsx'
 import Consulta from './paginas/Consulta.tsx'
 import DetalleReporte from './paginas/DetalleReporte.tsx'
+import EditarReporte from './paginas/EditarReporte.tsx'
 import Login from './paginas/Login.tsx'
 import Mapa from './paginas/Mapa.tsx'
 import MisReportes from './paginas/MisReportes.tsx'
@@ -37,6 +38,7 @@ export default function App() {
         <Route element={<RutaPrivada roles={ROLES_CIUDADANO} />}>
           <Route path="/reportar" element={<Reportar />} />
           <Route path="/mis-reportes" element={<MisReportes />} />
+          <Route path="/mis-reportes/:id/editar" element={<EditarReporte />} />
           <Route path="/perfil" element={<Perfil />} />
         </Route>
 
