@@ -83,4 +83,5 @@ GEO_BUSQUEDA_MIN = 3  # caracteres mínimos para buscar (no se busca "mientras s
 GEO_BUSQUEDA_MAX = 200
 GEO_TIEMPO_ESPERA_S = 5  # si Nominatim no responde en 5 s -> 503
 GEO_INTERVALO_MIN_S = 1.0  # política de uso de Nominatim: máximo 1 petición por segundo
+GEO_ESPERA_MAX_S = 3  # si la fila de búsquedas tarda más que esto en dar turno -> 503 (no se acumulan hilos)
 GEO_CACHE_MIN = 60  # una misma búsqueda se responde de memoria durante 1 hora

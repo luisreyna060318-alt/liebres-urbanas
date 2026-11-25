@@ -26,6 +26,7 @@ from app.core.geo import dentro_del_municipio
 from app.core.reglas import (
     GEO_BUSQUEDA_MIN,
     GEO_CACHE_MIN,
+    GEO_ESPERA_MAX_S,
     GEO_INTERVALO_MIN_S,
     GEO_MAX_RESULTADOS,
     GEO_TIEMPO_ESPERA_S,
@@ -70,13 +71,31 @@ def _llamar_http(ruta: str, parametros: dict) -> object:
     return respuesta.json()
 
 
+def _no_disponible(detalle: str = "El servicio de mapas no responde") -> ErrorApi:
+    return ErrorApi(503, "SERVICIO_NO_DISPONIBLE", f"{detalle}. Intenta más tarde o captura la ubicación a mano")
+
+
+def _de_la_cache(llave: tuple) -> tuple[float, object] | None:
+    """(vence, datos) si la respuesta está guardada y vigente; None si no."""
+    guardado = _cache.get(llave)
+    return guardado if guardado and guardado[0] > _reloj() else None
+
+
 def _consultar(ruta: str, parametros: dict) -> object:
     """Consulta Nominatim respetando la caché y el límite de 1 petición por segundo."""
     global _ultima_peticion
     llave = (ruta, tuple(sorted(parametros.items())))
-    with _candado:
-        guardado = _cache.get(llave)
-        if guardado and guardado[0] > _reloj():
+    guardado = _de_la_cache(llave)
+    if guardado:
+        return guardado[1]  # lo que ya está en caché no hace fila
+
+    # Fila de espera ACOTADA: si hay muchas búsquedas a la vez, no se deja a cada petición esperando turno sin
+    # límite (cada una ocupa un hilo del servidor y podrían dejar sin hilos al resto de la API).
+    if not _candado.acquire(timeout=GEO_ESPERA_MAX_S):
+        raise _no_disponible("El servicio de mapas está ocupado")
+    try:
+        guardado = _de_la_cache(llave)  # otra petición pudo traerla mientras esperábamos turno
+        if guardado:
             return guardado[1]
 
         # Límite de ritmo: si la petición anterior fue hace menos de 1 s, se espera lo que falte
@@ -89,14 +108,12 @@ def _consultar(ruta: str, parametros: dict) -> object:
             datos = _llamar_http(ruta, parametros)
         except (httpx.HTTPError, ValueError):
             # ValueError: Nominatim respondió algo que no es JSON. En ambos casos no hay datos confiables.
-            raise ErrorApi(
-                503,
-                "SERVICIO_NO_DISPONIBLE",
-                "El servicio de mapas no responde. Intenta más tarde o captura la ubicación a mano",
-            ) from None
+            raise _no_disponible() from None
 
         _cache[llave] = (_reloj() + GEO_CACHE_MIN * 60, datos)
         return datos
+    finally:
+        _candado.release()
 
 
 # --- Colonia: comparar nombres sin mayúsculas ni acentos -------------------------------------------
