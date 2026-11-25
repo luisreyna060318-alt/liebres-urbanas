@@ -28,6 +28,7 @@ from app.core.security import crear_token, hash_password  # noqa: E402
 from app.core.tiempo import ahora_utc  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import Colonia, Reporte, Sector, TipoDano, Usuario  # noqa: E402
+from app.services import geocodificacion  # noqa: E402
 
 PASSWORD_PRUEBA = "Clave1234"
 # Un hash bcrypt tarda ~0.2 s: se calcula una vez y se reutiliza en todos los usuarios de prueba
@@ -56,6 +57,20 @@ app.include_router(router_pruebas)
 
 
 # --- Fixtures -----------------------------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def sin_red(monkeypatch):
+    """Ninguna prueba sale a internet: si algo intenta llamar a Nominatim sin simularlo, la prueba falla.
+    También limpia la caché y el límite de ritmo para que cada prueba empiece igual."""
+
+    def _prohibido(ruta, parametros):
+        raise AssertionError(f"Prueba sin simular la red: se intentó llamar a Nominatim ({ruta})")
+
+    geocodificacion.limpiar_estado()
+    monkeypatch.setattr(geocodificacion, "_llamar_http", _prohibido)
+    yield
+    geocodificacion.limpiar_estado()
+
+
 @pytest.fixture()
 def db():
     """Una base SQLite nueva y vacía para cada prueba."""
