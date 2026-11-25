@@ -655,10 +655,36 @@ def sembrar(db: Session) -> dict[str, int]:
     return resumen
 
 
+def sembrar_todo(db: Session, ruta_csv: Path | str | None = None, hoy: datetime | None = None) -> None:
+    """Todo el flujo en orden: catálogos, cuentas demo, colonias y reportes demo. Cada paso hace su commit.
+
+    Si falta el CSV de colonias, falla ahí (ErrorSemilla) con un mensaje claro y deja guardado lo anterior:
+    el error no se oculta, pero tampoco se pierde el trabajo de los pasos que sí pudieron correr.
+    """
+    for nombre, agregados in sembrar(db).items():
+        print(f"  {nombre}: {agregados} nuevos")
+
+    agregadas = cargar_colonias(db, ruta_csv)
+    db.commit()
+    print(f"  colonias: {agregadas} nuevas")
+
+    # Los reportes demo solo se cargan con la tabla vacía: así no se mezclan con reportes reales
+    creados = cargar_reportes_demo(db, hoy=hoy)
+    db.commit()
+    if creados:
+        print(f"  reportes de demostración: {creados} nuevos (más 30 cuentas ciudadanas ficticias)")
+    else:
+        print("  reportes de demostración: ya hay reportes en la base, no se cargó nada")
+
+
 def main() -> None:
     with SessionLocal() as db:
-        for nombre, agregados in sembrar(db).items():
-            print(f"  {nombre}: {agregados} nuevos")
+        try:
+            sembrar_todo(db)
+        except ErrorSemilla as error:
+            db.rollback()
+            print(f"ERROR en la semilla: {error}", file=sys.stderr)
+            raise SystemExit(1) from None
 
 
 if __name__ == "__main__":
