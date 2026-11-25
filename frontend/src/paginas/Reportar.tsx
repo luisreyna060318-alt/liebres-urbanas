@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { ReporteMio, ReportePublico } from '../api/tipos.ts'
 import ConfirmacionReporte from '../componentes/ConfirmacionReporte.tsx'
 import FormularioBache from '../componentes/FormularioBache.tsx'
+import FormularioEncharcamiento from '../componentes/FormularioEncharcamiento.tsx'
 import GrupoRadios from '../componentes/GrupoRadios.tsx'
 import { useTitulo } from '../hooks/useTitulo.ts'
 
@@ -36,8 +37,7 @@ export default function Reportar() {
           leyenda="¿Qué quieres reportar?"
           opciones={[
             { valor: 'bache', etiqueta: 'Bache o daño en el pavimento' },
-            // El encharcamiento se habilita en la rama que construye su formulario (HU-03.1)
-            { valor: 'encharcamiento', etiqueta: 'Encharcamiento (Próximamente)', deshabilitada: true },
+            { valor: 'encharcamiento', etiqueta: 'Encharcamiento: agua acumulada en la calle' },
           ]}
           valor={categoria}
           onCambio={setCategoria}
@@ -47,6 +47,14 @@ export default function Reportar() {
 
       {categoria === 'bache' && (
         <FormularioBache
+          key={intento}
+          alGuardar={(reporte) => setResultado({ modo: 'creado', reporte })}
+          alConfirmar={(reporte) => setResultado({ modo: 'confirmado', reporte })}
+        />
+      )}
+
+      {categoria === 'encharcamiento' && (
+        <FormularioEncharcamiento
           key={intento}
           alGuardar={(reporte) => setResultado({ modo: 'creado', reporte })}
           alConfirmar={(reporte) => setResultado({ modo: 'confirmado', reporte })}
