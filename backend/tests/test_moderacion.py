@@ -189,11 +189,14 @@ def filas_de_historial(db, reporte) -> int:
 
 
 @pytest.mark.parametrize("texto", [None, "   "])
-def test_motivo_otro_exige_explicacion(client, moderador, datos, texto):
+def test_motivo_otro_exige_explicacion(client, moderador, datos, db, texto):
     reporte = datos["reporte"]()
     r = rechazar(client, moderador, reporte.id, motivo_rechazo_id=datos["otro"].id, motivo_texto=texto)
     assert r.status_code == 422 and "motivo_texto" in r.json()["campos"]
+    # Se relee de la base: el 422 no debe dejar el estado cambiado ni una fila de historial
+    db.refresh(reporte)
     assert reporte.estado == "recibido"
+    assert filas_de_historial(db, reporte) == 0
 
 
 def test_rechazar_guarda_motivo_y_el_autor_lo_ve(client, moderador, ciudadano, datos, db):
