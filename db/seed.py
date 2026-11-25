@@ -4,14 +4,15 @@ Uso, desde la raíz del repositorio y con la base ya migrada (alembic -c db/alem
     python db/seed.py
 
 Es idempotente: se puede correr varias veces y solo agrega lo que falta (busca cada registro por su
-código, nombre o correo). Está dividido en funciones `sembrar_*` para que otros PRs agreguen las suyas
-(colonias en L4/L5, reportes en L5) sin reescribir este archivo: basta con sumarlas a SEMBRADORES.
+código, nombre o correo). Orden de ejecución (sembrar_todo): catálogos y cuentas de demostración (SEMBRADORES),
+colonias reales desde db/datos/colonias_juarez.csv (cargar_colonias) y 500 reportes ficticios (cargar_reportes_demo).
 
 Contraseñas de las cuentas de demostración: variables SEED_CIUDADANO_PASSWORD, SEED_MODERADOR_PASSWORD y
 SEED_COORDINADOR_PASSWORD. En desarrollo, si faltan, se usa CONTRASENA_DEMO (pública, escrita en el README y que
 no se usa en ningún otro lado). En producción son obligatorias.
 """
 
+import csv
 import sys
 from pathlib import Path
 
@@ -25,10 +26,17 @@ from app.core.config import settings  # noqa: E402
 from app.core.database import SessionLocal  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.core.tiempo import ahora_utc  # noqa: E402
-from app.models import MotivoRechazo, Sector, TipoDano, Usuario, normalizar_correo  # noqa: E402
+from app.models import Colonia, MotivoRechazo, Sector, TipoDano, Usuario, normalizar_correo  # noqa: E402
 
 # Contraseña de demostración SOLO para desarrollo. Es pública: no la uses para nada real.
 CONTRASENA_DEMO = "LiebreDemo2026"
+
+# Catálogo de colonias reales de Juárez (RNF-09). Lo prepara y documenta (fuente) el equipo en db/datos/.
+RUTA_COLONIAS = Path(__file__).resolve().parent / "datos" / "colonias_juarez.csv"
+ENCABEZADO_COLONIAS = ["cp", "nombre", "tipo_asentamiento", "sector", "lat", "lon"]
+FUENTE_COLONIAS = "SEPOMEX/Correos de México; coordenadas aproximadas OpenStreetMap"
+# Caja amplia alrededor del municipio de Juárez: solo detecta errores de captura (lat/lon invertidas o con signo mal)
+LAT_MIN, LAT_MAX, LON_MIN, LON_MAX = 30.5, 32.5, -107.5, -105.0
 
 SECTORES = ["Centro", "Norponiente", "Nororiente", "Surponiente", "Suroriente"]
 
@@ -108,7 +116,71 @@ def sembrar_cuentas_demo(db: Session) -> int:
     return creadas
 
 
-# Orden en que se ejecutan. Otros PRs agregan aquí sus funciones (por ejemplo sembrar_colonias, sembrar_reportes).
+class ErrorSemilla(Exception):
+    """Falla de la semilla con un mensaje pensado para quien la corre (qué falta y cómo arreglarlo)."""
+
+
+def _leer_numero(texto: str, nombre: str, linea: int, minimo: float, maximo: float) -> float:
+    try:
+        valor = float(texto)
+    except (TypeError, ValueError):
+        raise ErrorSemilla(f"colonias: línea {linea}, «{nombre}» no es un número: {texto!r}") from None
+    if not minimo <= valor <= maximo:
+        raise ErrorSemilla(f"colonias: línea {linea}, «{nombre}» fuera de Ciudad Juárez ({valor}); ¿lat/lon al revés?")
+    return valor
+
+
+def cargar_colonias(db: Session, ruta_csv: Path | str | None = None) -> int:
+    """Carga las colonias del CSV (UTF-8, encabezado exacto cp,nombre,tipo_asentamiento,sector,lat,lon).
+
+    Idempotente: la clave es (sector, nombre), igual que la restricción UNIQUE de la tabla; una colonia que ya
+    existe no se duplica (solo se le completan lat, lon y fuente si no los tenía). Devuelve cuántas agregó.
+    Los sectores deben existir (los crea sembrar_sectores), así un error de captura no inventa sectores nuevos.
+    """
+    ruta = Path(ruta_csv) if ruta_csv else RUTA_COLONIAS
+    if not ruta.is_file():
+        raise ErrorSemilla(
+            f"Falta el catálogo de colonias: {ruta}. Debe ser un CSV UTF-8 con el encabezado "
+            f"{','.join(ENCABEZADO_COLONIAS)} (lo genera la rama feature/l4-catalogo-colonias)."
+        )
+
+    sectores = {s.nombre: s.id for s in db.scalars(select(Sector))}
+    existentes = {(c.sector_id, c.nombre): c for c in db.scalars(select(Colonia))}
+    agregadas = 0
+    # utf-8-sig tolera el BOM que agrega Excel al guardar como "CSV UTF-8"
+    with ruta.open(encoding="utf-8-sig", newline="") as archivo:
+        lector = csv.DictReader(archivo)
+        if lector.fieldnames != ENCABEZADO_COLONIAS:
+            raise ErrorSemilla(
+                f"{ruta.name}: el encabezado debe ser exactamente {','.join(ENCABEZADO_COLONIAS)} "
+                f"y es {','.join(lector.fieldnames or [])}"
+            )
+        for fila in lector:
+            linea = lector.line_num
+            nombre = (fila["nombre"] or "").strip()
+            sector = (fila["sector"] or "").strip()
+            if not nombre or len(nombre) > 120:
+                raise ErrorSemilla(f"colonias: línea {linea}, el nombre está vacío o pasa de 120 caracteres")
+            if sector not in sectores:
+                raise ErrorSemilla(
+                    f"colonias: línea {linea}, sector desconocido {sector!r}; los válidos son {', '.join(sectores)}"
+                )
+            lat = _leer_numero(fila["lat"], "lat", linea, LAT_MIN, LAT_MAX)
+            lon = _leer_numero(fila["lon"], "lon", linea, LON_MIN, LON_MAX)
+
+            clave = (sectores[sector], nombre)
+            colonia = existentes.get(clave)
+            if colonia is None:
+                colonia = Colonia(nombre=nombre, sector_id=clave[0], lat=lat, lon=lon, fuente=FUENTE_COLONIAS)
+                db.add(colonia)
+                existentes[clave] = colonia  # por si el CSV repite la fila
+                agregadas += 1
+            elif colonia.lat is None:
+                colonia.lat, colonia.lon, colonia.fuente = lat, lon, FUENTE_COLONIAS
+    return agregadas
+
+
+# Orden en que se ejecutan los sembradores de catálogos y cuentas (cada uno devuelve cuántos registros agregó).
 SEMBRADORES = [
     ("sectores", sembrar_sectores),
     ("tipos de daño", sembrar_tipos_dano),
