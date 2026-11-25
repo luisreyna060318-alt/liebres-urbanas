@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/AuthContexto.ts'
 import { ETIQUETA_ROL, opcionesParaRol } from '../utils/menu.ts'
 import Alerta from './Alerta.tsx'
+import AvisoLluvia from './AvisoLluvia.tsx'
 import Boton from './Boton.tsx'
 
 // Estructura semántica común a todas las pantallas: header (con nav), main y footer
@@ -74,6 +75,9 @@ export default function Layout() {
           </Alerta>
         </div>
       )}
+
+      {/* Aviso de lluvia: aparece en todas las pantallas cuando el pronóstico lo pide */}
+      <AvisoLluvia />
 
       {/* tabIndex=-1 permite que "Saltar al contenido" y el cambio de pantalla muevan el foco aquí */}
       <main id="contenido" className="contenido" tabIndex={-1}>
