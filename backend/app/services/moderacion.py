@@ -1,4 +1,4 @@
-"""Moderación: bandeja de reportes nuevos, validar y rechazar (HU-05.1).
+"""Moderación: bandeja de reportes nuevos, validar y rechazar (HU-05.1) y avance de la reparación (HU-05.2).
 
 Los cambios de estado pasan SIEMPRE por registrar_cambio_estado() (services/estados.py), que valida el salto y
 agrega la fila del historial con el actor, la fecha y el comentario. El historial interno guarda quién hizo el
@@ -13,7 +13,7 @@ from app.core.paginacion import paginar
 from app.core.reglas import TAM_PAGINA_MODERACION
 from app.core.tiempo import hoy_local
 from app.models import MotivoRechazo, Reporte, TipoDano, Usuario
-from app.schemas.moderacion import RechazarEntrada, ValidarEntrada
+from app.schemas.moderacion import AvanceEntrada, RechazarEntrada, ValidarEntrada
 from app.schemas.reportes import ReportePublico, a_reporte_publico
 from app.services.encharcamientos import expirar_vencidos
 from app.services.estados import puede_pasar, registrar_cambio_estado
@@ -85,6 +85,34 @@ def validar(db: Session, moderador: Usuario, reporte_id: int, datos: ValidarEntr
     reporte = obtener_reporte(db, reporte_id)
     exigir_salto(reporte, "validado", "solo se validan baches que siguen en «Recibido»")
     registrar_cambio_estado(db, reporte, "validado", actor=moderador, comentario=datos.comentario)
+    db.commit()
+    return a_reporte_publico(reporte, hoy_local())
+
+
+# --- Avance de la reparación (HU-05.2) --------------------------------------------------------------
+ESTADOS_EN_SEGUIMIENTO = ("validado", "en_reparacion")
+
+
+def listar_seguimiento(
+    db: Session, estado: str | None, colonia_id: int | None, tipo_dano_codigo: str | None, pagina: int
+) -> dict:
+    """GET /api/moderacion/seguimiento: baches validados o en reparación, del más antiguo al más reciente."""
+    expirar_vencidos(db)
+    estados = (estado,) if estado else ESTADOS_EN_SEGUIMIENTO
+    return paginar_publicos(db, consulta_de_baches(estados, colonia_id, tipo_dano_codigo), pagina)
+
+
+def registrar_avance(db: Session, actor: Usuario, reporte_id: int, datos: AvanceEntrada) -> ReportePublico:
+    """validado -> en_reparacion -> reparado (RN-05). Cualquier otro salto, o un encharcamiento, responde 409.
+    «reparado» exige una fecha ni futura ni anterior al reporte (422 con campos.fecha_reparacion)."""
+    expirar_vencidos(db)
+    reporte = obtener_reporte(db, reporte_id)
+    exigir_salto(
+        reporte, datos.estado,
+        "solo los baches avanzan de «Validado» a «En reparación» y de «En reparación» a «Reparado»",
+    )
+    fecha = datos.fecha_reparacion if datos.estado == "reparado" else None
+    registrar_cambio_estado(db, reporte, datos.estado, actor=actor, comentario=datos.comentario, fecha_reparacion=fecha)
     db.commit()
     return a_reporte_publico(reporte, hoy_local())
 

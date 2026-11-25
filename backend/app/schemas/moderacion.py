@@ -1,4 +1,8 @@
-"""Entradas de moderación (HU-05.1). La salida es ReportePublico: nunca incluye al autor (RN-04)."""
+"""Entradas de moderación (HU-05.1) y del avance de reparación (HU-05.2).
+La salida es ReportePublico: nunca incluye al autor (RN-04)."""
+
+from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -40,6 +44,23 @@ class RechazarEntrada(BaseModel):
     )
 
     @field_validator("motivo_texto", "comentario")
+    @classmethod
+    def limpiar(cls, v: str | None) -> str | None:
+        return limpiar_texto(v)
+
+
+class AvanceEntrada(BaseModel):
+    """POST /api/reportes/{id}/estado (HU-05.2). `reparado` exige `fecha_reparacion` (ni futura ni anterior al reporte,
+    lo valida registrar_cambio_estado); en `en_reparacion` la fecha se ignora."""
+
+    estado: Literal["en_reparacion", "reparado"] = Field(examples=["reparado"])
+    comentario: str | None = Field(
+        default=None, max_length=COMENTARIO_MAX, examples=["Bacheo terminado por la cuadrilla municipal"],
+        description="Opcional y público (aparece en el historial del detalle)",
+    )
+    fecha_reparacion: date | None = Field(default=None, examples=["2026-11-20"], description="Obligatoria en reparado")
+
+    @field_validator("comentario")
     @classmethod
     def limpiar(cls, v: str | None) -> str | None:
         return limpiar_texto(v)
