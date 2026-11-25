@@ -1,10 +1,19 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import type { UsuarioPublico } from '../api/tipos.ts'
-import { authFalso, CIUDADANO, ConAuth, COORDINADOR, MODERADOR } from '../pruebas/ayudas.tsx'
+import { authFalso, CIUDADANO, ConAuth, COORDINADOR, MODERADOR, simularApi } from '../pruebas/ayudas.tsx'
 import Layout from './Layout.tsx'
+
+// El Layout pide el aviso de lluvia: en estas pruebas el pronóstico dice que no habrá lluvia
+beforeEach(() => {
+  simularApi({
+    'GET /api/clima/aviso': {
+      cuerpo: { disponible: true, hay_aviso: false, probabilidad_max_pct: 5, horas: 12, umbral_pct: 30, consultado_en: null },
+    },
+  })
+})
 
 // Devuelve los textos de los enlaces del menú principal
 function menuPara(usuario: UsuarioPublico | null): string[] {
@@ -95,5 +104,30 @@ describe('estructura semántica del Layout', () => {
       </ConAuth>,
     )
     expect(screen.getByRole('status')).toHaveTextContent('Tu sesión caducó.')
+  })
+})
+
+describe('aviso de lluvia en el Layout (HU-08.1)', () => {
+  it('con probabilidad de lluvia aparece arriba del contenido principal', async () => {
+    simularApi({
+      'GET /api/clima/aviso': {
+        cuerpo: { disponible: true, hay_aviso: true, probabilidad_max_pct: 45, horas: 12, umbral_pct: 30, consultado_en: null },
+      },
+    })
+    render(
+      <ConAuth valor={authFalso()}>
+        <MemoryRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<h1>Inicio</h1>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </ConAuth>,
+    )
+    const aviso = await screen.findByRole('status')
+    expect(aviso).toHaveTextContent('probabilidad máxima de 45 %')
+    // El aviso va antes del <main> en el documento
+    expect(aviso.compareDocumentPosition(screen.getByRole('main')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

@@ -246,3 +246,66 @@ export interface EdicionColonia extends NuevaColonia {
 export interface EntradaSector {
   nombre: string
 }
+
+// --- Moderación y seguimiento (sección 10) ---
+export interface FiltroModeracion {
+  colonia_id?: number
+  tipo_dano_codigo?: string
+  pagina?: number
+}
+
+export interface ValidarEntrada {
+  comentario?: string // público: aparece en el historial
+}
+
+export interface RechazarEntrada {
+  motivo_rechazo_id: number
+  motivo_texto?: string // obligatorio si el motivo tiene pide_explicacion
+  comentario?: string
+}
+
+// Avance de la reparación (HU-05.2): validado -> en_reparacion -> reparado
+export type EstadoAvance = 'en_reparacion' | 'reparado'
+
+export interface FiltroSeguimiento extends FiltroModeracion {
+  estado?: 'validado' | 'en_reparacion' // vacío = los dos
+}
+
+export interface AvanceEntrada {
+  estado: EstadoAvance
+  comentario?: string // público: aparece en el historial del detalle
+  fecha_reparacion?: string // "2026-11-20"; obligatoria en reparado (ni futura ni anterior al reporte)
+}
+
+// --- Consulta pública (sección 8): GET /api/reportes. Todo es opcional; sin `estado` llegan solo los activos ---
+export interface FiltroReportes {
+  categoria?: Categoria
+  estado?: Estado
+  colonia_id?: number
+  severidad?: Severidad
+  desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
+  hasta?: string
+  q?: string // parte de la calle o del folio
+  pagina?: number
+  tam?: number // 20 por omisión
+}
+
+// --- ¿Cómo está mi zona? (sección 9) ---
+// GET /api/zona: reportes activos a 1 km, intransitables primero y luego por distancia.
+// `total` puede ser mayor que items.length cuando se alcanza el tope.
+export interface ZonaRespuesta {
+  centro: { lat: number; lon: number }
+  radio_m: number
+  total: number
+  items: ReporteCercano[]
+}
+
+// --- Aviso de lluvia (sección 13 del contrato) ---
+export interface AvisoLluvia {
+  disponible: boolean // false si Open-Meteo falló: la API igual responde 200
+  hay_aviso: boolean
+  probabilidad_max_pct: number | null
+  horas: number
+  umbral_pct: number
+  consultado_en: string | null
+}

@@ -55,6 +55,29 @@ def usuario_actual(
 UsuarioActual = Annotated[Usuario, Depends(usuario_actual)]
 
 
+def usuario_opcional(
+    credenciales: Annotated[HTTPAuthorizationCredentials | None, Depends(esquema_bearer)], db: SesionDB
+) -> Usuario | None:
+    """Para rutas PÚBLICAS que muestran algo más a ciertos roles (por ejemplo, los rechazados a moderación).
+
+    Nunca responde 401: sin token, con un token vencido o inválido, o con la cuenta suspendida, la petición
+    se trata como de una persona sin sesión (devuelve None).
+    """
+    if credenciales is None:
+        return None
+    try:
+        usuario_id = leer_token(credenciales.credentials)
+    except (jwt.PyJWTError, ValueError):
+        return None
+    usuario = db.get(Usuario, usuario_id, populate_existing=True)
+    if usuario is None or not usuario.activo:
+        return None
+    return usuario
+
+
+UsuarioOpcional = Annotated[Usuario | None, Depends(usuario_opcional)]
+
+
 def require_role(*roles: str):
     """Crea una dependencia que solo deja pasar a quien tenga alguno de esos roles (403 SIN_PERMISO si no).
 
