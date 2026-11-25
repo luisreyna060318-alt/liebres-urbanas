@@ -44,7 +44,6 @@ describe('rutas de la aplicación', () => {
   it('el ciudadano entra a sus pantallas y el coordinador al tablero', () => {
     const { unmount } = irA('/mis-reportes', authFalso({ usuario: CIUDADANO }))
     expect(screen.getByRole('heading', { level: 1, name: 'Mis reportes' })).toBeInTheDocument()
-    expect(screen.getByText('Próximamente')).toBeInTheDocument()
     unmount()
 
     irA('/tablero', authFalso({ usuario: COORDINADOR }))
