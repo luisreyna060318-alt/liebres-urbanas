@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { ReporteDetalle } from '../api/tipos.ts'
-import { authFalso, CIUDADANO, ConAuth, simularApi } from '../pruebas/ayudas.tsx'
+import { authFalso, CIUDADANO, ConAuth, COORDINADOR, MODERADOR, simularApi } from '../pruebas/ayudas.tsx'
 import { encharcamientoMio, reporteMio } from '../pruebas/datos.ts'
 import DetalleReporte from './DetalleReporte.tsx'
 
@@ -187,5 +187,44 @@ describe('Confirmar o desmentir desde el detalle (HU-03.3 y HU-02.3)', () => {
     renderizar('/reportes/345', comoCiudadano())
     await screen.findByText('Estado: Reparado')
     expect(screen.queryByRole('button', { name: 'Confirmar que sigue ahí' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Rechazar un encharcamiento desde el detalle (RN-06)', () => {
+  const activo = () => detalle({ estado: 'activo', historial: [] }, encharcamientoMio())
+  const MOTIVOS = [{ id: 4, codigo: 'contenido_inapropiado', nombre: 'Contenido inapropiado', pide_explicacion: false }]
+
+  it('el moderador elige un motivo, lo rechaza y ve el nuevo estado', async () => {
+    const api = simularApi({
+      'GET /api/reportes/500': [{ cuerpo: activo() }, { cuerpo: { ...activo(), estado: 'rechazado' } }],
+      'GET /api/motivos-rechazo': { cuerpo: MOTIVOS },
+      'POST /api/reportes/500/rechazar': { cuerpo: { ...activo(), estado: 'rechazado' } },
+    })
+    renderizar('/reportes/500', authFalso({ usuario: MODERADOR }))
+    const u = userEvent.setup()
+
+    await u.click(await screen.findByRole('button', { name: 'Rechazar este reporte' }))
+    await screen.findByRole('option', { name: 'Contenido inapropiado' })
+    await u.selectOptions(screen.getByLabelText(/Motivo del rechazo/), '4')
+    await u.click(screen.getByRole('button', { name: 'Confirmar rechazo' }))
+
+    expect(await screen.findByText(/Se rechazó el reporte ENC-/)).toBeInTheDocument()
+    expect(api.de('POST /api/reportes/500/rechazar')[0].cuerpo).toMatchObject({ motivo_rechazo_id: 4 })
+    expect(await screen.findByText('Estado: Rechazado')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Rechazar este reporte' })).not.toBeInTheDocument()
+  })
+
+  it('no se ofrece a ciudadanos ni coordinadores, ni en baches', async () => {
+    for (const usuario of [CIUDADANO, COORDINADOR]) {
+      simularApi({ 'GET /api/reportes/500': { cuerpo: activo() } })
+      const { unmount } = renderizar('/reportes/500', authFalso({ usuario }))
+      await screen.findByText('Estado: Activo')
+      expect(screen.queryByRole('button', { name: 'Rechazar este reporte' }), usuario.rol).not.toBeInTheDocument()
+      unmount()
+    }
+    simularApi({ 'GET /api/reportes/345': { cuerpo: detalle() } })
+    renderizar('/reportes/345', authFalso({ usuario: MODERADOR }))
+    await screen.findByText('Estado: Validado')
+    expect(screen.queryByRole('button', { name: 'Rechazar este reporte' })).not.toBeInTheDocument()
   })
 })
