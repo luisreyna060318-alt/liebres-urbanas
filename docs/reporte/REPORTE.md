@@ -121,6 +121,7 @@ UTC−7).
 | Mié 25, 15:08 a 15:55 | Luis revisa y se fusionan #16 a #27 y #30; con #30 las 20 historias P0 quedan en `main` | G3 (20:00) |
 | Mié 25, 15:46 a 16:10 | Se abren #31 (este reporte) y #32 a #34 (arreglos de la revisión) | — |
 | Mié 25, 20:12 a 20:13 | Luis aprueba y se fusionan #34, #33, #32 y #28 | — |
+| Mié 25, 20:55 a 21:15 | Se fusiona #29; búsqueda de secretos en el historial y arranque cronometrado desde un clon limpio | — |
 | [PENDIENTE: fecha] | Congelamiento de código y etiqueta `v1.0.0` | G4 y G5 |
 
 Tabla 5. Plan frente a lo registrado. Fuente: `PLAN_DE_TRABAJO.md`, `git log` y `gh pr list`.
@@ -254,14 +255,17 @@ comprueba con `backend/tests/test_seguridad.py`:
 - **Cabeceras y CORS:** CORS limitado a los dominios de Vercel; `nosniff`, `X-Frame-Options`, `Referrer-Policy` y HSTS en producción.
 
 Pendientes que documentamos: no hay límite de intentos en el login (OWASP A07) y `/docs` es público también en producción.
-[PENDIENTE: búsqueda de secretos en todo el historial antes de la etiqueta.]
+El 25 de noviembre revisamos el historial completo (194 commits de todas las ramas y PRs): no hay tokens, llaves privadas,
+contraseñas reales ni la clave del despliegue, y nunca se subió un `.env`; las únicas cadenas de conexión son valores de ejemplo
+o de la base local de desarrollo.
 
 ### 3.5 Contenedores y despliegue
 
 `compose.yaml` incluye `infra/docker-compose.yml` con tres servicios: PostgreSQL, backend y frontend con nginx sin privilegios. Al
-arrancar, el backend corre `alembic upgrade head` y la semilla si la base está vacía. Según el PR #3, `docker compose up -d --build`
-terminó en 42 s con los tres contenedores sanos; el CI también construye las imágenes con Compose en cada push.
-[PENDIENTE: prueba cronometrada desde un clon limpio de main antes de la etiqueta (RNF-04).]
+arrancar, el backend corre `alembic upgrade head` y la semilla si la base está vacía. El 25 de noviembre lo probamos desde un clon limpio de `main`,
+copiando solo `.env.example` a `.env`: construir las imágenes sin caché tomó 48 s y el arranque hasta tener los tres servicios
+sanos 31 s (79 s en total); con las imágenes ya construidas, 24 s (RNF-04 pide menos de 3 minutos). Las imágenes base ya estaban
+en la computadora, así que una máquina nueva además debe descargarlas. El CI también construye las imágenes en cada push.
 
 En la nube: frontend en Vercel, backend en Render como servicio Docker y base en Neon. Las claves solo viven en los paneles de cada
 servicio; `.env` está en `.gitignore` y `.env.example` trae valores de ejemplo (`infra/DEPLOY.md`). El 25 de noviembre a las 20:10
@@ -284,7 +288,9 @@ Tabla 7. Pruebas automáticas. Fuente: CI de GitHub Actions sobre `main` (commit
 
 Las cifras salen del registro de GitHub Actions (no las corrimos de nuevo en local). Las pruebas de la API usan SQLite, así que lo que depende de PostgreSQL se comprobó aparte y a mano: la migración y los triggers (#1), la comparación del tablero
 con la lista sobre los 500 reportes de la semilla (conteos 75, 94, 56, 112 y 115 iguales; comentario de Carlos en #28) y el bloqueo de
-fila al moderar con dos sesiones a la vez (#34). [PENDIENTE: actualizar los totales con el CI de la etiqueta v1.0.0.]
+fila al moderar con dos sesiones a la vez (#34). En la prueba desde el clon limpio, PostgreSQL quedó con las 23 colonias y los
+500 reportes de la semilla, y `GET /api/reportes` respondió entre 0.02 y 0.11 s (RNF-06 pide menos de 3 s).
+[PENDIENTE: actualizar los totales con el CI de la etiqueta v1.0.0.]
 
 ### 4.2 Lighthouse y accesibilidad
 
@@ -368,15 +374,15 @@ evidencia": pedí corregir la bitácora y resultó que la comparación sí se ha
 ## 6. Contribución individual
 
 La Tabla 9 resume la contribución de cada quien. Los 16 PRs de Carlos están fusionados (#23 a una rama; su contenido llegó a `main`
-con #30). De los de Luis siguen abiertos #29 y #31. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 18 de Luis
+con #30). De los de Luis siguen abiertos #31 y #35. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 19 de Luis
 (pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). [PENDIENTE: el porcentaje de contribución lo acuerda el
 equipo; recalcular las cifras sobre la etiqueta v1.0.0.]
 
 <!-- tabla: anchos=1238,2800,1100,1250,900,1550 -->
 | Integrante | Tareas principales | Commits (`main` / todas) | PRs (fusionados) | Revisó | % acordado |
 |---|---|---|---|---|---|
-| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 18 (16) | 16 PRs | [PENDIENTE] |
-| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 18 PRs | [PENDIENTE] |
+| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 19 (17) | 16 PRs | [PENDIENTE] |
+| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | [PENDIENTE] |
 
 Tabla 9. Contribución individual al 25-nov-2026, 20:30 (`main` en `5a0d6cd`). Commits sin merge en `main` y en todas las ramas publicadas (`git shortlog -sn --no-merges`); PRs con `gh pr list --state all`.
 
