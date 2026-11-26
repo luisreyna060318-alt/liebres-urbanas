@@ -106,7 +106,7 @@ bloquear la fila y dos moderadores podían dejar un historial incoherente. Lo de
 que, si el error toca datos que no se pueden borrar, hay que pedir cambios. En #28 también aprendí a separar "no se hizo" de "no hay
 evidencia": pedí corregir la bitácora y resultó que la comparación sí se había hecho, solo faltaba documentarla.
 
-**Reflexión crítica (Carlos).** Está en la sección 5.2 del reporte técnico: [`docs/reporte/REPORTE.md`](docs/reporte/REPORTE.md#52-reflexión-crítica).
+**Reflexión crítica (Carlos).** Está en la sección 5 (Uso de IA) del reporte técnico: [`docs/reporte/REPORTE.md`](docs/reporte/REPORTE.md#5-uso-de-ia).
 
 ## Reglas de seguridad que seguimos
 
