@@ -1,5 +1,7 @@
 """Salud del servicio y reglas de negocio públicas."""
 
+import os
+
 from fastapi import APIRouter
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,14 +16,18 @@ router = APIRouter(prefix="/api", tags=["Sistema"])
 
 @router.get("/health", summary="Salud del servicio")
 def salud(db: SesionDB):
-    """Responde `{"estado": "ok", "base_de_datos": "ok"}` si la API y la base de datos responden.
+    """Responde `{"estado": "ok", "base_de_datos": "ok", "version": "1a2b3c4"}` si la API y la base responden.
+
+    `version` es el commit publicado (Render define RENDER_GIT_COMMIT); en otro lado vale "local". Sirve para
+    notar cuando el despliegue se quedó atrasado.
 
     Lo usan Render y Docker para saber si el contenedor está listo (RNF-03)."""
     try:
         db.execute(text("SELECT 1"))
     except SQLAlchemyError:
         raise ErrorApi(503, "SERVICIO_NO_DISPONIBLE", "La base de datos no responde") from None
-    return {"estado": "ok", "base_de_datos": "ok"}
+    version = os.getenv("RENDER_GIT_COMMIT", "")[:7] or "local"
+    return {"estado": "ok", "base_de_datos": "ok", "version": version}
 
 
 @router.get("/reglas", response_model=ReglasSalida, summary="Reglas de negocio")

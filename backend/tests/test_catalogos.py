@@ -14,10 +14,16 @@ def sembrado(db):
     return db
 
 
-def test_health(client):
+def test_health(client, monkeypatch):
+    monkeypatch.delenv("RENDER_GIT_COMMIT", raising=False)
     r = client.get("/api/health")
     assert r.status_code == 200
-    assert r.json() == {"estado": "ok", "base_de_datos": "ok"}
+    assert r.json() == {"estado": "ok", "base_de_datos": "ok", "version": "local"}
+
+
+def test_health_dice_el_commit_publicado(client, monkeypatch):
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "1a2b3c4d5e6f7a8b9c0d")
+    assert client.get("/api/health").json()["version"] == "1a2b3c4"
 
 
 def test_reglas_tienen_la_forma_del_contrato(client):

@@ -95,7 +95,7 @@ Validación del registro: `nombre` 2 a 80 caracteres; `correo` válido; `passwor
 
 | Endpoint | Salida |
 |---|---|
-| `GET /api/health` | `{ "estado": "ok", "base_de_datos": "ok" }` (503 `SERVICIO_NO_DISPONIBLE` si la base no responde) |
+| `GET /api/health` | `{ "estado": "ok", "base_de_datos": "ok", "version": "1a2b3c4" }`: `version` es el commit publicado en Render, o `"local"` (503 `SERVICIO_NO_DISPONIBLE` si la base no responde) |
 | `GET /api/sectores` | `[ { "id": 1, "nombre": "Centro" } ]` (orden alfabético) |
 | `GET /api/colonias?q=&sector_id=&solo_activas=true&pagina=1&tam=10` | Paginación de `{ "id", "nombre", "sector": { "id", "nombre" }, "activa", "lat", "lon" }`, en orden alfabético. `tam` vale 10 por omisión (catálogos) y acepta hasta 500 para llenar listas |
 | `GET /api/tipos-dano` | `[ { "id", "codigo", "nombre" } ]` (solo los activos) |
