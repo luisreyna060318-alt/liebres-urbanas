@@ -17,6 +17,8 @@ interface Props extends PropsAccion {
 }
 
 export default function FormularioAvance({ reporte, estado, alTerminar, alDesfasarse, alCancelar }: Props) {
+  // PENDIENTE: el comentario tiene su propio límite (COMENTARIO_MAX en el backend); cuando GET /api/reglas exponga
+  // `comentario_max` (otro PR), usarlo aquí. Mientras tanto vale lo mismo que la descripción (500).
   const { descripcion_max } = useReglas()
   // "Hoy" se calcula una vez, al abrir el formulario (no en cada render)
   const [hoy] = useState(() => diaEnJuarez(new Date()))
@@ -68,28 +70,17 @@ export default function FormularioAvance({ reporte, estado, alTerminar, alDesfas
   return (
     <form className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`${accion} ${reporte.folio}`} noValidate>
       {esReparado && (
-        <div className="campo">
-          <label htmlFor={idFecha}>
-            Fecha de reparación<span aria-hidden="true"> *</span>
-          </label>
-          <input
-            id={idFecha}
-            type="date"
-            value={fecha}
-            min={diaReporte}
-            max={hoy}
-            onChange={(e) => setFecha(e.target.value)}
-            aria-required
-            aria-invalid={campos.fecha_reparacion ? true : undefined}
-            aria-describedby={campos.fecha_reparacion ? `${idFecha}-error` : undefined}
-          />
-          {campos.fecha_reparacion && (
-            <p id={`${idFecha}-error`} className="campo-error">
-              <span aria-hidden="true">⚠ </span>
-              {campos.fecha_reparacion}
-            </p>
-          )}
-        </div>
+        <Campo
+          id={idFecha}
+          etiqueta="Fecha de reparación"
+          tipo="date"
+          valor={fecha}
+          onCambio={setFecha}
+          minimo={diaReporte}
+          maximo={hoy}
+          error={campos.fecha_reparacion}
+          requerido
+        />
       )}
       <Campo
         id={`comentario-avance-${reporte.id}`}

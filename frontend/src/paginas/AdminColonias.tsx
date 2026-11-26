@@ -1,12 +1,13 @@
 // /admin/colonias (solo coordinador, HU-06.1): catálogo de colonias y sectores.
 // Muestra activas e inactivas, de 10 en 10. Una colonia con reportes no se puede eliminar (409): solo desactivar.
 // El servidor vuelve a validar el rol y cada dato; esta pantalla solo facilita el trabajo.
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { actualizarColonia, borrarColonia, pedirColonias, pedirSectores } from '../api/catalogos.ts'
 import type { Colonia } from '../api/tipos.ts'
 import Alerta from '../componentes/Alerta.tsx'
 import Boton from '../componentes/Boton.tsx'
 import Campo from '../componentes/Campo.tsx'
+import Confirmar from '../componentes/Confirmar.tsx'
 import Estado from '../componentes/Estado.tsx'
 import FormularioColonia from '../componentes/FormularioColonia.tsx'
 import Paginacion from '../componentes/Paginacion.tsx'
@@ -181,8 +182,12 @@ export default function AdminColonias() {
                   <td>{c.activa ? 'Activa' : 'Inactiva'}</td>
                   <td>
                     {porBorrar === c.id ? (
-                      <ConfirmarBorrado
-                        nombre={c.nombre}
+                      <Confirmar
+                        etiqueta={`Confirmar la eliminación de ${c.nombre}`}
+                        mensaje={`¿Eliminar la colonia ${c.nombre}? No se puede deshacer.`}
+                        textoConfirmar="Sí, eliminar"
+                        textoCargando="Eliminando…"
+                        variante="peligro"
                         ocupado={ocupado}
                         alConfirmar={() => void borrar(c)}
                         alCancelar={() => setPorBorrar(null)}
@@ -219,32 +224,5 @@ export default function AdminColonias() {
 
       <SeccionSectores sectores={listaSectores} alCambiar={alCambiarSectores} />
     </section>
-  )
-}
-
-interface PropsBorrado {
-  nombre: string
-  ocupado: boolean
-  alConfirmar: () => void
-  alCancelar: () => void
-}
-
-// Pregunta antes de eliminar; el foco empieza en "Cancelar" (la opción segura) para quien usa teclado
-function ConfirmarBorrado({ nombre, ocupado, alConfirmar, alCancelar }: PropsBorrado) {
-  const cancelar = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    cancelar.current?.focus()
-  }, [])
-
-  return (
-    <div className="confirmar-borrado" role="group" aria-label={`Confirmar la eliminación de ${nombre}`}>
-      <p>¿Eliminar la colonia {nombre}? No se puede deshacer.</p>
-      <Boton variante="peligro" onClick={alConfirmar} cargando={ocupado} textoCargando="Eliminando…">
-        Sí, eliminar
-      </Boton>
-      <button type="button" className="boton boton-secundario" onClick={alCancelar} disabled={ocupado} ref={cancelar}>
-        Cancelar
-      </button>
-    </div>
   )
 }

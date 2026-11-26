@@ -53,7 +53,7 @@ export default function Moderacion() {
             type="button"
             role="tab"
             id={`pestana-${p.id}`}
-            aria-controls={`panel-${p.id}`}
+            aria-controls={i === activa ? `panel-${p.id}` : undefined} // solo existe el panel de la pestaña activa
             aria-selected={i === activa}
             tabIndex={i === activa ? 0 : -1}
             className="pestana"

@@ -1,6 +1,6 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { ReportePublico, UsuarioPublico } from '../api/tipos.ts'
 import { authFalso, ConAuth, MODERADOR, simularApi } from '../pruebas/ayudas.tsx'
@@ -153,13 +153,72 @@ describe('Consulta pública (HU-04.1 y HU-04.2)', () => {
 
     expect(await screen.findByText('Página 1 de 2 (21 resultados)')).toBeInTheDocument()
     await u.click(screen.getByRole('button', { name: 'Siguiente' }))
+    // El botón se desmonta mientras carga; el foco queda en el encabezado de resultados
+    expect(screen.getByRole('heading', { name: 'Resultados' })).toHaveFocus()
 
     expect(await screen.findByRole('heading', { name: 'ENC-2026-000002' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Resultados' })).toHaveFocus()
     expect(screen.getByTestId('url')).toHaveTextContent('?categoria=bache&pagina=2')
     expect(api.de('GET /api/reportes').map((l) => l.url.search)).toEqual([
       '?categoria=bache&pagina=1',
       '?categoria=bache&pagina=2',
     ])
+  })
+
+  it('al buscar el formulario sigue montado: conserva el foco y pide las colonias una sola vez', async () => {
+    const api = simularApi({ 'GET /api/reportes': pagina([BACHE]), 'GET /api/colonias': COLONIAS_API })
+    renderizar()
+    const u = userEvent.setup()
+
+    await screen.findByRole('heading', { name: 'BCH-2026-000001' })
+    const campo = screen.getByLabelText(/Buscar por calle o folio/)
+    await u.type(campo, 'Tecnológico{Enter}')
+    await screen.findByText(/q=Tecnol/)
+    await screen.findByRole('heading', { name: 'BCH-2026-000001' })
+    expect(campo).toBeInTheDocument()
+    expect(campo).toHaveFocus() // Buscar con Enter no desmonta el formulario
+
+    const buscar = screen.getByRole('button', { name: 'Buscar' })
+    await u.click(buscar)
+    await screen.findByRole('heading', { name: 'BCH-2026-000001' })
+    expect(buscar).toHaveFocus()
+    expect(screen.getByRole('form', { name: 'Filtros de reportes' })).toContainElement(document.activeElement as HTMLElement)
+
+    expect(api.de('GET /api/colonias')).toHaveLength(1)
+  })
+
+  it('"Limpiar filtros" del formulario borra lo escrito aunque la URL ya no tenga filtros y conserva el foco', async () => {
+    simularApi({ 'GET /api/reportes': pagina([BACHE]), 'GET /api/colonias': COLONIAS_API })
+    renderizar()
+    const u = userEvent.setup()
+
+    await screen.findByRole('heading', { name: 'BCH-2026-000001' })
+    await u.type(screen.getByLabelText(/Buscar por calle o folio/), 'sin aplicar')
+    const limpiar = screen.getByRole('button', { name: 'Limpiar filtros' })
+    await u.click(limpiar)
+
+    expect(screen.getByLabelText(/Buscar por calle o folio/)).toHaveValue('')
+    expect(limpiar).toHaveFocus()
+  })
+
+  it('el botón "atrás" vuelve a poner en el formulario los filtros de la URL', async () => {
+    simularApi({ 'GET /api/reportes': pagina([BACHE]), 'GET /api/colonias': COLONIAS_API })
+    function Atras() {
+      const irAtras = useNavigate()
+      return <button onClick={() => void irAtras(-1)}>Atrás</button>
+    }
+    render(
+      <ConAuth valor={authFalso()}>
+        <MemoryRouter initialEntries={['/?q=uno', '/?q=dos']} initialIndex={1}>
+          <Consulta />
+          <Atras />
+        </MemoryRouter>
+      </ConAuth>,
+    )
+    await screen.findByRole('heading', { name: 'BCH-2026-000001' })
+    expect(screen.getByLabelText(/Buscar por calle o folio/)).toHaveValue('dos')
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Atrás' }))
+    await waitFor(() => expect(screen.getByLabelText(/Buscar por calle o folio/)).toHaveValue('uno'))
   })
 
   it('el estado Rechazado solo se ofrece a moderación', async () => {

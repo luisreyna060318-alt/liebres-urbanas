@@ -180,6 +180,7 @@ describe('Administrar colonias (HU-06.1)', () => {
     const u = userEvent.setup()
 
     await u.click(await screen.findByRole('button', { name: /Editar Colonia Ficticia Uno/ }))
+    expect(screen.getByLabelText('Nombre *')).toHaveFocus() // el foco pasa al primer campo del formulario
     expect(screen.getByLabelText('Nombre *')).toHaveValue('Colonia Ficticia Uno')
     expect(screen.getByLabelText('Latitud')).toHaveValue('31.7')
     await u.clear(screen.getByLabelText('Nombre *'))
