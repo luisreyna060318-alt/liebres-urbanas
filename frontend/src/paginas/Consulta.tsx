@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { pedirColonias } from '../api/catalogos.ts'
+import { pedirColonias, pedirSectores } from '../api/catalogos.ts'
 import { pedirReportes } from '../api/reportes.ts'
 import type { Categoria, Estado as EstadoReporte, FiltroReportes, Severidad } from '../api/tipos.ts'
 import Boton from '../componentes/Boton.tsx'
@@ -17,7 +17,7 @@ import { useTitulo } from '../hooks/useTitulo.ts'
 import { ETIQUETA_CATEGORIA, ETIQUETA_ESTADO, ETIQUETA_SEVERIDAD, opcionesDe } from '../utils/etiquetas.ts'
 
 // Filtros que se guardan en la URL (la página va aparte)
-const CLAVES = ['categoria', 'estado', 'colonia_id', 'severidad', 'desde', 'hasta', 'q'] as const
+const CLAVES = ['categoria', 'estado', 'sector_id', 'colonia_id', 'severidad', 'desde', 'hasta', 'q'] as const
 type Filtros = Record<(typeof CLAVES)[number], string>
 
 const FILTROS_VACIOS = Object.fromEntries(CLAVES.map((clave) => [clave, ''])) as Filtros
@@ -37,6 +37,7 @@ function aFiltroApi(f: Filtros, pagina: number): FiltroReportes {
     categoria: (f.categoria || undefined) as Categoria | undefined,
     estado: (f.estado || undefined) as EstadoReporte | undefined,
     colonia_id: f.colonia_id ? Number(f.colonia_id) : undefined,
+    sector_id: f.sector_id ? Number(f.sector_id) : undefined,
     severidad: (f.severidad || undefined) as Severidad | undefined,
     desde: f.desde || undefined,
     hasta: f.hasta || undefined,
@@ -153,6 +154,7 @@ function FormularioFiltros({ clave, inicial, onBuscar, onLimpiar }: PropsFiltros
     setErrorFechas(undefined)
   }
   const colonias = useApi(() => pedirColonias({ tam: 500 }), [])
+  const sectores = useApi(() => pedirSectores(), [])
 
   const cambiar = (clave: keyof Filtros) => (valor: string) => setF((previo) => ({ ...previo, [clave]: valor }))
 
@@ -210,6 +212,16 @@ function FormularioFiltros({ clave, inicial, onBuscar, onLimpiar }: PropsFiltros
         valor={f.estado}
         onCambio={cambiar('estado')}
         opciones={opcionesEstado}
+      />
+      <Campo
+        id="filtro-sector"
+        etiqueta="Sector"
+        tipo="select"
+        textoOpcionVacia="Todos"
+        valor={f.sector_id}
+        onCambio={cambiar('sector_id')}
+        opciones={(sectores.datos ?? []).map((s) => ({ valor: String(s.id), etiqueta: s.nombre }))}
+        ayuda={sectores.error ? 'No se pudo cargar la lista de sectores.' : undefined}
       />
       <Campo
         id="filtro-colonia"

@@ -124,8 +124,8 @@ def test_coincide_con_consulta_reportes(client, db, datos, coordinador, filtro):
                            sector_id=params.get("sector_id"))
         esperado = db.scalar(select(func.count()).select_from(consulta_reportes(f).order_by(None).subquery()))
         assert total == esperado, (categoria, estado)
-        if "sector_id" not in params:
-            # La lista pública (GET /api/reportes) con los mismos filtros da el mismo total
+        if estado != "rechazado":  # el público no ve los rechazados
+            # La lista pública (GET /api/reportes) con los mismos filtros, también por sector, da el mismo total
             lista = client.get("/api/reportes", params={"categoria": categoria, "estado": estado, **params})
             assert lista.json()["total"] == total, (categoria, estado)
     assert cuerpo["totales"]["total"] > 0
