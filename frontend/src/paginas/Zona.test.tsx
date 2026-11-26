@@ -194,7 +194,7 @@ describe('¿Cómo está mi zona? (HU-04.3)', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Usar mi ubicación' }))
 
     expect(
-      await screen.findByText('Tu ubicación está fuera de Ciudad Juárez; escribe una dirección de la ciudad.'),
+      await screen.findByText('Ese punto está fuera de Ciudad Juárez; escribe una dirección de la ciudad.'),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Reintentar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

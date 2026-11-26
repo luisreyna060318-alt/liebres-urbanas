@@ -11,9 +11,8 @@ import { estaDesfasado } from './acciones.ts'
 import type { PropsAccion } from './acciones.ts'
 
 export default function FormularioValidar({ reporte, alTerminar, alDesfasarse, alCancelar }: PropsAccion) {
-  // PENDIENTE: el comentario tiene su propio límite (COMENTARIO_MAX en backend/app/core/reglas.py, hoy 500, igual que la
-  // descripción). Cuando GET /api/reglas exponga `comentario_max` (otro PR), usarlo aquí en lugar de `descripcion_max`.
-  const { descripcion_max } = useReglas()
+  // Límite propio del comentario (COMENTARIO_MAX en el backend), tomado de GET /api/reglas
+  const { comentario_max } = useReglas()
   const [comentario, setComentario] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
@@ -45,7 +44,7 @@ export default function FormularioValidar({ reporte, alTerminar, alDesfasarse, a
         filas={2}
         valor={comentario}
         onCambio={setComentario}
-        maxLength={descripcion_max}
+        maxLength={comentario_max}
         error={campos.comentario}
         ayuda="Aparece en el historial del reporte."
       />

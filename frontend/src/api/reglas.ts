@@ -12,6 +12,7 @@ export const REGLAS_RESPALDO: Reglas = {
   radio_zona_km: 1,
   max_reportes_por_hora: 10,
   descripcion_max: 500,
+  comentario_max: 500,
   password_min: 8,
   inactividad_min: 30,
   tam_pagina_consulta: 20,

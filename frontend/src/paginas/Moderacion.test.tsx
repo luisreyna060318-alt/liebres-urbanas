@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { MotivoRechazo, ReportePublico } from '../api/tipos.ts'
-import { authFalso, ConAuth, MODERADOR, simularApi } from '../pruebas/ayudas.tsx'
+import { COORDINADOR, authFalso, ConAuth, MODERADOR, simularApi } from '../pruebas/ayudas.tsx'
 import type { RespuestaSimulada } from '../pruebas/ayudas.tsx'
 import { COLONIAS, reporteCercano, TIPOS_DANO } from '../pruebas/datos.ts'
 import Moderacion from './Moderacion.tsx'
@@ -30,9 +30,9 @@ const CATALOGOS = {
   'GET /api/motivos-rechazo': { cuerpo: MOTIVOS },
 }
 
-function renderizar() {
+function renderizar(usuario = MODERADOR) {
   return render(
-    <ConAuth valor={authFalso({ usuario: MODERADOR })}>
+    <ConAuth valor={authFalso({ usuario })}>
       <MemoryRouter initialEntries={['/moderacion']}>
         <Moderacion />
       </MemoryRouter>
@@ -336,5 +336,15 @@ describe('Moderación: en seguimiento (HU-05.2)', () => {
 
     expect(await screen.findByText(/está en «En reparación»/)).toBeInTheDocument()
     expect(api.de('GET /api/moderacion/seguimiento')).toHaveLength(2)
+  })
+})
+
+describe('Moderación: coordinador (RN-05)', () => {
+  it('solo ve la pestaña "En seguimiento" y no pide la bandeja', async () => {
+    // Si la pantalla pidiera la bandeja, simularApi no tendría esa ruta y la prueba fallaría
+    simularApi({ ...CATALOGOS, 'GET /api/moderacion/seguimiento': pagina([]) })
+    renderizar(COORDINADOR)
+    expect(await screen.findByRole('tab', { name: 'En seguimiento' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('tab', { name: 'Por revisar' })).not.toBeInTheDocument()
   })
 })

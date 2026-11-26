@@ -1,9 +1,11 @@
-// /moderacion (solo moderador, HU-05.1 y HU-05.2). Pestañas accesibles: "Por revisar" (validar o rechazar baches
-// nuevos) y "En seguimiento" (registrar el avance de la reparación, HU-05.2).
+// /moderacion (HU-05.1 y HU-05.2). Pestañas accesibles: "Por revisar" (validar o rechazar baches nuevos, solo
+// moderador) y "En seguimiento" (registrar el avance de la reparación: moderador y coordinador, RN-05).
 // Pestañas con el patrón de WAI-ARIA: las flechas izquierda/derecha cambian de pestaña y Tab entra al panel.
 import { useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
+import { useAuth } from '../context/AuthContexto.ts'
 import { useTitulo } from '../hooks/useTitulo.ts'
+import { ROLES_MODERADOR } from '../utils/menu.ts'
 import EnSeguimiento from './moderacion/EnSeguimiento.tsx'
 import PorRevisar from './moderacion/PorRevisar.tsx'
 
@@ -20,6 +22,9 @@ const PESTANAS: Pestana[] = [
 
 export default function Moderacion() {
   useTitulo('Moderación')
+  const { tienePermiso } = useAuth()
+  // El servidor rechaza la bandeja a quien no es moderador (403): aquí solo se evita mostrarla
+  const pestanas = tienePermiso(ROLES_MODERADOR) ? PESTANAS : PESTANAS.filter((p) => p.id === 'seguimiento')
   const [activa, setActiva] = useState(0)
   const botones = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -29,7 +34,7 @@ export default function Moderacion() {
   }
 
   function alPresionarTecla(evento: KeyboardEvent) {
-    const ultima = PESTANAS.length - 1
+    const ultima = pestanas.length - 1
     if (evento.key === 'ArrowRight') elegir(activa === ultima ? 0 : activa + 1)
     else if (evento.key === 'ArrowLeft') elegir(activa === 0 ? ultima : activa - 1)
     else if (evento.key === 'Home') elegir(0)
@@ -38,13 +43,13 @@ export default function Moderacion() {
     evento.preventDefault()
   }
 
-  const pestana = PESTANAS[activa]
+  const pestana = pestanas[activa]
 
   return (
     <section>
       <h1>Moderación</h1>
       <div className="pestanas" role="tablist" aria-label="Secciones de moderación" onKeyDown={alPresionarTecla}>
-        {PESTANAS.map((p, i) => (
+        {pestanas.map((p, i) => (
           <button
             key={p.id}
             ref={(boton) => {

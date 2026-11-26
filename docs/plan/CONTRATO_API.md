@@ -454,7 +454,7 @@ Código nuevo: 409 `ULTIMO_COORDINADOR`.
 
 | Parámetro | Valores | Notas |
 |---|---|---|
-| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` (igual que la sección 8.1) |
+| `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` (igual que la sección 8.1). Fuera del rango 2000-01-01 a 2100-12-31 responde 422 |
 | `sector_id` | entero ≥ 1 | Solo los reportes de las colonias de ese sector |
 
 **Una sola función de filtrado.** Todas las cifras salen de `services/consulta.consulta_reportes(FiltroReportes)` con

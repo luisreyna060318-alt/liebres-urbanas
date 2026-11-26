@@ -17,7 +17,7 @@ import Registro from './paginas/Registro.tsx'
 import Reportar from './paginas/Reportar.tsx'
 import Tablero from './paginas/Tablero.tsx'
 import Zona from './paginas/Zona.tsx'
-import { ROLES_CIUDADANO, ROLES_COORDINADOR, ROLES_MODERADOR } from './utils/menu.ts'
+import { ROLES_CIUDADANO, ROLES_COORDINADOR, ROLES_SEGUIMIENTO } from './utils/menu.ts'
 
 // Todas las rutas comparten el Layout (header, nav, main, footer).
 // Las rutas privadas piden sesión y rol aquí; el servidor vuelve a validar el rol en cada petición.
@@ -43,7 +43,7 @@ export default function App() {
         </Route>
 
         {/* Moderador */}
-        <Route element={<RutaPrivada roles={ROLES_MODERADOR} />}>
+        <Route element={<RutaPrivada roles={ROLES_SEGUIMIENTO} />}>
           <Route path="/moderacion" element={<Moderacion />} />
         </Route>
 

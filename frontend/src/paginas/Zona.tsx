@@ -32,7 +32,7 @@ interface Aviso {
 const ID_DIRECCION = 'zona-direccion'
 
 // Texto cuando el servidor dice que el punto (por ejemplo el del dispositivo) no está en Ciudad Juárez
-const TEXTO_FUERA_DEL_MUNICIPIO = 'Tu ubicación está fuera de Ciudad Juárez; escribe una dirección de la ciudad.'
+const TEXTO_FUERA_DEL_MUNICIPIO = 'Ese punto está fuera de Ciudad Juárez; escribe una dirección de la ciudad.'
 
 // 1000 -> "1 km"; 500 -> "500 m"
 function textoRadio(metros: number): string {
