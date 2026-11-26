@@ -284,3 +284,8 @@
   flex-wrap: wrap;
   gap: var(--espacio-2);
 }
+
+/* Severidad del bache o nivel del agua en la tarjeta (HU-04.1) */
+.tarjeta-reporte-gravedad {
+  font-weight: 600;
+}

@@ -14,7 +14,6 @@ import Estado from '../componentes/Estado.tsx'
 import TarjetaReporte from '../componentes/TarjetaReporte.tsx'
 import { useApi } from '../hooks/useApi.ts'
 import { useTitulo } from '../hooks/useTitulo.ts'
-import { ETIQUETA_NIVEL_AGUA } from '../utils/etiquetas.ts'
 
 // El punto que se consulta: viene de una dirección elegida o de la ubicación del dispositivo
 interface Punto {
@@ -250,9 +249,6 @@ function ReportesDeZona({ punto }: { punto: Punto }) {
                     </Link>
                   }
                 >
-                  {r.nivel_agua && (
-                    <p className="zona-nivel-agua">Nivel del agua: {ETIQUETA_NIVEL_AGUA[r.nivel_agua]}</p>
-                  )}
                   {intransitable && (
                     <p className="zona-leyenda-intransitable">
                       <span aria-hidden="true">⚠ </span>

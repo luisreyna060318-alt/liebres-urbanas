@@ -1,4 +1,5 @@
-// Resumen de un reporte: folio, tipo (ícono y texto), calle, colonia, estado, antigüedad y, si se conoce, la distancia.
+// Resumen de un reporte: folio, tipo (ícono y texto), calle, colonia, severidad del bache o nivel del agua del
+// encharcamiento (HU-04.1 CA1), estado, antigüedad y, si se conoce, la distancia.
 // Sirve para listas y avisos; quien la usa puede agregar botones con `acciones`.
 //   <TarjetaReporte reporte={r} acciones={<Boton>Confirmar</Boton>} />
 // `mostrarFecha` agrega la fecha y hora del reporte (hora de Juárez); `children` agrega texto extra, como el motivo de rechazo.
@@ -6,7 +7,15 @@
 import type { ReactNode } from 'react'
 import type { ReportePublico } from '../api/tipos.ts'
 import { formatoFechaHora } from '../utils/fechas.ts'
-import { ETIQUETA_CATEGORIA, ETIQUETA_ESTADO, ICONO_CATEGORIA, textoAntiguedad, textoDistancia } from '../utils/etiquetas.ts'
+import {
+  ETIQUETA_CATEGORIA,
+  ETIQUETA_ESTADO,
+  ETIQUETA_NIVEL_AGUA,
+  ETIQUETA_SEVERIDAD,
+  ICONO_CATEGORIA,
+  textoAntiguedad,
+  textoDistancia,
+} from '../utils/etiquetas.ts'
 
 interface Props {
   reporte: ReportePublico & { distancia_m?: number } // ReporteCercano trae la distancia; los demás no
@@ -36,6 +45,9 @@ export default function TarjetaReporte({ reporte, acciones, mostrarFecha = false
       <p className="tarjeta-reporte-lugar">
         {reporte.calle}, {reporte.colonia.nombre}
       </p>
+
+      {reporte.severidad && <p className="tarjeta-reporte-gravedad">Severidad: {ETIQUETA_SEVERIDAD[reporte.severidad]}</p>}
+      {reporte.nivel_agua && <p className="tarjeta-reporte-gravedad">Nivel del agua: {ETIQUETA_NIVEL_AGUA[reporte.nivel_agua]}</p>}
 
       <p className="tarjeta-reporte-detalle">
         {mostrarFecha && `${formatoFechaHora(reporte.creado_en)} · `}
