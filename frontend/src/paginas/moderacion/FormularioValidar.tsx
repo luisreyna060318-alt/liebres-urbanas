@@ -6,11 +6,13 @@ import { validarReporte } from '../../api/moderacion.ts'
 import Alerta from '../../componentes/Alerta.tsx'
 import Boton from '../../componentes/Boton.tsx'
 import Campo from '../../componentes/Campo.tsx'
+import { useFocoAlMontar } from '../../hooks/useFocoAlMontar.ts'
 import { useReglas } from '../../hooks/useReglas.ts'
 import { estaDesfasado } from './acciones.ts'
 import type { PropsAccion } from './acciones.ts'
 
 export default function FormularioValidar({ reporte, alTerminar, alDesfasarse, alCancelar }: PropsAccion) {
+  const formulario = useFocoAlMontar<HTMLFormElement>() // el botón que abrió el formulario ya no está
   // Límite propio del comentario (COMENTARIO_MAX en el backend), tomado de GET /api/reglas
   const { comentario_max } = useReglas()
   const [comentario, setComentario] = useState('')
@@ -36,7 +38,7 @@ export default function FormularioValidar({ reporte, alTerminar, alDesfasarse, a
   }
 
   return (
-    <form className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`Validar ${reporte.folio}`} noValidate>
+    <form ref={formulario} className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`Validar ${reporte.folio}`} noValidate>
       <Campo
         id={`comentario-validar-${reporte.id}`}
         etiqueta="Comentario (opcional, público)"

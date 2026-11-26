@@ -1,6 +1,14 @@
-"""Esquemas comunes: paginación, errores y reglas."""
+"""Esquemas comunes: paginación, errores, reglas y el tipo de los ids."""
+
+from typing import Annotated
 
 from pydantic import BaseModel, Field
+
+from app.core.reglas import ID_MAX
+
+# Id entero de una fila (reporte, usuario, colonia, sector, motivo). Se usa en rutas, ?filtros= y cuerpos de
+# entrada: fuera de 1..ID_MAX responde 422 VALIDACION con `campos`, en lugar de un 500 de PostgreSQL.
+IdEntero = Annotated[int, Field(ge=1, le=ID_MAX)]
 
 
 class Pagina[T](BaseModel):

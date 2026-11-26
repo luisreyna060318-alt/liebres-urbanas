@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 from app.core.reglas import COMENTARIO_MAX, DESCRIPCION_MAX
+from app.schemas.comun import IdEntero
 
 
 def limpiar_texto(v: str | None) -> str | None:
@@ -34,7 +35,7 @@ class RechazarEntrada(BaseModel):
     """POST /api/reportes/{id}/rechazar. Si el motivo tiene pide_explicacion, `motivo_texto` es obligatorio
     (lo valida el servicio, porque depende del motivo elegido)."""
 
-    motivo_rechazo_id: int = Field(examples=[5], description="Motivo activo de GET /api/motivos-rechazo")
+    motivo_rechazo_id: IdEntero = Field(examples=[5], description="Motivo activo de GET /api/motivos-rechazo")
     motivo_texto: str | None = Field(
         default=None, max_length=DESCRIPCION_MAX, examples=["El punto está dentro de un estacionamiento privado"],
         description="Explicación para el autor; obligatoria si el motivo la pide (por ejemplo «Otro»)",

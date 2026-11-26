@@ -8,6 +8,7 @@ import type { MotivoRechazo } from '../../api/tipos.ts'
 import Alerta from '../../componentes/Alerta.tsx'
 import Boton from '../../componentes/Boton.tsx'
 import Campo from '../../componentes/Campo.tsx'
+import { useFocoAlMontar } from '../../hooks/useFocoAlMontar.ts'
 import { useReglas } from '../../hooks/useReglas.ts'
 import { estaDesfasado } from './acciones.ts'
 import type { PropsAccion } from './acciones.ts'
@@ -17,6 +18,7 @@ interface Props extends PropsAccion {
 }
 
 export default function FormularioRechazo({ reporte, motivos, alTerminar, alDesfasarse, alCancelar }: Props) {
+  const formulario = useFocoAlMontar<HTMLFormElement>() // el botón que abrió el formulario ya no está
   // Límite propio del comentario (COMENTARIO_MAX en el backend), tomado de GET /api/reglas
   const { comentario_max } = useReglas()
   const [motivoId, setMotivoId] = useState('')
@@ -63,7 +65,7 @@ export default function FormularioRechazo({ reporte, motivos, alTerminar, alDesf
   }
 
   return (
-    <form className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`Rechazar ${reporte.folio}`} noValidate>
+    <form ref={formulario} className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`Rechazar ${reporte.folio}`} noValidate>
       <Campo
         id={id('motivo')}
         etiqueta="Motivo del rechazo"

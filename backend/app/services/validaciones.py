@@ -37,7 +37,15 @@ def validar_limite_horario(db: Session, autor: Usuario, ahora: datetime) -> None
 
     Se cuenta en la base de datos (no en memoria) para que el límite valga aunque el servidor se reinicie o
     corra en varios procesos. Cuentan baches y encharcamientos juntos.
+
+    Antes de contar se bloquea la fila de la persona (SELECT ... FOR UPDATE): si llegan dos altas de la misma
+    cuenta al mismo tiempo, la segunda espera a que la primera haga commit y su conteo ya incluye ese reporte.
+    Sin el bloqueo, una ráfaga de peticiones simultáneas pasaba toda el límite. El bloqueo se libera con el
+    commit (o rollback) del servicio de alta. Orden de bloqueos en el alta: primero esta fila del usuario y
+    después la del contador de folios (generar_folio); siempre el mismo, para no bloquearse entre peticiones.
+    SQLite (las pruebas) no tiene bloqueo de fila: ahí solo se comprueba que la consulta lo pida.
     """
+    db.get(Usuario, autor.id, with_for_update=True, populate_existing=True)
     hace_una_hora = ahora - timedelta(hours=1)
     creados = db.scalar(
         select(func.count()).select_from(Reporte).where(Reporte.autor_id == autor.id, Reporte.creado_en > hace_una_hora)

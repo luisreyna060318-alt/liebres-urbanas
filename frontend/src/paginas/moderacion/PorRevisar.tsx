@@ -10,6 +10,7 @@ import Estado from '../../componentes/Estado.tsx'
 import Paginacion from '../../componentes/Paginacion.tsx'
 import TarjetaReporte from '../../componentes/TarjetaReporte.tsx'
 import { useApi } from '../../hooks/useApi.ts'
+import { devolverFoco } from '../../utils/foco.ts'
 import DatosParaRevisar from './DatosParaRevisar.tsx'
 import FiltrosModeracion from './FiltrosModeracion.tsx'
 import type { Filtros } from './FiltrosModeracion.tsx'
@@ -65,7 +66,10 @@ export default function PorRevisar() {
       reporte: r,
       alTerminar: (texto: string) => refrescar({ tipo: 'exito', texto }),
       alDesfasarse: (texto: string) => refrescar({ tipo: 'error', texto }),
-      alCancelar: () => setAbierto(null),
+      alCancelar: () => {
+        setAbierto(null)
+        if (abierto) devolverFoco(`${abierto.accion}-${r.id}`) // vuelve al botón que abrió el formulario
+      },
     }
     if (abierto?.id === r.id && abierto.accion === 'validar') return <FormularioValidar {...props} />
     if (abierto?.id === r.id && abierto.accion === 'rechazar') {
@@ -84,10 +88,10 @@ export default function PorRevisar() {
     }
     return (
       <>
-        <Boton onClick={() => setAbierto({ id: r.id, accion: 'validar' })}>
+        <Boton id={`validar-${r.id}`} onClick={() => setAbierto({ id: r.id, accion: 'validar' })}>
           Validar <span className="solo-lectores">{r.folio}</span>
         </Boton>
-        <Boton variante="peligro" onClick={() => setAbierto({ id: r.id, accion: 'rechazar' })}>
+        <Boton id={`rechazar-${r.id}`} variante="peligro" onClick={() => setAbierto({ id: r.id, accion: 'rechazar' })}>
           Rechazar <span className="solo-lectores">{r.folio}</span>
         </Boton>
       </>

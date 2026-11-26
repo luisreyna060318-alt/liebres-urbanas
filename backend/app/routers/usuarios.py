@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import SesionDB, require_role
 from app.core.reglas import PAGINA_MAX, TAM_PAGINA_CATALOGOS, TAM_PAGINA_MAX
-from app.schemas.comun import Pagina, respuestas_error
+from app.schemas.comun import IdEntero, Pagina, respuestas_error
 from app.schemas.usuarios import CambioRolEntrada, Rol, SuspensionEntrada, UsuarioAdmin
 from app.services import usuarios as usuarios_service
 
@@ -38,7 +38,7 @@ def listar_usuarios(
     summary="Cambiar el rol",
     responses=respuestas_error(401, 403, 404, 409, 422),
 )
-def cambiar_rol(usuario_id: int, datos: CambioRolEntrada, db: SesionDB):
+def cambiar_rol(usuario_id: IdEntero, datos: CambioRolEntrada, db: SesionDB):
     """Cambia el rol (`ciudadano`, `moderador` o `coordinador`). Surte efecto en la siguiente petición de esa persona.
     No se puede quitar el rol al último coordinador activo (409 `ULTIMO_COORDINADOR`)."""
     return usuarios_service.cambiar_rol(db, usuario_id, datos.rol)
@@ -50,7 +50,7 @@ def cambiar_rol(usuario_id: int, datos: CambioRolEntrada, db: SesionDB):
     summary="Suspender o reactivar",
     responses=respuestas_error(401, 403, 404, 409, 422),
 )
-def cambiar_suspension(usuario_id: int, datos: SuspensionEntrada, db: SesionDB):
+def cambiar_suspension(usuario_id: IdEntero, datos: SuspensionEntrada, db: SesionDB):
     """`suspendido: true` pone `activo: false`: la persona ya no puede entrar (ni siquiera con un token vigente) y
     sus reportes se conservan. No se puede suspender al último coordinador activo (409 `ULTIMO_COORDINADOR`)."""
     return usuarios_service.cambiar_suspension(db, usuario_id, datos.suspendido)

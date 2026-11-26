@@ -70,8 +70,6 @@ RUTAS_ADMIN_USUARIOS = {
     ("PUT", "/api/usuarios/{usuario_id}/rol"),
     ("PUT", "/api/usuarios/{usuario_id}/suspension"),
 }
-# Registro y login son públicos pero se prueban aparte (crean cuentas y necesitan credenciales)
-RUTAS_PROBADAS_APARTE = {("POST", "/api/auth/registro"), ("POST", "/api/auth/login")}
 # Rutas que se prueban aparte, cada una con su propia matriz de roles (necesitan datos o credenciales especiales):
 # - registro y login son públicos y crean cuentas;
 # - el avance de reparación necesita un bache ya validado (test_avance_reparacion.py);

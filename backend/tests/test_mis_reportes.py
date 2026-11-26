@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from app.core.tiempo import ahora_utc
 from app.models import Confirmacion, HistorialEstado, MotivoRechazo, Reporte
@@ -154,6 +154,30 @@ def test_estado_cambiado_responde_409(client, ciudadano, moderador, alta, catalo
     r = client.delete(f"/api/reportes/{reporte_id}", headers=encabezado_de(ciudadano))
     assert r.status_code == 409 and r.json()["codigo"] == "REPORTE_NO_EDITABLE"
     assert db.get(Reporte, reporte_id) is not None  # RN-07: no se borra
+
+
+def test_editar_o_borrar_relee_la_fila_antes_de_decidir(client, ciudadano, alta, catalogo, db):
+    """S3: simula a un moderador que validó el reporte en ese instante. La sesión conserva el objeto viejo
+    («recibido») en memoria, pero la ruta relee la fila (with_for_update) y responde 409 sin borrar ni editar.
+    SQLite no bloquea filas: aquí se prueba la relectura; el bloqueo en sí lo hace PostgreSQL."""
+    reporte_id = alta()["id"]
+    reporte = db.get(Reporte, reporte_id)
+    assert reporte.estado == "recibido"  # cargado en memoria
+    historial_antes = db.scalar(select(func.count()).select_from(HistorialEstado))
+    # Cambio "por fuera" del ORM, sin commit: el objeto en memoria sigue diciendo «recibido»
+    db.execute(update(Reporte.__table__).where(Reporte.__table__.c.id == reporte_id).values(estado="validado"))
+    assert reporte.estado == "recibido"
+
+    r = client.delete(f"/api/reportes/{reporte_id}", headers=encabezado_de(ciudadano))
+    assert r.status_code == 409 and r.json()["codigo"] == "REPORTE_NO_EDITABLE", r.text
+    r = editar(client, ciudadano, reporte_id, catalogo, calle="Calle cambiada a destiempo")
+    assert r.status_code == 409 and r.json()["codigo"] == "REPORTE_NO_EDITABLE", r.text
+
+    db.expire_all()
+    reporte = db.get(Reporte, reporte_id)
+    assert reporte is not None and reporte.estado == "validado"  # RN-07: sigue ahí
+    assert reporte.calle != "Calle cambiada a destiempo"
+    assert db.scalar(select(func.count()).select_from(HistorialEstado)) == historial_antes
 
 
 def test_reporte_inexistente_responde_404(client, ciudadano, catalogo):
