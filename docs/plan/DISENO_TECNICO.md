@@ -214,12 +214,13 @@ Errores: `{"detail": "mensaje en español", "codigo": "ETIQUETA"}` con 400, 401,
 | 31 | `PUT /usuarios/{id}/rol` | K | HU-06.2 | C |
 | 32 | `PUT /usuarios/{id}/suspension` | K | HU-06.2 | C |
 | 33 | `GET /tablero` | K | HU-07.1 | C |
+| 34 | `GET /moderacion/seguimiento` (baches validados y en reparación) | M, K | HU-05.2 | C |
 
 Con P1: `GET/PUT /yo/colonias` (HU-01.4), `GET /puntos-recurrentes` (HU-03.4), `POST/PUT /tipos-dano` y `/motivos-rechazo`
 (HU-06.3), `GET /notificaciones` y `POST /notificaciones/{id}/leer` (HU-08.2), `GET /colonias/{id}/resumen` (HU-07.2),
 `GET /reportes/exportar?formato=csv|xml` (HU-07.3).
 
-Son **36 endpoints en P0** (contando por método y ruta) frente a los 12 que pide la materia.
+Son **37 endpoints en P0** (contando por método y ruta) frente a los 12 que pide la materia.
 
 ## 6. Servicios externos
 

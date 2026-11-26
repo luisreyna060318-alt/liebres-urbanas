@@ -12,7 +12,7 @@ import bcrypt
 import jwt
 
 from app.core.config import settings
-from app.core.reglas import INACTIVIDAD_MIN
+from app.core.reglas import ID_MAX, INACTIVIDAD_MIN
 from app.core.tiempo import ahora_utc
 
 # bcrypt solo procesa los primeros 72 BYTES (no caracteres: una "é" ocupa 2) y desde la versión 5
@@ -57,4 +57,7 @@ def leer_token(token: str) -> int:
         algorithms=[settings.jwt_algorithm],
         options={"require": ["exp", "sub"]},
     )
-    return int(datos["sub"])
+    usuario_id = int(datos["sub"])
+    if not 1 <= usuario_id <= ID_MAX:  # un id fuera del integer de PostgreSQL daría 500 al buscar al usuario
+        raise ValueError("Id de usuario fuera de rango")
+    return usuario_id

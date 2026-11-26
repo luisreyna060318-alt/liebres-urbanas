@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from app.core.deps import SesionDB, require_role
 from app.core.reglas import CATEGORIAS, PAGINA_MAX
 from app.models import Usuario
-from app.schemas.comun import Pagina, respuestas_error
+from app.schemas.comun import IdEntero, Pagina, respuestas_error
 from app.schemas.reportes import (
     BacheEdicion,
     BacheEntrada,
@@ -102,7 +102,7 @@ def reportes_cercanos(
         409: {"description": "`YA_CONFIRMADO` o `TRANSICION_INVALIDA` (el reporte ya está cerrado)"},
     },
 )
-def confirmar_reporte(reporte_id: int, datos: ConfirmacionEntrada, usuario: Ciudadano, db: SesionDB):
+def confirmar_reporte(reporte_id: IdEntero, datos: ConfirmacionEntrada, usuario: Ciudadano, db: SesionDB):
     """Suma tu confirmación a un reporte existente sin crear otro folio.
 
     - `confirma`: solo baches abiertos; suma 1 a `confirmaciones`.
@@ -141,7 +141,7 @@ def mis_reportes(
     summary="Corregir mi reporte",
     responses={**ERRORES_AUTOR, **respuestas_error(422)},
 )
-def editar_reporte(reporte_id: int, datos: BacheEdicion, usuario: Ciudadano, db: SesionDB):
+def editar_reporte(reporte_id: IdEntero, datos: BacheEdicion, usuario: Ciudadano, db: SesionDB):
     """Corrige un bache **propio** mientras siga en «recibido». Mismos campos y validaciones del alta, sin `forzar`.
     Los encharcamientos se publican activos de inmediato y no se editan (409)."""
     return reportes_service.editar_bache(db, usuario, reporte_id, datos)
@@ -153,7 +153,7 @@ def editar_reporte(reporte_id: int, datos: BacheEdicion, usuario: Ciudadano, db:
     summary="Eliminar mi reporte",
     responses=ERRORES_AUTOR,
 )
-def eliminar_reporte(reporte_id: int, usuario: Ciudadano, db: SesionDB):
+def eliminar_reporte(reporte_id: IdEntero, usuario: Ciudadano, db: SesionDB):
     """Elimina un reporte **propio** mientras siga en «recibido» (204, sin cuerpo)."""
     reportes_service.eliminar_reporte(db, usuario, reporte_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

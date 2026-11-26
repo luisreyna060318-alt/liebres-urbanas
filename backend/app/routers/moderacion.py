@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Query
 from app.core.deps import SesionDB, require_role
 from app.core.reglas import PAGINA_MAX
 from app.models import Usuario
-from app.schemas.comun import Pagina, respuestas_error
+from app.schemas.comun import IdEntero, Pagina, respuestas_error
 from app.schemas.moderacion import AvanceEntrada, RechazarEntrada, ValidarEntrada
 from app.schemas.reportes import ReportePublico
 from app.services import moderacion as moderacion_service
@@ -37,7 +37,7 @@ ERRORES_CAMBIO = {
 def bandeja(
     usuario: Moderador,
     db: SesionDB,
-    colonia_id: int | None = Query(None, description="Solo los de esta colonia"),
+    colonia_id: Annotated[IdEntero | None, Query(description="Solo los de esta colonia")] = None,
     tipo_dano_codigo: str | None = Query(None, max_length=40, description="bache, hundimiento, grieta..."),
     pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Empieza en 1"),
 ):
@@ -49,7 +49,7 @@ def bandeja(
     "/reportes/{reporte_id}/validar", response_model=ReportePublico, summary="Validar un bache",
     responses=ERRORES_CAMBIO,
 )
-def validar(reporte_id: int, datos: ValidarEntrada, usuario: Moderador, db: SesionDB):
+def validar(reporte_id: IdEntero, datos: ValidarEntrada, usuario: Moderador, db: SesionDB):
     """**recibido → validado**. El historial guarda quién, cuándo y el comentario (opcional y público)."""
     return moderacion_service.validar(db, usuario, reporte_id, datos)
 
@@ -58,7 +58,7 @@ def validar(reporte_id: int, datos: ValidarEntrada, usuario: Moderador, db: Sesi
     "/reportes/{reporte_id}/rechazar", response_model=ReportePublico, summary="Rechazar un reporte",
     responses=ERRORES_CAMBIO,
 )
-def rechazar(reporte_id: int, datos: RechazarEntrada, usuario: Moderador, db: SesionDB):
+def rechazar(reporte_id: IdEntero, datos: RechazarEntrada, usuario: Moderador, db: SesionDB):
     """Rechaza un bache en **recibido** o un encharcamiento **activo** o **histórico** (RN-06).
 
     `motivo_rechazo_id` es obligatorio y debe estar activo; si el motivo tiene `pide_explicacion`,
@@ -77,7 +77,7 @@ def seguimiento(
     usuario: ModeradorOCoordinador,
     db: SesionDB,
     estado: Literal["validado", "en_reparacion"] | None = Query(None, description="Vacío = los dos"),
-    colonia_id: int | None = Query(None, description="Solo los de esta colonia"),
+    colonia_id: Annotated[IdEntero | None, Query(description="Solo los de esta colonia")] = None,
     tipo_dano_codigo: str | None = Query(None, max_length=40, description="bache, hundimiento, grieta..."),
     pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Empieza en 1"),
 ):
@@ -89,7 +89,7 @@ def seguimiento(
     "/reportes/{reporte_id}/estado", response_model=ReportePublico, summary="Registrar el avance de una reparación",
     responses=ERRORES_CAMBIO,
 )
-def registrar_avance(reporte_id: int, datos: AvanceEntrada, usuario: ModeradorOCoordinador, db: SesionDB):
+def registrar_avance(reporte_id: IdEntero, datos: AvanceEntrada, usuario: ModeradorOCoordinador, db: SesionDB):
     """**validado → en_reparacion → reparado** (RN-05); cualquier otro salto → 409 `TRANSICION_INVALIDA`.
 
     `reparado` exige `fecha_reparacion` (ni futura ni anterior al día del reporte, 422 en `campos`).

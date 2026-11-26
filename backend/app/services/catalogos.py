@@ -22,8 +22,9 @@ def listar_colonias(
     """Colonias en orden alfabético, con su sector. `q` busca por nombre sin distinguir mayúsculas."""
     consulta = select(Colonia).options(joinedload(Colonia.sector)).order_by(Colonia.nombre, Colonia.id)
     if q and q.strip():
-        # Parámetro de SQLAlchemy: el texto nunca se pega a mano en el SQL (sin inyección)
-        consulta = consulta.where(func.lower(Colonia.nombre).contains(q.strip().lower()))
+        # Parámetro de SQLAlchemy: el texto nunca se pega a mano en el SQL (sin inyección).
+        # autoescape: un "%" o "_" escrito por la persona se busca tal cual, no como comodín
+        consulta = consulta.where(func.lower(Colonia.nombre).contains(q.strip().lower(), autoescape=True))
     if sector_id is not None:
         consulta = consulta.where(Colonia.sector_id == sector_id)
     if solo_activas:
