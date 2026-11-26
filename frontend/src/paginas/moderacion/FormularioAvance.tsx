@@ -8,6 +8,7 @@ import type { EstadoAvance } from '../../api/tipos.ts'
 import Alerta from '../../componentes/Alerta.tsx'
 import Boton from '../../componentes/Boton.tsx'
 import Campo from '../../componentes/Campo.tsx'
+import { useFocoAlMontar } from '../../hooks/useFocoAlMontar.ts'
 import { useReglas } from '../../hooks/useReglas.ts'
 import { diaEnJuarez, estaDesfasado } from './acciones.ts'
 import type { PropsAccion } from './acciones.ts'
@@ -17,6 +18,7 @@ interface Props extends PropsAccion {
 }
 
 export default function FormularioAvance({ reporte, estado, alTerminar, alDesfasarse, alCancelar }: Props) {
+  const formulario = useFocoAlMontar<HTMLFormElement>() // el botón que abrió el formulario ya no está
   // Límite propio del comentario (COMENTARIO_MAX en el backend), tomado de GET /api/reglas
   const { comentario_max } = useReglas()
   // "Hoy" se calcula una vez, al abrir el formulario (no en cada render)
@@ -67,7 +69,7 @@ export default function FormularioAvance({ reporte, estado, alTerminar, alDesfas
   const accion = esReparado ? 'Marcar reparado' : 'Marcar en reparación'
 
   return (
-    <form className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`${accion} ${reporte.folio}`} noValidate>
+    <form ref={formulario} className="formulario-moderacion" onSubmit={(e) => void enviar(e)} aria-label={`${accion} ${reporte.folio}`} noValidate>
       {esReparado && (
         <Campo
           id={idFecha}

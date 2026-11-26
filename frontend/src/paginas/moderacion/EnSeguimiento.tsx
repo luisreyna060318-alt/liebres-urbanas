@@ -10,6 +10,7 @@ import Estado from '../../componentes/Estado.tsx'
 import Paginacion from '../../componentes/Paginacion.tsx'
 import TarjetaReporte from '../../componentes/TarjetaReporte.tsx'
 import { useApi } from '../../hooks/useApi.ts'
+import { devolverFoco } from '../../utils/foco.ts'
 import DatosParaRevisar from './DatosParaRevisar.tsx'
 import FiltrosModeracion from './FiltrosModeracion.tsx'
 import type { Filtros } from './FiltrosModeracion.tsx'
@@ -72,12 +73,15 @@ export default function EnSeguimiento() {
           estado={siguiente.estado}
           alTerminar={(texto) => refrescar({ tipo: 'exito', texto }, sale)}
           alDesfasarse={(texto) => refrescar({ tipo: 'error', texto }, sale)}
-          alCancelar={() => setAbierto(null)}
+          alCancelar={() => {
+            setAbierto(null)
+            devolverFoco(`avance-${r.id}`) // vuelve al botón que abrió el formulario
+          }}
         />
       )
     }
     return (
-      <Boton onClick={() => setAbierto(r.id)}>
+      <Boton id={`avance-${r.id}`} onClick={() => setAbierto(r.id)}>
         {siguiente.texto} <span className="solo-lectores">{r.folio}</span>
       </Boton>
     )
