@@ -85,6 +85,22 @@ Anota la URL (`https://TU-SERVICIO.onrender.com`): se usa en el paso 3. Si el no
 ocupado, Render agrega un sufijo; en ese caso usa la URL real y actualiza también el `connect-src` de
 `frontend/vercel.json` (ver el paso 3).
 
+### Que Render despliegue cada cambio
+
+Un servicio creado desde **Public Git Repository** (o desde la herramienta de Render) no recibe avisos de GitHub, así
+que **no se redespliega con cada fusión**: la aplicación publicada se queda con una versión vieja y los endpoints
+nuevos responden 404. Hay dos formas de resolverlo (basta una):
+
+1. **Conectar la cuenta de GitHub en Render** (Account Settings > GitHub) y dar acceso a `liebres-urbanas`. Después
+   revisa en el servicio que *Auto-Deploy* esté activado.
+2. **Deploy Hook:** en el servicio, *Settings > Deploy Hook*, copia la dirección. En GitHub, *Settings > Secrets and
+   variables > Actions > New repository secret*, crea `RENDER_DEPLOY_HOOK_URL` con esa dirección. Es un secreto:
+   no la pegues en chats, issues ni commits. El flujo `.github/workflows/despliegue.yml` la usa en cada fusión.
+
+El flujo **Despliegue** comprueba en cada fusión a `main` que la API publicada responda; `/api/health` muestra en
+`version` el commit publicado. Antes de una demo, revisa que coincida con el último commit de `main`. Si no, usa
+**Manual Deploy > Deploy latest commit** en Render.
+
 ### Si Render no ve el repositorio
 
 - En Render: **Account Settings > GitHub** (o *Configure account*) y revisa que la aplicación de Render esté instalada en
