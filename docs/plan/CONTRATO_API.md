@@ -227,7 +227,7 @@ vencido (historial con actor `null` = sistema). Lo llaman al inicio el alta de e
 | Público | Consultar reportes, detalle, zona, catálogos, reglas, clima, geocodificación |
 | `ciudadano` | Todo lo público + crear, confirmar, ver, editar y borrar sus reportes |
 | `moderador` | Todo lo público + bandeja, validar, rechazar y registrar avance |
-| `coordinador` | Todo lo del moderador + catálogos, usuarios y roles, tablero |
+| `coordinador` | Todo lo público + registrar el avance de una reparación (validado a en reparación y a reparado) + catálogos, usuarios y roles, tablero. La bandeja, validar y rechazar son solo del moderador |
 
 Un rol por persona: moderador y coordinador **no** crean ni confirman reportes (403 `SIN_PERMISO`).
 
