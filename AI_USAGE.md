@@ -54,6 +54,7 @@ Cada integrante lleva su propia bitácora para evitar choques al fusionar: [Luis
 | 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 (orquestador) | Crear el proyecto en Neon, el servicio en Render y el proyecto en Vercel, configurar variables y CORS, y comprobar el despliegue | Servicios en Neon, Render y Vercel (sin cambios de código) | Luis autorizó crear los tres servicios y aprobó el acceso de Vercel a GitHub; las claves no se escribieron en ningún archivo |
 | 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 y agente con Claude Opus 5.5 | Redactar el borrador del reporte técnico y de la autoevaluación a partir del repositorio y darles el formato de un reporte previo del equipo (docx y PDF) | `docs/reporte/*`, `docs/REPORTE.docx`, `docs/REPORTE.pdf`, `docs/AUTOEVALUACION.md` (PR #31) | Luis entregó el modelo de formato y el número de control de Carlos; en revisión por Carlos |
 | 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 (orquestador) | Corregir las observaciones que quedaban de la revisión y comprobar antes de la etiqueta: secretos en el historial y arranque desde un clon limpio | `frontend/`, `docs/plan/CONTRATO_API.md` (PR #35) | Luis pidió las correcciones y autorizó las comprobaciones |
+| 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 (orquestador) y agente auditor con Claude Opus 5.5 | Registrar el backlog como issues, auditar los criterios de las historias indispensables antes de cerrarlas, corregir los botones de confirmar y desmentir y pedir a Carlos sus textos | Issues #36 a #80, `frontend/` (PR #81) | Luis pidió abrir los issues y cerrar solo lo completo |
 
 ## 5. Marcado en commits
 
@@ -64,15 +65,22 @@ Los commits con código generado por IA terminan con `Co-Authored-By: <herramien
 
 | Carpeta | % aproximado |
 |---|---|
-| `frontend/` | Por estimar al final |
-| `backend/` | Por estimar al final |
-| `db/` | Por estimar al final |
-| `infra/` | Por estimar al final |
+| `frontend/` | ~95 % |
+| `backend/` | ~95 % |
+| `db/` | ~95 % |
+| `infra/` | ~95 % |
+
+Estimación aproximada: parte del código se adaptó de código que ya existía (infraestructura y patrones del proyecto previo
+`extra-liebres`).
 
 ## 7. Reflexión crítica
 
-Por escribir al final: un error o vulnerabilidad concreto que introdujo la IA, cómo lo detectamos y qué aprendimos que no habríamos
-aprendido sin ella.
+**Reflexión crítica (Luis).** Lo que más me enseñó fue revisar #24: el código pasaba todas las pruebas, pero leía el reporte sin
+bloquear la fila y dos moderadores podían dejar un historial incoherente. Lo dejé como nota no bloqueante, se fusionó así y aprendí
+que, si el error toca datos que no se pueden borrar, hay que pedir cambios. En #28 también aprendí a separar "no se hizo" de "no hay
+evidencia": pedí corregir la bitácora y resultó que la comparación sí se había hecho, solo faltaba documentarla.
+
+**Reflexión crítica (Carlos).** Pendiente: Carlos la agrega con su propio pull request.
 
 ## Reglas de seguridad que seguimos
 

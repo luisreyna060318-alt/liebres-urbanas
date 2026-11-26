@@ -67,9 +67,9 @@ pública, arranque en menos de 3 minutos, contraseñas protegidas, consulta en m
 español de México y datos de demostración). La Tabla 3 resume qué entró en cada nivel.
 
 <!-- tabla: anchos=2000,4338,2500 -->
-| Nivel | Qué incluye | Estado al 25-nov, 20:30 |
+| Nivel | Qué incluye | Estado al 25-nov, 21:50 |
 |---|---|---|
-| P0 (se entrega sí o sí) | 20 historias indispensables y los requisitos de la materia | Las 20 en `main` |
+| P0 (se entrega sí o sí) | 20 historias indispensables y los requisitos de la materia | Las 20 en `main`; 16 cumplen todos sus criterios y 4 tienen uno pendiente |
 | P1 (si P0 está desplegado) | 8 historias deseables: mapa, exportar CSV y XML, colonias de interés, puntos recurrentes, resumen por colonia, catálogos, avisos y encharcamientos sin recargar | No iniciadas (`/mapa` y `/perfil` son pantallas provisionales) |
 | P2 (trabajo futuro) | 6 historias: fotos, trayecto, fusionar duplicados, cuadrillas, enlace municipal y PWA | Fuera del alcance (sección 4.5) |
 
@@ -84,24 +84,25 @@ cada historia tiene su ID (HU-xx.x), prioridad del cliente, nivel, responsable, 
 La Tabla 4 resume el estado por épica.
 
 <!-- tabla: anchos=2500,1600,1250,1000,1000,1488 -->
-| Épica | Historias | P0 en `main` | P1 | P2 | PRs |
+| Épica | Historias | P0 completas | P1 | P2 | PRs |
 |---|---|---|---|---|---|
 | E1. Cuentas y acceso | HU-01.1 a 01.4 | 3 de 3 | 1 | — | #1, #2, #12 |
 | E2. Reporte de baches | HU-02.1 a 02.5 | 4 de 4 | — | 1 | #4, #5, #7 a #10 |
-| E3. Reporte de encharcamientos | HU-03.1 a 03.4 | 3 de 3 | 1 | — | #6, #11 |
-| E4. Consulta ciudadana | HU-04.1 a 04.6 | 4 de 4 | 1 | 1 | #19, #22, #30 |
+| E3. Reporte de encharcamientos | HU-03.1 a 03.4 | 1 de 3 | 1 | — | #6, #11 |
+| E4. Consulta ciudadana | HU-04.1 a 04.6 | 3 de 4 | 1 | 1 | #19, #22, #30 |
 | E5. Validación y seguimiento | HU-05.1 a 05.5 | 2 de 2 | — | 3 | #24, #25 |
 | E6. Administración | HU-06.1 a 06.3 | 2 de 2 | 1 | — | #20, #21 |
-| E7. Indicadores | HU-07.1 a 07.3 | 1 de 1 | 2 | — | #26 |
+| E7. Indicadores | HU-07.1 a 07.3 | 0 de 1 | 2 | — | #26 |
 | E8. Avisos | HU-08.1 a 08.4 | 1 de 1 | 2 | 1 | #18 |
-| **Total** | **34** | **20 de 20** | **8** | **6** | |
+| **Total** | **34** | **16 de 20** | **8** | **6** | |
 
 Tabla 4. Historias por épica (P1 sin iniciar; P2 es trabajo futuro). Fuente: `BACKLOG.md` y `gh pr list`, 25-nov-2026.
 
-**No hay tablero de GitHub Projects ni issues.** El plan preveía un tablero con columnas Pendiente, En curso, En revisión y Hecho,
-pero no se creó: al 25 de noviembre el repositorio no tiene issues ni un proyecto de GitHub Projects (lo comprobamos con
-`gh issue list` y `gh project list`). En la práctica el seguimiento se hizo con la columna PR de `BACKLOG.md`, la descripción de cada PR
-(historia, cómo probarlo y lista de verificación) y la lista de PRs abiertos y fusionados.
+**Backlog en issues, sin tablero.** El 25 de noviembre registramos el backlog en GitHub Issues: la propuesta (#36), las 34
+historias con sus criterios (#38 a #71) y las tareas transversales (#72 a #80). Se registraron al final y no durante el trabajo. Al
+auditar cada criterio antes de cerrar, 16 historias indispensables quedaron cerradas como completas y 4 siguen abiertas porque un
+criterio no se observa desde la interfaz: #48 y #49 (se corrigen en #81), #51 y #65. No se creó un tablero de GitHub Projects;
+durante el trabajo el seguimiento se hizo con la columna PR de `BACKLOG.md`, la descripción de cada PR y la lista de PRs.
 
 ### 2.2 Cronograma real
 
@@ -122,12 +123,14 @@ UTC−7).
 | Mié 25, 15:46 a 16:10 | Se abren #31 (este reporte) y #32 a #34 (arreglos de la revisión) | — |
 | Mié 25, 20:12 a 20:13 | Luis aprueba y se fusionan #34, #33, #32 y #28 | — |
 | Mié 25, 20:55 a 21:15 | Se fusiona #29; búsqueda de secretos en el historial y arranque cronometrado desde un clon limpio | — |
+| Mié 25, 21:15 a 21:50 | Se fusiona #35, se auditan los criterios, se registran los issues y se abre #81 | — |
 | [PENDIENTE: fecha] | Congelamiento de código y etiqueta `v1.0.0` | G4 y G5 |
 
 Tabla 5. Plan frente a lo registrado. Fuente: `PLAN_DE_TRABAJO.md`, `git log` y `gh pr list`.
 
 La revisión de la mañana terminó casi media hora después de lo previsto y el despliegue de humo se movió de las 13:00 a la tarde.
-En cambio, las 20 historias P0 llegaron a `main` antes de las 20:00 planeadas. Las historias P1 no se iniciaron.
+En cambio, el código de las 20 historias P0 llegó a `main` antes de las 20:00 planeadas, aunque la auditoría posterior
+encontró 4 con un criterio pendiente. Las historias P1 no se iniciaron.
 
 ### 2.3 Arquitectura
 
@@ -318,8 +321,10 @@ revisión manual con lector de pantalla (W3C, 2023). [PENDIENTE: repetir la medi
 | Desborde a 360 px en administración y orden de encabezados en `/mis-reportes` | Auditoría de accesibilidad (#27) | Corregido en #20, #21 y #27 |
 | #23 se fusionó a la rama de su PR base y no a `main` | Se notó después de fusionar | Se reabrió como #30 y se fusionó; ahora se revisa la base antes de fusionar |
 | La bitácora de Carlos afirmaba una comparación en PostgreSQL sin evidencia enlazada | Revisión de Luis en #28 | Carlos documentó la comparación en #28, ya fusionado |
+| Los botones "Sigue ahí" y "Ya no hay agua" no estaban en ninguna pantalla (HU-03.3), aunque las pruebas pasaban | Auditoría de criterios antes de cerrar los issues | Corregido en #81, en revisión |
+| La lista pública no muestra severidad ni nivel del agua ni filtra por sector, y no se puede rechazar un encharcamiento desde la interfaz | Misma auditoría | Abierto (#51, #65 y #79) |
 
-Tabla 8. Problemas encontrados y su estado al 25-nov-2026, 20:30. Fuente: revisiones y descripciones de los PRs.
+Tabla 8. Problemas encontrados y su estado al 25-nov-2026, 21:50. Fuente: revisiones y descripciones de los PRs.
 
 ### 4.4 Lecciones aprendidas
 
@@ -348,8 +353,8 @@ bitácoras en [`docs/ai/`](https://github.com/luisreyna060318-alt/liebres-urbana
 de la ACM (Association for Computing Machinery, s. f.): la IA no es autora y respondemos por todo el material. Los dos usamos Claude
 Code con Claude Sonnet 5.5 como orquestador y agentes de apoyo con Claude Opus 5.5 y Claude Sonnet 5.5, cada uno en su propia copia
 de Git; push, PRs, despliegue y descargas solo con autorización de la persona. El contexto está en `CLAUDE.md` y `docs/plan/`. Los 136 commits sin merge de todas las ramas llevan
-`Co-Authored-By` con el modelo real. [PENDIENTE: en AI_USAGE.md faltan la parte de Carlos, la estimación por carpeta (punto 6) y la
-reflexión (punto 7). La bitácora de Carlos ya está en main (#28).]
+`Co-Authored-By` con el modelo real. Estimamos en ~95 % el código generado con IA en cada carpeta.
+[PENDIENTE: en AI_USAGE.md falta la parte de Carlos, incluida su reflexión (#37).]
 
 Casi todo el código lo escribieron agentes a partir de nuestro plan; nuestro trabajo principal fue decidir qué construir, revisar y
 comprobar. Estos casos, registrados en los PRs, muestran por qué la revisión no se puede saltar:
@@ -374,14 +379,14 @@ evidencia": pedí corregir la bitácora y resultó que la comparación sí se ha
 ## 6. Contribución individual
 
 La Tabla 9 resume la contribución de cada quien. Los 16 PRs de Carlos están fusionados (#23 a una rama; su contenido llegó a `main`
-con #30). De los de Luis siguen abiertos #31 y #35. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 19 de Luis
+con #30). De los de Luis siguen abiertos #31 y #81. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 19 de Luis
 (pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). [PENDIENTE: el porcentaje de contribución lo acuerda el
 equipo; recalcular las cifras sobre la etiqueta v1.0.0.]
 
 <!-- tabla: anchos=1238,2800,1100,1250,900,1550 -->
 | Integrante | Tareas principales | Commits (`main` / todas) | PRs (fusionados) | Revisó | % acordado |
 |---|---|---|---|---|---|
-| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 19 (17) | 16 PRs | [PENDIENTE] |
+| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 20 (18) | 16 PRs | [PENDIENTE] |
 | Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | [PENDIENTE] |
 
 Tabla 9. Contribución individual al 25-nov-2026, 20:30 (`main` en `5a0d6cd`). Commits sin merge en `main` y en todas las ramas publicadas (`git shortlog -sn --no-merges`); PRs con `gh pr list --state all`.
