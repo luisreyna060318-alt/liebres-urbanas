@@ -1,5 +1,7 @@
 # Liebre Urbana — Checklist de entrega
 
+> Lista de verificación escrita al planear. Sus casillas no se mantuvieron: el estado final está en [`../AUTOEVALUACION.md`](../AUTOEVALUACION.md) y en el reporte.
+
 Cada criterio de la rúbrica (100 puntos, 11 criterios) con el nivel al que apuntamos, la evidencia que lo respalda y quién la
 produce. **Un nivel sin evidencia enlazada se toma como Insuficiente**, así que la evidencia se va guardando mientras se construye.
 
