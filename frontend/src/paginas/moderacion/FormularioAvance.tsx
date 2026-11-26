@@ -17,9 +17,8 @@ interface Props extends PropsAccion {
 }
 
 export default function FormularioAvance({ reporte, estado, alTerminar, alDesfasarse, alCancelar }: Props) {
-  // PENDIENTE: el comentario tiene su propio límite (COMENTARIO_MAX en el backend); cuando GET /api/reglas exponga
-  // `comentario_max` (otro PR), usarlo aquí. Mientras tanto vale lo mismo que la descripción (500).
-  const { descripcion_max } = useReglas()
+  // Límite propio del comentario (COMENTARIO_MAX en el backend), tomado de GET /api/reglas
+  const { comentario_max } = useReglas()
   // "Hoy" se calcula una vez, al abrir el formulario (no en cada render)
   const [hoy] = useState(() => diaEnJuarez(new Date()))
   const diaReporte = diaEnJuarez(new Date(reporte.creado_en))
@@ -89,7 +88,7 @@ export default function FormularioAvance({ reporte, estado, alTerminar, alDesfas
         filas={2}
         valor={comentario}
         onCambio={setComentario}
-        maxLength={descripcion_max}
+        maxLength={comentario_max}
         error={campos.comentario}
         ayuda="Aparece en el historial del reporte."
       />

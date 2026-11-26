@@ -82,6 +82,7 @@ export interface Reglas {
   radio_zona_km: number
   max_reportes_por_hora: number
   descripcion_max: number
+  comentario_max: number
   password_min: number
   inactividad_min: number
   tam_pagina_consulta: number
