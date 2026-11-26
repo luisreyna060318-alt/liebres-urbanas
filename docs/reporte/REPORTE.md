@@ -174,18 +174,25 @@ misma consulta; una restricción `CHECK` exige los campos correctos según la ca
 
 ### 3.1 Frontend
 
-[PENDIENTE: Carlos revisa esta sección; se redactó a partir del código de frontend/src/.]
-
-- **16 rutas** en `frontend/src/App.tsx`: públicas (consulta, zona, mapa, detalle, inicio de sesión, registro y privacidad), del
-  ciudadano (reportar, mis reportes, editar y perfil), del moderador (moderación) y del coordinador (colonias, usuarios y tablero),
-  más la página 404. `RutaPrivada` manda a `/login` recordando la ruta de origen; ocultar enlaces no es la seguridad real, porque el
-  servidor vuelve a validar el rol.
-- **Tres estados siempre visibles:** toda pantalla que consume la API usa el hook `useApi`, que devuelve carga, error con
-  "Reintentar" y vacío, y descarta respuestas viejas (fragmento después de la Figura 3).
+- **16 rutas** en `frontend/src/App.tsx` (15 pantallas y la 404): públicas (consulta, zona, detalle, inicio de sesión, registro,
+  privacidad y mapa), del ciudadano (reportar, mis reportes, editar y perfil), de moderación (el moderador ve "Por revisar" y "En
+  seguimiento"; el coordinador solo "En seguimiento") y del coordinador (colonias, usuarios y tablero). **El mapa (HU-04.5) y Mi
+  perfil (HU-01.4) son pantallas provisionales ("Próximamente")** de historias deseables que no se hicieron. `RutaPrivada` manda a
+  `/login` recordando la ruta de origen; ocultar enlaces no es la seguridad real, porque el servidor vuelve a validar el rol.
+- **Tres estados siempre visibles:** toda pantalla que consulta datos (consulta, detalle, zona, mis reportes, edición, moderación,
+  administración, tablero y los formularios que cargan catálogos) usa el hook `useApi` y el componente `Estado`: carga, error con
+  "Reintentar" y vacío; `useApi` descarta respuestas viejas (fragmento después de la Figura 3). Inicio de sesión, registro y reporte
+  manejan su propio estado de envío y muestran los errores del servidor junto a cada campo.
 - **Formulario dinámico** (HU-02.2): los campos cambian según el tipo de daño (`utils/reportes.ts`) y el servidor vuelve a validar lo
-  mismo; los límites se piden con `GET /api/reglas` para no repetirlos.
-- **Pantallas de Carlos:** consulta con filtros y paginación, detalle con historial, moderación con bandeja y seguimiento,
-  administración de colonias y usuarios, y el tablero con una gráfica semanal en SVG propio (`GraficaSemanal.tsx`, sin librerías).
+  mismo; los límites se piden con `GET /api/reglas` (`useReglas`) para no repetirlos.
+- **Pantallas de Carlos:** consulta con filtros guardados en la URL (tipo, estado, sector, colonia, severidad, fechas y búsqueda por
+  calle o folio) y paginación; detalle con historial; "¿Cómo está mi zona?" con búsqueda de dirección o ubicación del dispositivo;
+  moderación con bandeja y seguimiento; administración de colonias y usuarios; el tablero con una gráfica semanal en SVG propio
+  (`GraficaSemanal.tsx`, sin librerías); y la franja del aviso de lluvia en el encabezado. [PENDIENTE: con #81 a #84 fusionados, el
+  detalle también permite "Sigue ahí", "Ya no hay agua" y rechazar un encharcamiento (moderador).]
+- **Componentes compartidos y pruebas:** `TarjetaReporte`, `Confirmar`, `Campo` y `Paginacion` se reutilizan en varias pantallas; hay
+  25 archivos de pruebas con Vitest (220 pruebas en `main` al 26-nov; recalcular con la etiqueta). Lighthouse de accesibilidad
+  100 y axe sin violaciones en 12 vistas a 360 y 1280 px (#27).
 - **Estilos:** hojas externas con variables de color, diseño desde 360 px con cortes en 640 y 1024 px, foco visible y
   `prefers-reduced-motion`; el tipo de reporte se distingue con ícono y texto, no solo con color.
 
