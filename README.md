@@ -56,7 +56,17 @@ Son cuentas de **demostración** (ficticias y públicas, definidas en `.env.exam
 | Moderador | `moderador@liebreurbana.test` | `Demo-Moderador-2026` |
 | Coordinador | `coordinador@liebreurbana.test` | `Demo-Coordinador-2026` |
 
+## Despliegue público
+
+| Pieza | Servicio | Dirección |
+|---|---|---|
+| Aplicación (frontend) | Vercel | <https://liebre-urbana.vercel.app> |
+| API y documentación OpenAPI | Render (Docker) | <https://liebre-urbana-api.onrender.com/docs> |
+| Base de datos | Neon (PostgreSQL 16) | solo accesible desde la API |
+
+Render y Neon son gratuitos y se duermen sin tráfico: la primera petición puede tardar entre 30 y 60 segundos.
+El despliegue público usa las mismas cuentas de demostración de la tabla de arriba.
+
 ## Pendiente de completar antes de `v1.0.0`
 
-- URL pública del despliegue
 - Insignia del CI
