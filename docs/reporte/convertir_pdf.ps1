@@ -39,7 +39,7 @@ try {
     # (Con ExportAsFixedFormat y argumentos posicionales, Word se quedaba esperando desde PowerShell.)
     $doc.SaveAs2([string]$pdf, 17)
     $paginas = $doc.ComputeStatistics(2)  # wdStatisticPages
-    Write-Output "Escrito docs\REPORTE.pdf ($paginas páginas)"
+    Write-Output "Escrito docs\REPORTE.pdf ($paginas paginas)"
 }
 finally {
     if ($doc -ne $null) {
