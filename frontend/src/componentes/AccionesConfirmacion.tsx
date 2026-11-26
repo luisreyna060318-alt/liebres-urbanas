@@ -68,7 +68,8 @@ export default function AccionesConfirmacion({ reporte, alActualizar }: Props) {
   const [error, setError] = useState('')
 
   const opciones = accionesDe(reporte)
-  if (!opciones) return null
+  // Si la respuesta cerró el reporte (tercer "Ya no hay agua") ya no hay botones, pero se conserva el mensaje de éxito
+  if (!opciones) return exito ? <Alerta tipo="exito">{exito}</Alerta> : null
 
   // Sin sesión no se puede responder: se invita a entrar y se regresa a esta pantalla
   if (!usuario) {
