@@ -39,6 +39,7 @@ from app.core.reglas import (
 )
 from app.core.tiempo import a_hora_local
 from app.models import Reporte
+from app.schemas.comun import IdEntero
 
 CALLE_MAX = 150
 
@@ -55,7 +56,7 @@ class _UbicacionEntrada(BaseModel):
     lat: float = Field(ge=-90, le=90, examples=[31.7001])
     lon: float = Field(ge=-180, le=180, examples=[-106.4302])
     calle: str = Field(examples=["Av. Tecnológico"], description=f"Hasta {CALLE_MAX} caracteres")
-    colonia_id: int = Field(examples=[12], description="Colonia activa del catálogo (GET /api/colonias)")
+    colonia_id: IdEntero = Field(examples=[12], description="Colonia activa del catálogo (GET /api/colonias)")
     descripcion: str | None = Field(
         default=None, examples=["Hueco grande junto al semáforo"], description=f"Opcional, hasta {DESCRIPCION_MAX}"
     )

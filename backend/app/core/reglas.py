@@ -39,6 +39,11 @@ TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
 TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
 PAGINA_MAX = 10000  # ?pagina= más alto que se acepta: evita pedirle a la base un OFFSET enorme (error 500)
 
+# --- Ids ---
+# Máximo del tipo `integer` de PostgreSQL. Un id mayor llegaba a la base y respondía 500 («integer out of
+# range»); con este tope (esquemas/comun.py, IdEntero) responde 422 VALIDACION antes de consultar.
+ID_MAX = 2_147_483_647
+
 # --- Filtros por fecha (consulta y tablero) ---
 # Rango razonable para ?desde= y ?hasta=. Fuera de él responde 422 en lugar de fallar al sumar un día a 9999-12-31.
 FECHA_FILTRO_MIN = date(2000, 1, 1)
