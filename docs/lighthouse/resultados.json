@@ -4,6 +4,7 @@
     "ruta": "/",
     "rol": "publico",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -13,6 +14,7 @@
     "ruta": "/",
     "rol": "publico",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -22,6 +24,7 @@
     "ruta": "/reportes/1",
     "rol": "publico",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -31,6 +34,7 @@
     "ruta": "/reportes/1",
     "rol": "publico",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -40,6 +44,7 @@
     "ruta": "/zona",
     "rol": "publico",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -49,6 +54,7 @@
     "ruta": "/zona",
     "rol": "publico",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -58,6 +64,7 @@
     "ruta": "/login",
     "rol": "publico",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -67,6 +74,7 @@
     "ruta": "/login",
     "rol": "publico",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -76,6 +84,7 @@
     "ruta": "/registro",
     "rol": "publico",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -85,6 +94,7 @@
     "ruta": "/registro",
     "rol": "publico",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -94,6 +104,7 @@
     "ruta": "/privacidad",
     "rol": "publico",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -103,6 +114,7 @@
     "ruta": "/privacidad",
     "rol": "publico",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -112,6 +124,7 @@
     "ruta": "/reportar",
     "rol": "ciudadano",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -121,6 +134,7 @@
     "ruta": "/reportar",
     "rol": "ciudadano",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -130,6 +144,7 @@
     "ruta": "/mis-reportes",
     "rol": "ciudadano",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -139,6 +154,7 @@
     "ruta": "/mis-reportes",
     "rol": "ciudadano",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -148,6 +164,7 @@
     "ruta": "/moderacion",
     "rol": "moderador",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -157,6 +174,7 @@
     "ruta": "/moderacion",
     "rol": "moderador",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -166,6 +184,7 @@
     "ruta": "/tablero",
     "rol": "coordinador",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -175,6 +194,7 @@
     "ruta": "/tablero",
     "rol": "coordinador",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -184,6 +204,7 @@
     "ruta": "/admin/colonias",
     "rol": "coordinador",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -193,6 +214,7 @@
     "ruta": "/admin/colonias",
     "rol": "coordinador",
     "dispositivo": "escritorio",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -202,6 +224,7 @@
     "ruta": "/admin/usuarios",
     "rol": "coordinador",
     "dispositivo": "movil",
+    "entorno": "local",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
@@ -211,6 +234,227 @@
     "ruta": "/admin/usuarios",
     "rol": "coordinador",
     "dispositivo": "escritorio",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "moderacion-coordinador",
+    "ruta": "/moderacion",
+    "rol": "coordinador",
+    "dispositivo": "movil",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "moderacion-coordinador",
+    "ruta": "/moderacion",
+    "rol": "coordinador",
+    "dispositivo": "escritorio",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-encharcamiento-ciudadano",
+    "ruta": "/reportes/500",
+    "rol": "ciudadano",
+    "dispositivo": "movil",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-encharcamiento-ciudadano",
+    "ruta": "/reportes/500",
+    "rol": "ciudadano",
+    "dispositivo": "escritorio",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-bache-ciudadano",
+    "ruta": "/reportes/1",
+    "rol": "ciudadano",
+    "dispositivo": "movil",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-bache-ciudadano",
+    "ruta": "/reportes/1",
+    "rol": "ciudadano",
+    "dispositivo": "escritorio",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-encharcamiento-moderador",
+    "ruta": "/reportes/500",
+    "rol": "moderador",
+    "dispositivo": "movil",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-encharcamiento-moderador",
+    "ruta": "/reportes/500",
+    "rol": "moderador",
+    "dispositivo": "escritorio",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-bache-moderador",
+    "ruta": "/reportes/1",
+    "rol": "moderador",
+    "dispositivo": "movil",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle-bache-moderador",
+    "ruta": "/reportes/1",
+    "rol": "moderador",
+    "dispositivo": "escritorio",
+    "entorno": "local",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "consulta",
+    "ruta": "/",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "consulta",
+    "ruta": "/",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle",
+    "ruta": "/reportes/1",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "detalle",
+    "ruta": "/reportes/1",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "zona",
+    "ruta": "/zona",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "zona",
+    "ruta": "/zona",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "login",
+    "ruta": "/login",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "login",
+    "ruta": "/login",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "registro",
+    "ruta": "/registro",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "registro",
+    "ruta": "/registro",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "privacidad",
+    "ruta": "/privacidad",
+    "rol": "publico",
+    "dispositivo": "movil",
+    "entorno": "desplegado",
+    "lighthouse_accesibilidad": 100,
+    "axe_violaciones": 0,
+    "desborde_horizontal": false
+  },
+  {
+    "vista": "privacidad",
+    "ruta": "/privacidad",
+    "rol": "publico",
+    "dispositivo": "escritorio",
+    "entorno": "desplegado",
     "lighthouse_accesibilidad": 100,
     "axe_violaciones": 0,
     "desborde_horizontal": false
