@@ -53,3 +53,8 @@
 .historial-comentario {
   color: var(--color-texto-suave);
 }
+
+/* Botón y formulario del moderador para rechazar un encharcamiento (RN-06) */
+.rechazo-encharcamiento {
+  margin-block: 1rem;
+}
