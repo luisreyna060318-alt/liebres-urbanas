@@ -1,0 +1,65 @@
+# Despliegue y comprobación de la API publicada.
+#
+# El servicio de Render está conectado como "repositorio público", así que NO se redespliega solo con cada push.
+# Por eso la API publicada se quedó atrasada y /api/reportes y /api/clima/aviso respondían 404.
+# Este flujo pide el despliegue (si existe el secreto con el "Deploy Hook" de Render) y comprueba que la API
+# publicada sirve el mismo commit que main y que responden sus endpoints principales. Ver infra/DEPLOY.md.
+name: Despliegue
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: despliegue
+  cancel-in-progress: true
+
+jobs:
+  render:
+    name: Render (desplegar y comprobar)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      API: https://liebre-urbana-api.onrender.com
+      HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+    steps:
+      - name: Pedir el despliegue a Render
+        if: env.HOOK != ''
+        run: curl --fail --silent --show-error --request POST "$HOOK" > /dev/null
+
+      - name: Avisar que falta el secreto
+        if: env.HOOK == ''
+        run: echo "::warning::Falta el secreto RENDER_DEPLOY_HOOK_URL, así que Render no se despliega desde aquí. Ver infra/DEPLOY.md."
+
+      - name: Esperar a que la API sirva este commit
+        if: env.HOOK != ''
+        run: |
+          esperado="${GITHUB_SHA:0:7}"
+          for intento in $(seq 1 60); do
+            actual=$(curl --silent --max-time 30 "$API/api/health" \
+              | python3 -c "import sys, json; print(json.load(sys.stdin).get('version', ''))" 2>/dev/null || true)
+            echo "intento $intento: publicado=${actual:-sin respuesta} esperado=$esperado"
+            if [ "$actual" = "$esperado" ]; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::La API publicada no llegó al commit $esperado"
+          exit 1
+
+      # Sin el secreto, este paso es el que avisa (en rojo) cuando la API publicada quedó atrasada
+      - name: Comprobar los endpoints principales
+        run: |
+          fallas=0
+          for ruta in "/api/health" "/api/reportes?pagina=1" "/api/clima/aviso" "/api/reglas" "/api/sectores"; do
+            codigo=$(curl --silent --output /dev/null --max-time 90 --retry 3 --retry-delay 10 \
+              --write-out '%{http_code}' "$API$ruta" || true)
+            echo "$ruta -> $codigo"
+            if [ "$codigo" != "200" ]; then fallas=1; fi
+          done
+          if [ "$fallas" != "0" ]; then
+            echo "::error::La API publicada no responde como se esperaba (¿versión atrasada?)"
+            exit 1
+          fi
