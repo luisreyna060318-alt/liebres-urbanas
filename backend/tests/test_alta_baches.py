@@ -3,14 +3,16 @@
 from datetime import timedelta
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import event, select
+from sqlalchemy.dialects import postgresql
 
 from app.core.reglas import DESCRIPCION_MAX, MAX_REPORTES_POR_HORA
 from app.core.tiempo import ahora_utc, como_utc
-from app.models import HistorialEstado, Reporte
+from app.models import FolioContador, HistorialEstado, Reporte, Usuario
 from app.schemas.reportes import BacheEntrada
 from app.services import reportes as reportes_service
 from app.services.reportes import calcular_severidad
+from app.services.validaciones import validar_limite_horario
 from tests.conftest import LLAVES_PROHIBIDAS, datos_bache, encabezado_de, llaves_de
 
 RUTA = "/api/reportes/baches"
@@ -219,3 +221,42 @@ def test_pasada_una_hora_se_puede_volver_a_reportar(db, ciudadano, catalogo):
         reportes_service.crear_bache(db, ciudadano, BacheEntrada(**datos_bache(catalogo["colonia"].id, n)), hace_61_min)
     nuevo = reportes_service.crear_bache(db, ciudadano, BacheEntrada(**datos_bache(catalogo["colonia"].id, 20)))
     assert nuevo.estado == "recibido"
+
+
+def _bloqueos_pedidos(db, accion) -> list[str]:
+    """Ejecuta `accion` y devuelve, en orden, las tablas que se leyeron con SELECT ... FOR UPDATE.
+
+    SQLite no ejerce el bloqueo de fila (ni siquiera escribe FOR UPDATE), así que cada consulta del ORM se
+    traduce al SQL de PostgreSQL para comprobar que el bloqueo SÍ se pide en la base real.
+    """
+    tablas = []
+
+    def _al_ejecutar(estado):
+        if estado.is_select and estado.bind_mapper is not None:
+            sql = str(estado.statement.compile(dialect=postgresql.dialect()))
+            if "FOR UPDATE" in sql:
+                tablas.append(estado.bind_mapper.local_table.name)
+
+    event.listen(db, "do_orm_execute", _al_ejecutar)
+    try:
+        accion()
+    finally:
+        event.remove(db, "do_orm_execute", _al_ejecutar)
+    return tablas
+
+
+def test_el_limite_bloquea_la_fila_de_la_persona(db, ciudadano):
+    """S1: el conteo del límite se hace con la fila del usuario bloqueada, así las altas simultáneas de una
+    misma cuenta se forman en fila y la ráfaga ya no se salta el límite."""
+    tablas = _bloqueos_pedidos(db, lambda: validar_limite_horario(db, ciudadano, ahora_utc()))
+    assert tablas == [Usuario.__tablename__]
+
+
+def test_el_alta_bloquea_primero_al_usuario_y_despues_el_folio(db, ciudadano, catalogo):
+    """Mismo orden de bloqueos en toda alta (usuario -> contador de folios): dos peticiones nunca se esperan
+    una a la otra en círculo."""
+    entrada = BacheEntrada(**datos_bache(catalogo["colonia"].id, 1))
+    tablas = _bloqueos_pedidos(db, lambda: reportes_service.crear_bache(db, ciudadano, entrada))
+    assert tablas[0] == Usuario.__tablename__
+    assert FolioContador.__tablename__ in tablas
+    assert tablas.count(Usuario.__tablename__) == 1  # la fila del usuario se bloquea una sola vez
