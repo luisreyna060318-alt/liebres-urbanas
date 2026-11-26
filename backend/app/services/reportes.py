@@ -132,8 +132,12 @@ def _propio_y_editable(db: Session, usuario: Usuario, reporte_id: int) -> Report
 
     404 si no existe, 403 SIN_PERMISO si es de otra persona, 409 REPORTE_NO_EDITABLE si ya cambió de estado.
     Un encharcamiento nace «activo» (RN-06), así que nunca es editable.
+
+    with_for_update bloquea la fila (como obtener_reporte_para_cambiar en moderación) y populate_existing la
+    vuelve a leer aunque la sesión ya la tenga en memoria: si un moderador la valida al mismo tiempo, el autor
+    espera, lee «validado» y recibe 409 en vez de borrar o editar un reporte ya revisado.
     """
-    reporte = db.get(Reporte, reporte_id)
+    reporte = db.get(Reporte, reporte_id, with_for_update=True, populate_existing=True)
     if reporte is None:
         raise ErrorApi(404, "NO_ENCONTRADO", "El reporte no existe")
     if reporte.autor_id != usuario.id:
