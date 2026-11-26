@@ -374,7 +374,11 @@ bloquear la fila y dos moderadores podían dejar un historial incoherente. Lo de
 que, si el error toca datos que no se pueden borrar, hay que pedir cambios. En #28 también aprendí a separar "no se hizo" de "no hay
 evidencia": pedí corregir la bitácora y resultó que la comparación sí se había hecho, solo faltaba documentarla.
 
-**Reflexión crítica (Carlos).** [PENDIENTE: Carlos escribe su reflexión crítica.]
+**Reflexión crítica (Carlos).** Lo que más me enseñó fue el PR #23. Estaba apilado sobre la rama de C3, pasaba el CI y estaba
+aprobado, y el asistente lo fusionó sin comprobar su base: el detalle quedó en la rama equivocada y no en `main`. El asistente lo
+detectó al revisar `main`, me avisó y lo corregimos con #30. Aprendí que "aprobado y en verde" no es lo mismo que "está donde
+debe", y que una IA repite un paso sin darse cuenta si nadie verifica el resultado. Desde entonces cada fusión comprueba primero
+la base y revisa `main` al terminar.
 
 ## 6. Contribución individual
 
@@ -399,7 +403,7 @@ Cada integrante califica a la otra persona de 1 a 5 en compromiso, calidad y com
 | Evaluador | Evaluado | Compromiso | Calidad | Comunicación | Comentario |
 |---|---|---|---|---|---|
 | Luis David Reyna Morisco | Carlos Limones Ayala | 5 | 5 | 5 | Carlos revisó todos mis PRs (los 14 de la noche del 24 los aprobó en la mañana del 25) y entregó de punta a punta consulta, zona, detalle, moderación, administración, tablero y aviso de lluvia. Cuando le pedí cambios en #28 los atendió y documentó la comparación, y corrigió en #32 a #34 lo que señalé en mis revisiones. |
-| Carlos Limones Ayala | Luis David Reyna Morisco | — | — | — | [PENDIENTE: Carlos pone sus calificaciones y su comentario] |
+| Carlos Limones Ayala | Luis David Reyna Morisco | [PENDIENTE: 1 a 5] | [PENDIENTE: 1 a 5] | [PENDIENTE: 1 a 5] | Luis entregó la base completa (API, base de datos, autenticación y despliegue) antes de que yo empezara. Revisó mis PRs con comentarios concretos (la carrera en moderación, el foco del teclado) y su auditoría de criterios encontró fallos reales en #81 a #84. Cuando pedí cambios los atendió con evidencia. |
 
 Tabla 10. Coevaluación (cada integrante llena su fila).
 
