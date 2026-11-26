@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -111,7 +111,11 @@ describe('Administrar usuarios (HU-06.2)', () => {
     renderizar()
     const u = userEvent.setup()
 
+    // Elegir el rol en el select no pregunta nada: la pregunta sale con "Cambiar rol"
     await u.selectOptions(await screen.findByLabelText('Rol de Ana Pérez'), 'moderador')
+    expect(screen.queryByText(/¿Cambiar el rol/)).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Rol de Ana Pérez')).toHaveValue('moderador')
+    await u.click(screen.getByRole('button', { name: 'Cambiar rol de Ana Pérez' }))
     expect(screen.getByText('¿Cambiar el rol de Ana Pérez a moderador?')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Cancelar' })).toHaveFocus()
     await u.click(screen.getByRole('button', { name: 'Cancelar' }))
@@ -119,11 +123,30 @@ describe('Administrar usuarios (HU-06.2)', () => {
     expect(screen.getByLabelText('Rol de Ana Pérez')).toHaveValue('ciudadano')
 
     await u.selectOptions(screen.getByLabelText('Rol de Ana Pérez'), 'moderador')
+    await u.click(screen.getByRole('button', { name: 'Cambiar rol de Ana Pérez' }))
     await u.click(screen.getByRole('button', { name: 'Sí, confirmar' }))
 
     expect(await screen.findByText('Ana Pérez ahora es moderador.')).toBeInTheDocument()
     expect(api.de('PUT /api/usuarios/1/rol')[0].cuerpo).toEqual({ rol: 'moderador' })
     expect(screen.getByLabelText('Rol de Ana Pérez')).toHaveValue('moderador')
+  })
+
+  it('con teclado, las flechas del select no abren la confirmación y "Cambiar rol" solo sirve con un rol distinto', async () => {
+    const api = simularApi({ 'GET /api/usuarios': pagina([ANA]) })
+    renderizar()
+
+    const select = await screen.findByLabelText('Rol de Ana Pérez')
+    const boton = screen.getByRole('button', { name: 'Cambiar rol de Ana Pérez' })
+    expect(boton).toBeDisabled() // el rol elegido es el que ya tiene
+
+    select.focus()
+    // jsdom no mueve el select con las flechas; este evento "change" es lo que el navegador dispara al hacerlo
+    fireEvent.change(select, { target: { value: 'moderador' } })
+    expect(select).toHaveFocus() // el foco no se va a la pregunta
+    expect(screen.queryByRole('group', { name: 'Confirmar el cambio' })).not.toBeInTheDocument()
+    expect(select).toHaveValue('moderador')
+    expect(boton).toBeEnabled()
+    expect(api.de('PUT /api/usuarios/1/rol')).toHaveLength(0)
   })
 
   it('suspender pide confirmación y llama a PUT /suspension con suspendido true', async () => {
@@ -179,6 +202,7 @@ describe('Administrar usuarios (HU-06.2)', () => {
     const u = userEvent.setup()
 
     await u.selectOptions(await screen.findByLabelText('Rol de Clara Soto'), 'ciudadano')
+    await u.click(screen.getByRole('button', { name: 'Cambiar rol de Clara Soto' }))
     await u.click(screen.getByRole('button', { name: 'Sí, confirmar' }))
     expect(await screen.findByText(/Es el último coordinador activo.*quitarle el rol/)).toBeInTheDocument()
     expect(await screen.findByLabelText('Rol de Clara Soto')).toHaveValue('coordinador')

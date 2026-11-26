@@ -179,13 +179,28 @@ describe('Moderación: en seguimiento (HU-05.2)', () => {
   const VALIDADO = publico({ id: 10, folio: 'BCH-2026-000010', estado: 'validado', sin_validar: false, creado_en: '2026-01-10T18:00:00Z' })
   const EN_REPARACION = publico({ id: 11, folio: 'BCH-2026-000011', estado: 'en_reparacion', sin_validar: false, creado_en: '2026-01-05T18:00:00Z' })
 
-  async function abrirSeguimiento(rutas: Record<string, RespuestaSimulada | RespuestaSimulada[]>) {
+  async function abrirSeguimiento(rutas: Parameters<typeof simularApi>[0]) {
     const api = simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([], 0), ...rutas })
     renderizar()
     const u = userEvent.setup()
     await u.click(screen.getByRole('tab', { name: 'En seguimiento' }))
     return { api, u }
   }
+
+  it('solo la pestaña activa apunta a un panel que existe (aria-controls)', async () => {
+    simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([], 0), 'GET /api/moderacion/seguimiento': pagina([], 0) })
+    renderizar()
+    const u = userEvent.setup()
+
+    const revisar = screen.getByRole('tab', { name: 'Por revisar' })
+    const seguimiento = screen.getByRole('tab', { name: 'En seguimiento' })
+    expect(revisar).toHaveAttribute('aria-controls', screen.getByRole('tabpanel').id)
+    expect(seguimiento).not.toHaveAttribute('aria-controls')
+
+    await u.click(seguimiento)
+    expect(seguimiento).toHaveAttribute('aria-controls', screen.getByRole('tabpanel').id)
+    expect(revisar).not.toHaveAttribute('aria-controls')
+  })
 
   it('las flechas del teclado cambian de pestaña', async () => {
     simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([], 0), 'GET /api/moderacion/seguimiento': pagina([], 0) })
@@ -253,6 +268,38 @@ describe('Moderación: en seguimiento (HU-05.2)', () => {
     expect(await screen.findByText('El reporte BCH-2026-000011 quedó como Reparado.')).toBeInTheDocument()
     expect(api.de('POST /api/reportes/11/estado')[0].cuerpo).toEqual({ estado: 'reparado', fecha_reparacion: hoy })
     expect(await screen.findByText('No hay baches validados ni en reparación.')).toBeInTheDocument()
+  })
+
+  it('al reparar el único bache de una página mayor que 1 regresa a la página anterior', async () => {
+    const { api, u } = await abrirSeguimiento({
+      'GET /api/moderacion/seguimiento': ({ url }) =>
+        url.searchParams.get('pagina') === '2' ? pagina([EN_REPARACION], 11, 2) : pagina([VALIDADO], 11, 1),
+      'POST /api/reportes/11/estado': { cuerpo: { ...EN_REPARACION, estado: 'reparado' } },
+    })
+
+    await u.click(await screen.findByRole('button', { name: 'Siguiente' }))
+    await u.click(await screen.findByRole('button', { name: 'Marcar reparado BCH-2026-000011' }))
+    await u.click(screen.getByRole('button', { name: 'Confirmar: Reparado' }))
+
+    expect(await screen.findByText('El reporte BCH-2026-000011 quedó como Reparado.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'BCH-2026-000010' })).toBeInTheDocument()
+    expect(api.de('GET /api/moderacion/seguimiento').map((l) => l.url.searchParams.get('pagina'))).toEqual(['1', '2', '1'])
+  })
+
+  it('marcar en reparación el único bache de la página 2 no cambia de página (el bache sigue en la lista)', async () => {
+    const solo = { ...VALIDADO, id: 12, folio: 'BCH-2026-000012' }
+    const { api, u } = await abrirSeguimiento({
+      'GET /api/moderacion/seguimiento': ({ url }) =>
+        url.searchParams.get('pagina') === '2' ? pagina([solo], 11, 2) : pagina([VALIDADO], 11, 1),
+      'POST /api/reportes/12/estado': { cuerpo: { ...solo, estado: 'en_reparacion' } },
+    })
+
+    await u.click(await screen.findByRole('button', { name: 'Siguiente' }))
+    await u.click(await screen.findByRole('button', { name: 'Marcar en reparación BCH-2026-000012' }))
+    await u.click(screen.getByRole('button', { name: 'Confirmar: En reparación' }))
+
+    await screen.findByText('El reporte BCH-2026-000012 quedó como En reparación.')
+    expect(api.de('GET /api/moderacion/seguimiento').map((l) => l.url.searchParams.get('pagina'))).toEqual(['1', '2', '2'])
   })
 
   it('muestra junto a la fecha el error que manda el servidor (422)', async () => {

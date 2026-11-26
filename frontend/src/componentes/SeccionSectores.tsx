@@ -6,9 +6,7 @@ import type { Sector } from '../api/tipos.ts'
 import Alerta from './Alerta.tsx'
 import Boton from './Boton.tsx'
 import Campo from './Campo.tsx'
-
-const NOMBRE_SECTOR_MIN = 2
-const NOMBRE_SECTOR_MAX = 80
+import { NOMBRE_SECTOR_MAX, NOMBRE_SECTOR_MIN } from '../utils/validaciones.ts'
 
 interface Props {
   sectores: Sector[]

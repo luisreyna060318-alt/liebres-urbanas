@@ -51,23 +51,27 @@ export default function EnSeguimiento() {
     setAbierto(null)
   }
 
-  // Un bache reparado sale de la lista; uno en reparación cambia de botón: en ambos casos se vuelve a pedir
-  function refrescar(nuevo: Mensaje) {
+  // Un bache reparado sale de la lista; uno en reparación cambia de botón: en ambos casos se vuelve a pedir.
+  // Si salía el único de la última página, se regresa a la anterior (como en "Por revisar"); el cambio de página
+  // ya vuelve a pedir la lista.
+  function refrescar(nuevo: Mensaje, saleDeLaLista: boolean) {
     setMensaje(nuevo)
     setAbierto(null)
-    lista.recargar()
+    if (saleDeLaLista && items.length === 1 && pagina > 1) setPagina(pagina - 1)
+    else lista.recargar()
   }
 
   function acciones(r: ReportePublico) {
     const siguiente = SIGUIENTE[r.estado]
     if (!siguiente) return null
     if (abierto === r.id) {
+      const sale = siguiente.estado === 'reparado' // solo "reparado" saca el bache de esta lista
       return (
         <FormularioAvance
           reporte={r}
           estado={siguiente.estado}
-          alTerminar={(texto) => refrescar({ tipo: 'exito', texto })}
-          alDesfasarse={(texto) => refrescar({ tipo: 'error', texto })}
+          alTerminar={(texto) => refrescar({ tipo: 'exito', texto }, sale)}
+          alDesfasarse={(texto) => refrescar({ tipo: 'error', texto }, sale)}
           alCancelar={() => setAbierto(null)}
         />
       )

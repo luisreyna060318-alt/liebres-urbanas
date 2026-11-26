@@ -1,6 +1,6 @@
 // /zona (pública, HU-04.3): "¿Cómo está mi zona?". La persona escribe una dirección y pulsa Buscar (nunca se busca
 // mientras escribe: Nominatim limita las consultas) o usa su ubicación, y ve los reportes activos a 1 km.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorApi } from '../api/cliente.ts'
@@ -24,12 +24,15 @@ interface Punto {
 }
 
 interface Aviso {
-  tipo: 'aviso' | 'error' | 'info'
+  tipo: 'aviso' | 'error'
   texto: string
   reintento?: 'otra' | 'misma' // "otra": escribir otra dirección; "misma": repetir la búsqueda (falló el servicio)
 }
 
 const ID_DIRECCION = 'zona-direccion'
+
+// Texto cuando el servidor dice que el punto (por ejemplo el del dispositivo) no está en Ciudad Juárez
+const TEXTO_FUERA_DEL_MUNICIPIO = 'Tu ubicación está fuera de Ciudad Juárez; escribe una dirección de la ciudad.'
 
 // 1000 -> "1 km"; 500 -> "500 m"
 function textoRadio(metros: number): string {
@@ -45,6 +48,8 @@ export default function Zona() {
   const [opciones, setOpciones] = useState<GeoResultado[]>([]) // varias direcciones: la persona elige
   const [aviso, setAviso] = useState<Aviso | null>(null)
   const [punto, setPunto] = useState<Punto | null>(null)
+  // Número de la última búsqueda: si llega la respuesta de una anterior (Enter dos veces seguidas, por ejemplo) se descarta
+  const ultimaBusqueda = useRef(0)
 
   function elegir(r: GeoResultado) {
     setOpciones([])
@@ -63,12 +68,14 @@ export default function Zona() {
       setAviso({ tipo: 'aviso', texto: 'Escribe una dirección (calle y número, por ejemplo) y pulsa Buscar.' })
       return
     }
+    const numero = ++ultimaBusqueda.current
     setBuscando(true)
     setAviso(null)
     setOpciones([])
     setPunto(null)
     try {
       const { resultados } = await buscarDireccion(texto)
+      if (numero !== ultimaBusqueda.current) return // ya hay una búsqueda más nueva
       if (resultados.length === 0) {
         setAviso({ tipo: 'aviso', texto: 'No encontramos esa dirección. Revisa cómo la escribiste e inténtalo de nuevo.', reintento: 'otra' })
       } else if (resultados.length === 1) {
@@ -77,6 +84,7 @@ export default function Zona() {
         setOpciones(resultados)
       }
     } catch (e) {
+      if (numero !== ultimaBusqueda.current) return
       if (e instanceof ErrorApi && e.codigo === 'SERVICIO_NO_DISPONIBLE') {
         setAviso({
           tipo: 'error',
@@ -87,7 +95,7 @@ export default function Zona() {
         setAviso({ tipo: 'error', texto: e instanceof Error ? e.message : 'No se pudo buscar la dirección.', reintento: 'misma' })
       }
     } finally {
-      setBuscando(false)
+      if (numero === ultimaBusqueda.current) setBuscando(false)
     }
   }
 
@@ -96,6 +104,8 @@ export default function Zona() {
       setAviso({ tipo: 'aviso', texto: 'Tu navegador no permite obtener la ubicación. Escribe una dirección y pulsa Buscar.' })
       return
     }
+    ultimaBusqueda.current++ // una búsqueda de dirección que siga en camino ya no debe pisar este resultado
+    setBuscando(false)
     setUbicando(true)
     setAviso(null)
     setOpciones([])
@@ -189,9 +199,26 @@ export default function Zona() {
 
 // Pide y muestra los reportes de un punto. Se monta solo cuando ya hay un punto elegido.
 function ReportesDeZona({ punto }: { punto: Punto }) {
-  const zona = useApi(() => pedirZona(punto.lat, punto.lon), [punto.lat, punto.lon])
+  // 422 FUERA_DEL_MUNICIPIO no es una falla que se arregle reintentando: se devuelve como resultado propio
+  const zona = useApi(async () => {
+    try {
+      return await pedirZona(punto.lat, punto.lon)
+    } catch (e) {
+      if (e instanceof ErrorApi && e.codigo === 'FUERA_DEL_MUNICIPIO') return 'fuera' as const
+      throw e
+    }
+  }, [punto.lat, punto.lon])
+
+  if (zona.datos === 'fuera') {
+    return (
+      <div className="zona-avisos">
+        <Alerta tipo="aviso">{TEXTO_FUERA_DEL_MUNICIPIO}</Alerta>
+      </div>
+    )
+  }
+
   const items = zona.datos?.items ?? []
-  const radio = textoRadio(zona.datos?.radio_m ?? 1000)
+  const radio = zona.datos ? textoRadio(zona.datos.radio_m) : '' // el servidor informa el radio; solo se usa con datos
 
   return (
     <section aria-labelledby="zona-titulo">

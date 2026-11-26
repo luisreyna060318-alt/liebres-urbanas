@@ -1,12 +1,13 @@
 // /mis-reportes (solo ciudadano, HU-02.5): los reportes de la persona, 10 por página, con Editar y Eliminar
 // solo mientras el reporte sigue en Recibido (`puede_editar`). El servidor vuelve a validarlo (409 REPORTE_NO_EDITABLE).
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ErrorApi } from '../api/cliente.ts'
 import { borrarReporte, pedirMisReportes } from '../api/reportes.ts'
 import type { ReporteMio } from '../api/tipos.ts'
 import Alerta from '../componentes/Alerta.tsx'
 import Boton from '../componentes/Boton.tsx'
+import Confirmar from '../componentes/Confirmar.tsx'
 import Estado from '../componentes/Estado.tsx'
 import Paginacion from '../componentes/Paginacion.tsx'
 import TarjetaReporte from '../componentes/TarjetaReporte.tsx'
@@ -83,8 +84,12 @@ export default function MisReportes() {
                 acciones={
                   r.puede_editar &&
                   (porBorrar === r.id ? (
-                    <ConfirmarBorrado
-                      folio={r.folio}
+                    <Confirmar
+                      etiqueta={`Confirmar la eliminación de ${r.folio}`}
+                      mensaje={`¿Eliminar el reporte ${r.folio}? Esta acción no se puede deshacer.`}
+                      textoConfirmar="Sí, eliminar"
+                      textoCargando="Eliminando…"
+                      variante="peligro"
                       ocupado={borrando}
                       alConfirmar={() => void borrar(r)}
                       alCancelar={() => setPorBorrar(null)}
@@ -131,32 +136,5 @@ export default function MisReportes() {
         </Link>
       </p>
     </section>
-  )
-}
-
-interface PropsBorrado {
-  folio: string
-  ocupado: boolean
-  alConfirmar: () => void
-  alCancelar: () => void
-}
-
-// Pregunta antes de borrar. Al aparecer pasa el foco a "Cancelar" (la opción segura) para quien usa teclado.
-function ConfirmarBorrado({ folio, ocupado, alConfirmar, alCancelar }: PropsBorrado) {
-  const cancelar = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    cancelar.current?.focus()
-  }, [])
-
-  return (
-    <div className="confirmar-borrado" role="group" aria-label={`Confirmar la eliminación de ${folio}`}>
-      <p>¿Eliminar el reporte {folio}? Esta acción no se puede deshacer.</p>
-      <Boton variante="peligro" onClick={alConfirmar} cargando={ocupado} textoCargando="Eliminando…">
-        Sí, eliminar
-      </Boton>
-      <button type="button" className="boton boton-secundario" onClick={alCancelar} disabled={ocupado} ref={cancelar}>
-        Cancelar
-      </button>
-    </div>
   )
 }
