@@ -1,12 +1,15 @@
 // /reportes/:id (pública, HU-04.4): folio, tipo, ubicación, datos del daño, confirmaciones, estado y el historial
 // del más reciente al más antiguo. En los baches, además, la fecha del reporte, la longevidad y la última confirmación.
 // Todas las fechas se muestran en la hora de Ciudad Juárez. El historial público no dice quién hizo cada cambio.
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorApi } from '../api/cliente.ts'
 import { pedirDetalle } from '../api/reportes.ts'
-import type { CambioEstado, ReporteDetalle } from '../api/tipos.ts'
+import type { CambioEstado, ReporteDetalle, ReportePublico } from '../api/tipos.ts'
+import AccionesConfirmacion from '../componentes/AccionesConfirmacion.tsx'
 import Estado from '../componentes/Estado.tsx'
+import { useAuth } from '../context/AuthContexto.ts'
 import { useApi } from '../hooks/useApi.ts'
 import { useTitulo } from '../hooks/useTitulo.ts'
 import { formatoFecha, formatoFechaHora } from '../utils/fechas.ts'
@@ -20,6 +23,8 @@ import {
   ETIQUETA_TAMANO,
   ICONO_CATEGORIA,
 } from '../utils/etiquetas.ts'
+import { ROLES_MODERADOR } from '../utils/menu.ts'
+import RechazarEncharcamiento from './moderacion/RechazarEncharcamiento.tsx'
 
 // Un 404 no es una falla: el reporte no existe (o está rechazado). Se devuelve null para mostrar un mensaje amable.
 async function pedirOMarcarAusente(id: number): Promise<ReporteDetalle | null> {
@@ -63,8 +68,25 @@ export default function DetalleReporte() {
   )
 }
 
-function Contenido({ reporte: r }: { reporte: ReporteDetalle }) {
+function Contenido({ reporte }: { reporte: ReporteDetalle }) {
+  const [r, setReporte] = useState(reporte)
+  const { tienePermiso } = useAuth()
   const esBache = r.categoria === 'bache'
+
+  // Después de confirmar o desmentir se muestran los datos que respondió el servidor y se vuelve a pedir el detalle
+  // (historial y fecha de la última confirmación) sin quitar la pantalla, para no perder el mensaje de éxito.
+  async function alActualizar(actualizado: ReportePublico) {
+    setReporte((anterior) => ({ ...anterior, ...actualizado }))
+    await refrescar()
+  }
+
+  async function refrescar() {
+    try {
+      setReporte(await pedirDetalle(reporte.id))
+    } catch {
+      // Si falla, quedan en pantalla los datos que ya se tenían
+    }
+  }
 
   return (
     <>
@@ -115,6 +137,11 @@ function Contenido({ reporte: r }: { reporte: ReporteDetalle }) {
           </>
         )}
       </dl>
+
+      {/* HU-03.3 y HU-02.3: "Sigue ahí", "Ya no hay agua" o confirmar un bache abierto */}
+      <AccionesConfirmacion reporte={r} alActualizar={(actualizado) => void alActualizar(actualizado)} />
+
+      {!esBache && tienePermiso(ROLES_MODERADOR) && <RechazarEncharcamiento reporte={r} alCambiar={() => void refrescar()} />}
 
       <h2>Historial</h2>
       {r.historial.length === 0 ? (

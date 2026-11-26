@@ -40,7 +40,7 @@ class FiltroReportes:
     - desde / hasta: días del calendario de Ciudad Juárez, ambos incluidos.
     - q: texto que se busca en la calle o en el folio, sin distinguir mayúsculas.
     - incluir_rechazados: False = los rechazados se quitan SIEMPRE, aunque se pidan en `estados`.
-    - sector_id: lo usa el tablero; la consulta pública todavía no lo expone.
+    - sector_id: reportes de las colonias de ese sector (consulta pública y tablero, para que coincidan: HU-07.1 CA5).
     """
 
     categoria: str | None = None

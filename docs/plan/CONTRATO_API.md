@@ -211,7 +211,7 @@ borran también su historial y sus confirmaciones.
 
 ### 6.7 Consulta pública (la construye Carlos; la forma ya queda fijada)
 
-`GET /api/reportes?categoria=&estado=&colonia_id=&severidad=&desde=&hasta=&q=&pagina=1&tam=20` → paginación de `ReportePublico`.
+`GET /api/reportes?categoria=&estado=&colonia_id=&sector_id=&severidad=&desde=&hasta=&q=&pagina=1&tam=20` → paginación de `ReportePublico`.
 `GET /api/reportes/{id}` → `ReporteDetalle`. Por omisión solo "activos": baches abiertos y encharcamientos activos.
 
 ### 6.8 Vigencia de encharcamientos
@@ -245,6 +245,7 @@ Ambos llaman antes a `expirar_vencidos(db)`, así un encharcamiento vencido ya a
 | `categoria` | `bache`, `encharcamiento` | |
 | `estado` | cualquiera de la sección 2 | Sin valor: solo **activos** (baches `recibido`, `validado`, `en_reparacion` y encharcamientos `activo`) |
 | `colonia_id` | entero ≥ 1 | |
+| `sector_id` | entero ≥ 1 | Solo los reportes de las colonias de ese sector (mismo filtro que el tablero) |
 | `severidad` | `baja`, `media`, `alta` | Solo baches (los encharcamientos no tienen severidad) |
 | `desde`, `hasta` | `AAAA-MM-DD` | Días del calendario de **Ciudad Juárez**, los dos incluidos, sobre `creado_en` |
 | `q` | texto, hasta 100 caracteres | Parte de la calle o del folio, sin distinguir mayúsculas; `%` y `_` se buscan tal cual |
