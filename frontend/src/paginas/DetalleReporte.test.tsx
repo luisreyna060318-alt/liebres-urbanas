@@ -58,6 +58,18 @@ describe('Detalle de un reporte (HU-04.4)', () => {
     expect(valor('Confirmaciones')).toHaveTextContent('3')
   })
 
+  it('en un bache el tipo de daño aparece una sola vez (en los datos, no repetido bajo el encabezado)', async () => {
+    simularApi({
+      'GET /api/reportes/345': { cuerpo: detalle({ tipo_dano: { codigo: 'grieta', nombre: 'Grieta' } }) },
+    })
+    renderizar()
+
+    await screen.findByRole('heading', { level: 1, name: /BCH-2026-000123/ })
+    expect(document.querySelector('.tarjeta-reporte-tipo')).not.toHaveTextContent('Grieta')
+    expect(screen.getAllByText('Grieta')).toHaveLength(1)
+    expect(screen.getByText('Tipo de daño').nextElementSibling).toHaveTextContent('Grieta')
+  })
+
   it('en baches muestra la fecha original, la longevidad y la última confirmación en hora de Juárez', async () => {
     simularApi({ 'GET /api/reportes/345': { cuerpo: detalle() } })
     renderizar()

@@ -1,7 +1,7 @@
 // Formulario para crear o editar una colonia (HU-06.1). Con `colonia` edita; sin ella, crea.
 // Valida lo básico en el cliente; el servidor vuelve a validar todo (coordenadas dentro de Juárez, nombre repetido...)
 // y sus mensajes por campo se muestran junto a cada campo.
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { actualizarColonia, crearColonia } from '../api/catalogos.ts'
 import { ErrorApi } from '../api/cliente.ts'
 import type { Colonia, Sector } from '../api/tipos.ts'
@@ -9,9 +9,7 @@ import Alerta from './Alerta.tsx'
 import Boton from './Boton.tsx'
 import Campo from './Campo.tsx'
 import CampoCasilla from './CampoCasilla.tsx'
-
-export const NOMBRE_COLONIA_MIN = 2
-export const NOMBRE_COLONIA_MAX = 120
+import { NOMBRE_COLONIA_MAX, NOMBRE_COLONIA_MIN } from '../utils/validaciones.ts'
 
 interface Props {
   colonia: Colonia | null
@@ -35,6 +33,13 @@ export default function FormularioColonia({ colonia, sectores, alGuardar, alCanc
   const [errores, setErrores] = useState<Record<string, string>>({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [enviando, setEnviando] = useState(false)
+
+  // Al abrir el formulario (Editar o Nueva colonia) el foco pasa al primer campo; si no, quien usa teclado
+  // tendría que recorrer toda la tabla para llegar a él.
+  const formulario = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    formulario.current?.querySelector<HTMLInputElement>('#colonia-nombre')?.focus()
+  }, [])
 
   function validar(): Record<string, string> {
     const campos: Record<string, string> = {}
@@ -81,7 +86,7 @@ export default function FormularioColonia({ colonia, sectores, alGuardar, alCanc
   const opcionesSector = sectores.map((s) => ({ valor: String(s.id), etiqueta: s.nombre }))
 
   return (
-    <form className="formulario formulario-admin" onSubmit={(e) => void enviar(e)} noValidate aria-label={colonia ? `Editar ${colonia.nombre}` : 'Nueva colonia'}>
+    <form ref={formulario} className="formulario formulario-admin" onSubmit={(e) => void enviar(e)} noValidate aria-label={colonia ? `Editar ${colonia.nombre}` : 'Nueva colonia'}>
       <h2>{colonia ? `Editar ${colonia.nombre}` : 'Nueva colonia'}</h2>
       <Campo id="colonia-nombre" etiqueta="Nombre" valor={nombre} onCambio={setNombre} error={errores.nombre} maxLength={NOMBRE_COLONIA_MAX} requerido />
       <Campo

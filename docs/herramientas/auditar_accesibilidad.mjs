@@ -6,8 +6,8 @@
 //
 // Uso (con el backend en :8000, el frontend en :5173 y la semilla cargada; las cuentas de demostración están en el README):
 //   HERRAMIENTAS=/ruta/a/herramientas-a11y node docs/herramientas/auditar_accesibilidad.mjs <carpeta_salida> [vistas_separadas_por_comas]
-// Variables opcionales: NAVEGADOR (ruta de Edge o Chrome), BASE (por omisión http://localhost:5173) y
-// PASSWORD_DEMO (contraseña de las cuentas de demostración del entorno local).
+// Variables opcionales: NAVEGADOR (ruta de Edge o Chrome) y BASE (por omisión http://localhost:5173).
+// Obligatoria: PASSWORD_DEMO (contraseña de las cuentas de demostración del entorno local).
 // En Git Bash de Windows pasa la carpeta de salida como ruta de Windows (C:/...) o con MSYS_NO_PATHCONV sin definir.
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -22,7 +22,12 @@ const axeSource = fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'
 const { default: lighthouse } = await import(pathToFileURL(path.resolve(HERR, 'node_modules/lighthouse/core/index.js')).href)
 
 const BASE = process.env.BASE ?? 'http://localhost:5173'
-const PASSWORD = process.env.PASSWORD_DEMO ?? 'LiebreDemo2026' // contraseña de demostración (ficticia y pública), solo para la base local
+// La contraseña de las cuentas de demostración se pasa por variable de entorno (sin valor por omisión en el código)
+const PASSWORD = process.env.PASSWORD_DEMO
+if (!PASSWORD) {
+  console.error('Define PASSWORD_DEMO con la contraseña de las cuentas de demostración del entorno local (ver el README).')
+  process.exit(1)
+}
 const EDGE = process.env.NAVEGADOR ?? 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
 const salida = path.resolve(process.argv[2] ?? './a11y-out')
 const filtro = process.argv[3] ?? ''

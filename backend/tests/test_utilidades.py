@@ -1,4 +1,4 @@
-"""Folios, distancia, fechas, restricciones de la base y forma de los errores."""
+"""Folios, distancia, fechas, restricciones de la base, forma de los errores y página máxima."""
 
 import re
 from datetime import UTC, datetime, timedelta
@@ -7,9 +7,11 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.core.geo import caja, distancia_m
+from app.core.reglas import PAGINA_MAX
 from app.core.tiempo import a_hora_local, como_utc
 from app.models import Reporte, Usuario
 from app.services.folios import generar_folio
+from tests.conftest import encabezado_de
 
 
 # --- Folios (RN-03) -------------------------------------------------------------------------------
@@ -122,3 +124,24 @@ def test_cors_solo_para_el_frontend_configurado(client):
     ajeno = client.options("/api/reglas", headers={"Origin": "https://sitio-ajeno.test",
                                                    "Access-Control-Request-Method": "GET"})
     assert "access-control-allow-origin" not in ajeno.headers
+
+
+# --- Página máxima (PAGINA_MAX) en todos los listados paginados -----------------------------------
+@pytest.mark.parametrize(
+    ("ruta", "rol"),
+    [
+        ("/api/reportes", None),
+        ("/api/colonias", None),
+        ("/api/mis-reportes", "ciudadano"),
+        ("/api/moderacion/bandeja", "moderador"),
+        ("/api/moderacion/seguimiento", "moderador"),
+        ("/api/usuarios", "coordinador"),
+    ],
+)
+def test_pagina_mayor_al_maximo_responde_422(client, ciudadano, moderador, coordinador, ruta, rol):
+    """Un ?pagina= gigante pediría a la base un OFFSET que no cabe en un entero: 422 en lugar de 500."""
+    usuarios = {"ciudadano": ciudadano, "moderador": moderador, "coordinador": coordinador}
+    headers = encabezado_de(usuarios[rol]) if rol else {}
+    r = client.get(ruta, params={"pagina": PAGINA_MAX + 1}, headers=headers)
+    assert r.status_code == 422 and r.json()["codigo"] == "VALIDACION" and "pagina" in r.json()["campos"]
+    assert client.get(ruta, params={"pagina": PAGINA_MAX}, headers=headers).status_code == 200

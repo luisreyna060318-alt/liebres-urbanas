@@ -1,6 +1,6 @@
 // / (pública, HU-04.1 y HU-04.2): reportes activos sin cuenta, con filtros combinados, búsqueda por calle o folio
 // y 20 por página. Los filtros viven en la URL (?categoria=bache&pagina=2) para poder compartir el enlace o recargar.
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { pedirColonias } from '../api/catalogos.ts'
@@ -19,6 +19,8 @@ import { ETIQUETA_CATEGORIA, ETIQUETA_ESTADO, ETIQUETA_SEVERIDAD, opcionesDe } f
 // Filtros que se guardan en la URL (la página va aparte)
 const CLAVES = ['categoria', 'estado', 'colonia_id', 'severidad', 'desde', 'hasta', 'q'] as const
 type Filtros = Record<(typeof CLAVES)[number], string>
+
+const FILTROS_VACIOS = Object.fromEntries(CLAVES.map((clave) => [clave, ''])) as Filtros
 
 const ESTADOS_POR_CATEGORIA: Record<Categoria, EstadoReporte[]> = {
   bache: ['recibido', 'validado', 'en_reparacion', 'reparado'],
@@ -64,15 +66,25 @@ export default function Consulta() {
   const limpiar = () => setParams(new URLSearchParams())
   const datos = lista.datos
 
+  // Al cambiar de página la lista se reemplaza por "Cargando…" y el botón pulsado se desmonta; el foco pasa al
+  // encabezado de resultados (que sigue montado) para no perderlo ni regresar al inicio de la página.
+  const encabezadoResultados = useRef<HTMLHeadingElement>(null)
+  function cambiarPagina(n: number) {
+    encabezadoResultados.current?.focus()
+    aplicar(filtros, n)
+  }
+
   return (
     <section>
       <h1>Reportes</h1>
       <p>Baches y encharcamientos reportados por la ciudadanía. Por omisión se muestran los que siguen activos.</p>
 
-      {/* key: al limpiar o al navegar con "atrás" el formulario vuelve a leer los filtros de la URL */}
-      <FormularioFiltros key={claveFiltros} inicial={filtros} onBuscar={(f) => aplicar(f)} onLimpiar={limpiar} />
+      {/* El formulario no se desmonta al buscar (conserva el foco y las colonias ya pedidas); se resincroniza con la URL */}
+      <FormularioFiltros clave={claveFiltros} inicial={filtros} onBuscar={(f) => aplicar(f)} onLimpiar={limpiar} />
 
-      <h2>Resultados</h2>
+      <h2 ref={encabezadoResultados} tabIndex={-1}>
+        Resultados
+      </h2>
       <Estado
         cargando={lista.cargando}
         error={lista.error}
@@ -111,7 +123,7 @@ export default function Consulta() {
                 pagina={datos.pagina}
                 total={datos.total}
                 tam={datos.tam}
-                onCambiar={(n) => aplicar(filtros, n)}
+                onCambiar={cambiarPagina}
               />
             )}
           </>
@@ -122,16 +134,24 @@ export default function Consulta() {
 }
 
 interface PropsFiltros {
+  clave: string // cambia cuando cambian los filtros de la URL (botón "atrás", "Limpiar filtros" de otro lado...)
   inicial: Filtros
   onBuscar: (filtros: Filtros) => void
   onLimpiar: () => void
 }
 
 // Formulario de filtros. Guarda lo que se va escribiendo y solo consulta al presionar "Buscar".
-function FormularioFiltros({ inicial, onBuscar, onLimpiar }: PropsFiltros) {
+function FormularioFiltros({ clave, inicial, onBuscar, onLimpiar }: PropsFiltros) {
   const { usuario } = useAuth()
   const [f, setF] = useState<Filtros>(inicial)
+  // Si la URL cambió por fuera del formulario, los campos vuelven a leerla (ajuste durante el render, sin efecto)
   const [errorFechas, setErrorFechas] = useState<string | undefined>()
+  const [claveVista, setClaveVista] = useState(clave)
+  if (clave !== claveVista) {
+    setClaveVista(clave)
+    setF(inicial)
+    setErrorFechas(undefined)
+  }
   const colonias = useApi(() => pedirColonias({ tam: 500 }), [])
 
   const cambiar = (clave: keyof Filtros) => (valor: string) => setF((previo) => ({ ...previo, [clave]: valor }))
@@ -144,6 +164,13 @@ function FormularioFiltros({ inicial, onBuscar, onLimpiar }: PropsFiltros) {
     valor: e,
     etiqueta: ETIQUETA_ESTADO[e],
   }))
+
+  // También borra lo escrito sin aplicar: si la URL ya estaba sin filtros no cambia y el formulario no se resincroniza
+  function limpiar() {
+    setF(FILTROS_VACIOS)
+    setErrorFechas(undefined)
+    onLimpiar()
+  }
 
   function enviar(evento: FormEvent) {
     evento.preventDefault()
@@ -209,7 +236,7 @@ function FormularioFiltros({ inicial, onBuscar, onLimpiar }: PropsFiltros) {
 
       <div className="filtros-consulta-botones">
         <Boton type="submit">Buscar</Boton>
-        <Boton variante="secundario" onClick={onLimpiar}>
+        <Boton variante="secundario" onClick={limpiar}>
           Limpiar filtros
         </Boton>
       </div>

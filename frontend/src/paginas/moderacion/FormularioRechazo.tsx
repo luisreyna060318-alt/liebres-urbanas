@@ -17,6 +17,8 @@ interface Props extends PropsAccion {
 }
 
 export default function FormularioRechazo({ reporte, motivos, alTerminar, alDesfasarse, alCancelar }: Props) {
+  // PENDIENTE: el comentario tiene su propio límite (COMENTARIO_MAX en backend/app/core/reglas.py, hoy 500, igual que la
+  // descripción). Cuando GET /api/reglas exponga `comentario_max` (otro PR), usarlo aquí en lugar de `descripcion_max`.
   const { descripcion_max } = useReglas()
   const [motivoId, setMotivoId] = useState('')
   const [explicacion, setExplicacion] = useState('')

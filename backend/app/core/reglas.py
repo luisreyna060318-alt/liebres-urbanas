@@ -5,6 +5,8 @@ servicios, los esquemas, las restricciones de la base y el endpoint GET /api/reg
 leen de aquí en lugar de repetir los números.
 """
 
+from datetime import date
+
 # --- Duplicados, vigencia y zona ---
 RADIO_DUPLICADO_BACHE_M = 30
 RADIO_DUPLICADO_ENCHARCAMIENTO_M = 50
@@ -35,6 +37,12 @@ TAM_PAGINA_CATALOGOS = 10  # catálogos y usuarios
 TAM_PAGINA_MODERACION = 10  # bandeja de revisión y seguimiento de reparaciones
 TAM_PAGINA_MAX = 100  # máximo general que acepta ?tam=
 TAM_PAGINA_MAX_COLONIAS = 500  # las colonias se piden completas para llenar listas desplegables
+PAGINA_MAX = 10000  # ?pagina= más alto que se acepta: evita pedirle a la base un OFFSET enorme (error 500)
+
+# --- Filtros por fecha (consulta y tablero) ---
+# Rango razonable para ?desde= y ?hasta=. Fuera de él responde 422 en lugar de fallar al sumar un día a 9999-12-31.
+FECHA_FILTRO_MIN = date(2000, 1, 1)
+FECHA_FILTRO_MAX = date(2100, 12, 31)
 
 # --- Tablero de indicadores (HU-07.1) ---
 TABLERO_TOP_COLONIAS = 10  # colonias con más baches abiertos

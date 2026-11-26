@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.core.deps import SesionDB, require_role
-from app.core.reglas import CATEGORIAS
+from app.core.reglas import CATEGORIAS, PAGINA_MAX
 from app.models import Usuario
 from app.schemas.comun import Pagina, respuestas_error
 from app.schemas.reportes import (
@@ -120,9 +120,14 @@ ERRORES_AUTOR = {
 
 
 @router.get(
-    "/mis-reportes", response_model=Pagina[ReporteMio], summary="Mis reportes", responses=respuestas_error(401, 403)
+    "/mis-reportes",
+    response_model=Pagina[ReporteMio],
+    summary="Mis reportes",
+    responses=respuestas_error(401, 403, 422),
 )
-def mis_reportes(usuario: Ciudadano, db: SesionDB, pagina: int = Query(1, ge=1, description="Empieza en 1")):
+def mis_reportes(
+    usuario: Ciudadano, db: SesionDB, pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Empieza en 1")
+):
     """Tus baches y encharcamientos, **10 por página**, del más reciente al más antiguo.
 
     `puede_editar` es `true` solo en «recibido»; si un moderador lo rechazó, `motivo_rechazo` dice por qué.

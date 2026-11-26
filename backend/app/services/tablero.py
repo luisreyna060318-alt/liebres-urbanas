@@ -29,7 +29,7 @@ from app.core.reglas import (
 from app.core.tiempo import a_hora_local, como_utc, hoy_local
 from app.models import Colonia, HistorialEstado, Reporte, Sector
 from app.schemas.reportes import ESTADOS_BACHE_ABIERTOS, antiguedad_dias
-from app.services.consulta import FiltroReportes, consulta_reportes, inicio_del_dia_utc
+from app.services.consulta import FiltroReportes, consulta_reportes, inicio_del_dia_utc, validar_rango_fechas
 from app.services.encharcamientos import expirar_vencidos
 
 # (categoria, estado) que se cuentan, en el orden en que se muestran. Sin «rechazado».
@@ -166,8 +166,7 @@ def _longevidad_por_colonia(db: Session, abiertos: FiltroReportes, hoy: date) ->
 
 def obtener_tablero(db: Session, desde: date | None, hasta: date | None, sector_id: int | None) -> dict:
     """GET /api/tablero: valida el filtro, vence encharcamientos y arma todos los indicadores."""
-    if desde and hasta and desde > hasta:
-        raise error_validacion({"hasta": "La fecha final no puede ser anterior a la inicial"})
+    validar_rango_fechas(desde, hasta)  # la misma regla que la consulta pública (y sin desbordar fechas)
     if sector_id is not None and db.get(Sector, sector_id) is None:
         raise error_validacion({"sector_id": "El sector no existe"})
 

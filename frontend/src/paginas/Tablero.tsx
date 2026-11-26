@@ -13,7 +13,7 @@ import Estado from '../componentes/Estado.tsx'
 import GraficaSemanal from '../componentes/GraficaSemanal.tsx'
 import { useApi } from '../hooks/useApi.ts'
 import { useTitulo } from '../hooks/useTitulo.ts'
-import { ETIQUETA_CATEGORIA, ETIQUETA_ESTADO } from '../utils/etiquetas.ts'
+import { ETIQUETA_ESTADO } from '../utils/etiquetas.ts'
 
 interface Filtros {
   desde: string
@@ -29,6 +29,9 @@ function aFiltroApi(f: Filtros): FiltroTablero {
     sector_id: f.sector_id ? Number(f.sector_id) : undefined,
   }
 }
+
+// Títulos de los bloques por estado (ETIQUETA_CATEGORIA está en singular)
+const PLURAL_CATEGORIA: Record<Categoria, string> = { bache: 'Baches', encharcamiento: 'Encharcamientos' }
 
 const numero = (valor: number) => valor.toLocaleString('es-MX', { maximumFractionDigits: 1 })
 const dias = (valor: number) => `${numero(valor)} ${valor === 1 ? 'día' : 'días'}`
@@ -46,7 +49,13 @@ export default function Tablero() {
       <h1>Tablero de indicadores</h1>
       <p>Cifras de baches y encharcamientos. Los filtros aplican a todos los indicadores.</p>
 
-      <FormularioFiltros key={clave} inicial={filtros} onAplicar={setFiltros} onLimpiar={() => setFiltros(SIN_FILTROS)} />
+      {/* Sin key: el formulario no se desmonta al aplicar (conserva el foco y los sectores ya pedidos) */}
+      <FormularioFiltros
+        clave={clave}
+        inicial={filtros}
+        onAplicar={setFiltros}
+        onLimpiar={() => setFiltros(SIN_FILTROS)}
+      />
 
       <Estado
         cargando={tablero.cargando}
@@ -94,7 +103,7 @@ function Indicadores({ datos }: { datos: DatosTablero }) {
       <div className="tablero-estados">
         {categorias.map((categoria) => (
           <div key={categoria}>
-            <h3>{ETIQUETA_CATEGORIA[categoria]} por estado</h3>
+            <h3>{PLURAL_CATEGORIA[categoria]} por estado</h3>
             <dl className="tablero-lista-estados">
               {totales.por_estado
                 .filter((e) => e.categoria === categoria)
@@ -203,17 +212,32 @@ function Indicadores({ datos }: { datos: DatosTablero }) {
 }
 
 interface PropsFiltros {
+  clave: string // cambia cuando cambian los filtros aplicados
   inicial: Filtros
   onAplicar: (filtros: Filtros) => void
   onLimpiar: () => void
 }
 
 // Guarda lo que se va eligiendo y solo vuelve a pedir el tablero al presionar "Aplicar"
-function FormularioFiltros({ inicial, onAplicar, onLimpiar }: PropsFiltros) {
+function FormularioFiltros({ clave, inicial, onAplicar, onLimpiar }: PropsFiltros) {
   const [f, setF] = useState<Filtros>(inicial)
   const [errorFechas, setErrorFechas] = useState<string | undefined>()
+  // Si los filtros aplicados cambian por fuera del formulario, los campos se resincronizan (ajuste durante el render)
+  const [claveVista, setClaveVista] = useState(clave)
+  if (clave !== claveVista) {
+    setClaveVista(clave)
+    setF(inicial)
+    setErrorFechas(undefined)
+  }
   const sectores = useApi(() => pedirSectores(), [])
   const cambiar = (clave: keyof Filtros) => (valor: string) => setF((previo) => ({ ...previo, [clave]: valor }))
+
+  // También borra lo escrito sin aplicar (si no había filtros aplicados, "inicial" no cambia y no se resincroniza solo)
+  function limpiar() {
+    setF(SIN_FILTROS)
+    setErrorFechas(undefined)
+    onLimpiar()
+  }
 
   function enviar(evento: FormEvent) {
     evento.preventDefault()
@@ -248,7 +272,7 @@ function FormularioFiltros({ inicial, onAplicar, onLimpiar }: PropsFiltros) {
       />
       <div className="filtros-tablero-botones">
         <Boton type="submit">Aplicar</Boton>
-        <Boton variante="secundario" onClick={onLimpiar}>
+        <Boton variante="secundario" onClick={limpiar}>
           Limpiar filtros
         </Boton>
       </div>

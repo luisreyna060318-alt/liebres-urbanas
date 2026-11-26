@@ -40,3 +40,10 @@ export function validarPasswordLogin(valor: string): string {
 export function validarAceptaPrivacidad(aceptada: boolean): string {
   return aceptada ? '' : 'Para crear tu cuenta debes aceptar el aviso de privacidad.'
 }
+
+// Longitud del nombre de colonias y sectores (administración, HU-06.1). Son las cifras de backend/app/core/reglas.py
+// (NOMBRE_COLONIA_MIN/MAX, NOMBRE_SECTOR_MAX); GET /api/reglas todavía no las expone, por eso viven aquí, en un solo lugar.
+export const NOMBRE_COLONIA_MIN = 2
+export const NOMBRE_COLONIA_MAX = 120
+export const NOMBRE_SECTOR_MIN = 2
+export const NOMBRE_SECTOR_MAX = 80

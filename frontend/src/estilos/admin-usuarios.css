@@ -66,6 +66,13 @@
   overflow-wrap: anywhere;
 }
 
+.rol-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  align-items: center;
+}
+
 .selector-rol {
   min-height: var(--alto-tactil);
   padding: var(--espacio-2) var(--espacio-3);

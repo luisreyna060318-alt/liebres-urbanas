@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select, update
 
 from app.core.tiempo import ahora_utc
 from app.models import Colonia, HistorialEstado, MotivoRechazo, Reporte
@@ -141,6 +141,30 @@ def test_comentario_de_mas_de_500_caracteres_responde_422(client, moderador, dat
     assert r.status_code == 422 and "comentario" in r.json()["campos"]
 
 
+@pytest.mark.parametrize(
+    ("ruta", "cuerpo", "estado_previo", "otro_estado"),
+    [
+        ("validar", {}, "recibido", "rechazado"),
+        ("rechazar", {"motivo": "duplicado"}, "recibido", "validado"),
+        ("estado", {"estado": "en_reparacion"}, "validado", "en_reparacion"),
+    ],
+)
+def test_cambio_de_estado_relee_la_fila_antes_de_decidir(client, moderador, datos, db, ruta, cuerpo, estado_previo,
+                                                        otro_estado):
+    """Simula a otro moderador que ya cambió el reporte: la sesión conserva el objeto viejo en memoria, pero la
+    ruta relee la fila (with_for_update) y responde 409 sin escribir un segundo historial. SQLite no bloquea filas:
+    aquí se prueba la relectura; el bloqueo en sí lo hace PostgreSQL."""
+    reporte = datos["reporte"](estado=estado_previo)
+    # Cambio "por fuera" del ORM, sin commit: el objeto en memoria sigue diciendo estado_previo
+    db.execute(update(Reporte.__table__).where(Reporte.__table__.c.id == reporte.id).values(estado=otro_estado))
+    assert reporte.estado == estado_previo
+    if "motivo" in cuerpo:
+        cuerpo = {"motivo_rechazo_id": datos[cuerpo["motivo"]].id}
+    r = client.post(f"/api/reportes/{reporte.id}/{ruta}", json=cuerpo, headers=encabezado_de(moderador))
+    assert r.status_code == 409 and r.json()["codigo"] == "TRANSICION_INVALIDA", r.text
+    assert filas_de_historial(db, reporte) == 0
+
+
 # --- Rechazar --------------------------------------------------------------------------------------
 def rechazar(client, usuario, reporte_id, **cuerpo):
     return client.post(f"/api/reportes/{reporte_id}/rechazar", json=cuerpo, headers=encabezado_de(usuario))
@@ -160,12 +184,19 @@ def test_rechazar_con_motivo_inexistente_o_inactivo_responde_422(client, moderad
     assert r.status_code == 422 and r.json()["campos"] == {"motivo_rechazo_id": "Elige un motivo de la lista"}
 
 
+def filas_de_historial(db, reporte) -> int:
+    return db.scalar(select(func.count()).select_from(HistorialEstado).where(HistorialEstado.reporte_id == reporte.id))
+
+
 @pytest.mark.parametrize("texto", [None, "   "])
-def test_motivo_otro_exige_explicacion(client, moderador, datos, texto):
+def test_motivo_otro_exige_explicacion(client, moderador, datos, db, texto):
     reporte = datos["reporte"]()
     r = rechazar(client, moderador, reporte.id, motivo_rechazo_id=datos["otro"].id, motivo_texto=texto)
     assert r.status_code == 422 and "motivo_texto" in r.json()["campos"]
+    # Se relee de la base: el 422 no debe dejar el estado cambiado ni una fila de historial
+    db.refresh(reporte)
     assert reporte.estado == "recibido"
+    assert filas_de_historial(db, reporte) == 0
 
 
 def test_rechazar_guarda_motivo_y_el_autor_lo_ve(client, moderador, ciudadano, datos, db):

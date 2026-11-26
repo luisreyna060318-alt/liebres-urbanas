@@ -23,6 +23,8 @@ interface Props {
   filas?: number // solo para tipo "textarea"
   requerido?: boolean
   modoEntrada?: 'text' | 'decimal' | 'numeric' // teclado que se abre en el celular (por ejemplo "decimal" para coordenadas)
+  minimo?: string // solo para tipo "date": primera fecha permitida (AAAA-MM-DD)
+  maximo?: string // solo para tipo "date": última fecha permitida (AAAA-MM-DD)
   alPresionarEnter?: () => void // en campos de texto: ejecuta una acción (como "Buscar") en vez de enviar el formulario
 }
 
@@ -41,6 +43,8 @@ export default function Campo({
   filas = 4,
   requerido = false,
   modoEntrada,
+  minimo,
+  maximo,
   alPresionarEnter,
 }: Props) {
   // Ids de los textos de apoyo, para que el lector de pantalla los lea junto con el campo
@@ -86,6 +90,8 @@ export default function Campo({
           autoComplete={autoComplete}
           maxLength={maxLength}
           inputMode={modoEntrada}
+          min={minimo}
+          max={maximo}
           onChange={(e) => onCambio(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && alPresionarEnter) {

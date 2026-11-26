@@ -6,10 +6,12 @@ UMBRAL_LLUVIA_PCT (30 %), hay aviso.
 
 Cuidados (DISENO_TECNICO, sección 6):
 - Caché en memoria de CACHE_PRONOSTICO_HORAS (1 h): el pronóstico no cambia por cada visita a la página.
-- Tiempo de espera de 5 s. Si Open-Meteo falla, tarda o responde algo inválido, NO se levanta un error: la
-  respuesta es 200 con disponible=false y la interfaz muestra "Pronóstico no disponible" (CA4).
+- Tiempo de espera con tope por fase (TIEMPO_ESPERA, ver abajo). Si Open-Meteo falla, tarda o responde algo
+  inválido, NO se levanta un error: la respuesta es 200 con disponible=false y la interfaz muestra
+  "Pronóstico no disponible" (CA4).
 - Un fallo solo se recuerda unos segundos (CACHE_FALLO_S): así no se queda la plataforma "sin pronóstico" una
-  hora entera por un tropiezo de red, pero tampoco se espera 5 s en cada visita mientras el servicio está caído.
+  hora entera por un tropiezo de red, pero tampoco se espera el tiempo límite en cada visita mientras el
+  servicio está caído.
 - User-Agent genérico del proyecto: nunca un correo ni datos personales.
 
 En las pruebas NUNCA se llama a la red: se reemplaza la función _llamar_http y el reloj _reloj (tests/test_clima.py).
@@ -26,7 +28,20 @@ from app.schemas.clima import AvisoLluvia
 
 URL_OPEN_METEO = "https://api.open-meteo.com/v1/forecast"
 USER_AGENT = "LiebreUrbana-proyecto-escolar"
-TIEMPO_ESPERA_S = 5  # si Open-Meteo no responde en 5 s, se da por no disponible
+# httpx mide el tiempo de espera POR FASE, no en total: un solo número (timeout=5) permitiría 5 s para conectar,
+# otros 5 para enviar, 5 por cada lectura y 5 esperando conexión libre. Por eso se fija cada fase por separado.
+# La respuesta de Open-Meteo es pequeña (unos KB: una o dos lecturas), así que en la práctica la consulta completa
+# no pasa de unos 10 s (2 + 2 + 5 + 1). Sin un tope total de httpx, solo un servidor que mandara los datos gota a
+# gota podría alargarla; aun así cualquier fallo o espera vencida termina en disponible=false, nunca en un error.
+# Mientras dura la consulta se mantiene el candado (ver obtener_aviso), así que las visitas que llegan a la vez
+# esperan, como mucho, este mismo tiempo y luego leen la caché que dejó la primera.
+TIEMPO_CONECTAR_S = 2  # abrir la conexión con Open-Meteo
+TIEMPO_ESCRIBIR_S = 2  # enviar la petición
+TIEMPO_LEER_S = 5  # esperar cada parte de la respuesta
+TIEMPO_POOL_S = 1  # esperar una conexión libre del cliente
+TIEMPO_ESPERA = httpx.Timeout(
+    connect=TIEMPO_CONECTAR_S, read=TIEMPO_LEER_S, write=TIEMPO_ESCRIBIR_S, pool=TIEMPO_POOL_S
+)
 CACHE_FALLO_S = 30  # un fallo se recuerda solo este tiempo
 
 # Punto fijo para todo el pronóstico: el Centro de Ciudad Juárez (cerca de la Misión de Guadalupe), redondeado a
@@ -55,7 +70,7 @@ def _llamar_http(parametros: dict) -> object:
         URL_OPEN_METEO,
         params=parametros,
         headers={"User-Agent": USER_AGENT},
-        timeout=TIEMPO_ESPERA_S,
+        timeout=TIEMPO_ESPERA,
     )
     respuesta.raise_for_status()
     return respuesta.json()

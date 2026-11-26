@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.errores import ErrorApi, error_validacion
 from app.core.paginacion import paginar
+from app.core.reglas import FECHA_FILTRO_MAX, FECHA_FILTRO_MIN
 from app.core.tiempo import ZONA_JUAREZ, como_utc, hoy_local
 from app.models import Colonia, Confirmacion, Reporte, Usuario
 from app.schemas.reportes import ESTADOS_BACHE_ABIERTOS, ReporteDetalle, a_reporte_detalle, a_reporte_publico
@@ -56,6 +57,23 @@ class FiltroReportes:
 def inicio_del_dia_utc(dia: date) -> datetime:
     """00:00 de ese día en Ciudad Juárez, convertido a UTC (la base guarda en UTC, RN-02)."""
     return datetime.combine(dia, time.min, tzinfo=ZONA_JUAREZ).astimezone(UTC)
+
+
+def validar_rango_fechas(desde: date | None, hasta: date | None) -> None:
+    """422 VALIDACION por campo si una fecha cae fuera del rango permitido o si `desde` > `hasta`.
+
+    La usan la consulta pública y el tablero ANTES de armar el filtro: así `hasta + 1 día` nunca se desborda
+    (con hasta=9999-12-31 Python lanzaría OverflowError y la API respondería 500)."""
+    rango = f"Elige una fecha entre el {FECHA_FILTRO_MIN:%d/%m/%Y} y el {FECHA_FILTRO_MAX:%d/%m/%Y}"
+    campos = {
+        nombre: rango
+        for nombre, valor in (("desde", desde), ("hasta", hasta))
+        if valor is not None and not FECHA_FILTRO_MIN <= valor <= FECHA_FILTRO_MAX
+    }
+    if campos:
+        raise error_validacion(campos)
+    if desde and hasta and desde > hasta:
+        raise error_validacion({"hasta": "La fecha final no puede ser anterior a la inicial"})
 
 
 def consulta_reportes(filtro: FiltroReportes) -> Select:
@@ -104,8 +122,7 @@ def puede_ver_rechazados(usuario: Usuario | None) -> bool:
 
 def listar_publicos(db: Session, usuario: Usuario | None, filtro: FiltroReportes, pagina: int, tam: int) -> dict:
     """GET /api/reportes: valida el rango de fechas, vence encharcamientos y devuelve una página de ReportePublico."""
-    if filtro.desde and filtro.hasta and filtro.desde > filtro.hasta:
-        raise error_validacion({"hasta": "La fecha final no puede ser anterior a la inicial"})
+    validar_rango_fechas(filtro.desde, filtro.hasta)
     # Lo decide el servidor según el rol, nunca un parámetro de la petición
     filtro = replace(filtro, incluir_rechazados=puede_ver_rechazados(usuario))
 

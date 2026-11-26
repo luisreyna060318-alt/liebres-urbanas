@@ -32,6 +32,7 @@ class ReglasSalida(BaseModel):
     radio_zona_km: int
     max_reportes_por_hora: int
     descripcion_max: int
+    comentario_max: int = Field(description="Caracteres del comentario público de un cambio de estado")
     password_min: int
     inactividad_min: int
     tam_pagina_consulta: int

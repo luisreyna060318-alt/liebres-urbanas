@@ -4,7 +4,7 @@ Evidencia del criterio 2 de la rúbrica (HTML semántico, CSS y responsividad). 
 nivel A y AA) y con **Lighthouse** (categoría Accesibilidad), en las 12 vistas principales, en **móvil (360 px)** y en **escritorio
 (1280 px)**. También se comprobó que ninguna vista tenga desborde horizontal a 360 px.
 
-- Datos: `resultados.json` (una fila por vista y dispositivo). Capturas de pantalla completa en [`../capturas/`](../capturas/).
+- Datos: `resultados.json` es un **resumen** (una fila por vista y dispositivo) que armé a partir de la salida del script; la salida cruda (con cada violación de axe y cada auditoría de Lighthouse) no se guarda en el repositorio y se regenera con el script. Capturas de pantalla completa en [`../capturas/`](../capturas/).
 - Se repite con `docs/herramientas/auditar_accesibilidad.mjs` (las herramientas se instalan aparte; las instrucciones van en su cabecera).
 
 ## Resultado
@@ -31,7 +31,7 @@ Meta del proyecto: Lighthouse de accesibilidad ≥ 90 en las vistas principales.
 La primera pasada no salió limpia; estos fueron los hallazgos reales y cómo se resolvieron:
 
 1. **Desborde horizontal a 360 px en `/admin/colonias` y `/admin/usuarios`.** La tabla vivía dentro de un contenedor con scroll
-   propio, pero Chrome móvil ensanchaba toda la página con el ancho de la tabla (la página medía 643 px en una pantalla de 375).
+   propio, pero Chrome móvil ensanchaba toda la página con el ancho de la tabla (en el emulador de móvil de 375 px la página medía 643 px; la auditoría automática usa 360 px y también lo detectó).
    Se resolvió con `contain: layout` en el contenedor; la tabla sigue desplazándose dentro de su caja. Corregido en las ramas de
    esas historias (C8 y C9).
 2. **Lighthouse 98 en `/mis-reportes`** por orden de encabezados (`heading-order`): pasaba de `h1` a `h3` sin un `h2`. Se agregó un

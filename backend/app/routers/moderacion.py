@@ -10,6 +10,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import SesionDB, require_role
+from app.core.reglas import PAGINA_MAX
 from app.models import Usuario
 from app.schemas.comun import Pagina, respuestas_error
 from app.schemas.moderacion import AvanceEntrada, RechazarEntrada, ValidarEntrada
@@ -38,7 +39,7 @@ def bandeja(
     db: SesionDB,
     colonia_id: int | None = Query(None, description="Solo los de esta colonia"),
     tipo_dano_codigo: str | None = Query(None, max_length=40, description="bache, hundimiento, grieta..."),
-    pagina: int = Query(1, ge=1, description="Empieza en 1"),
+    pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Empieza en 1"),
 ):
     """Baches en **recibido**, del más antiguo al más reciente, **10 por página**. Sin datos del autor."""
     return moderacion_service.listar_bandeja(db, colonia_id, tipo_dano_codigo, pagina)
@@ -78,7 +79,7 @@ def seguimiento(
     estado: Literal["validado", "en_reparacion"] | None = Query(None, description="Vacío = los dos"),
     colonia_id: int | None = Query(None, description="Solo los de esta colonia"),
     tipo_dano_codigo: str | None = Query(None, max_length=40, description="bache, hundimiento, grieta..."),
-    pagina: int = Query(1, ge=1, description="Empieza en 1"),
+    pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Empieza en 1"),
 ):
     """Baches **validados** y **en reparación**, del más antiguo al más reciente, **10 por página**."""
     return moderacion_service.listar_seguimiento(db, estado, colonia_id, tipo_dano_codigo, pagina)

@@ -26,9 +26,17 @@ def test_reglas_tienen_la_forma_del_contrato(client):
     assert r.json() == {
         "radio_duplicado_bache_m": 30, "radio_duplicado_encharcamiento_m": 50, "vigencia_encharcamiento_horas": 6,
         "desmentidos_para_cerrar": 3, "radio_zona_km": 1, "max_reportes_por_hora": 10, "descripcion_max": 500,
+        "comentario_max": 500,
         "password_min": 8, "inactividad_min": 30, "tam_pagina_consulta": 20, "tam_pagina_mis_reportes": 10,
         "umbral_lluvia_pct": 30, "zona_horaria": "America/Ciudad_Juarez",
     }
+
+
+def test_reglas_exponen_el_mismo_limite_de_comentario_que_valida_la_api(client):
+    """La pantalla de moderación debe usar comentario_max (no descripcion_max) para el comentario de un cambio."""
+    from app.core.reglas import COMENTARIO_MAX
+
+    assert client.get("/api/reglas").json()["comentario_max"] == COMENTARIO_MAX
 
 
 def test_sectores(client, sembrado):

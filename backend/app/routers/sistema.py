@@ -37,6 +37,7 @@ def obtener_reglas():
         radio_zona_km=reglas.RADIO_ZONA_KM,
         max_reportes_por_hora=reglas.MAX_REPORTES_POR_HORA,
         descripcion_max=reglas.DESCRIPCION_MAX,
+        comentario_max=reglas.COMENTARIO_MAX,
         password_min=reglas.PASSWORD_MIN,
         inactividad_min=reglas.INACTIVIDAD_MIN,
         tam_pagina_consulta=reglas.TAM_PAGINA_CONSULTA,

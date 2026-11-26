@@ -28,6 +28,7 @@ export default function GraficaSemanal({ semanas }: Props) {
 
   return (
     <figure className="grafica-semanal">
+      <figcaption>Cada barra es una semana de lunes a domingo (hora de Ciudad Juárez).</figcaption>
       <div className="grafica-desplazable" tabIndex={0} role="region" aria-label="Gráfica de reportes por semana (se desplaza a lo ancho)">
         <svg
           viewBox={`0 0 ${ANCHO} ${ALTO}`}
@@ -66,7 +67,6 @@ export default function GraficaSemanal({ semanas }: Props) {
           })}
         </svg>
       </div>
-      <figcaption>Cada barra es una semana de lunes a domingo (hora de Ciudad Juárez).</figcaption>
 
       <table className="tabla-tablero">
         <caption>Reportes por semana (los mismos datos de la gráfica)</caption>
