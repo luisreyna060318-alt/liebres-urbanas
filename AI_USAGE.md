@@ -109,7 +109,8 @@ bloquear la fila y dos moderadores podían dejar un historial incoherente. Lo de
 que, si el error toca datos que no se pueden borrar, hay que pedir cambios. En #28 también aprendí a separar "no se hizo" de "no hay
 evidencia": pedí corregir la bitácora y resultó que la comparación sí se había hecho, solo faltaba documentarla.
 
-**Reflexión crítica (Carlos).** Está en la sección 5 (Uso de IA) del reporte técnico: [`docs/reporte/REPORTE.md`](docs/reporte/REPORTE.md#5-uso-de-ia).
+**Reflexión crítica (Carlos).** Lo que más me enseñó fue el PR #23. Estaba apilado sobre la rama de C3, pasaba el CI y estaba aprobado, y el asistente lo fusionó sin comprobar su base: el detalle quedó en la rama equivocada y no en `main`. El asistente lo detectó al revisar `main`, me avisó y lo corregimos con #30. Aprendí que "aprobado y en verde" no es lo mismo que "está donde debe", y que una IA repite un paso sin darse cuenta si nadie verifica el resultado. Desde entonces cada fusión comprueba primero la base y revisa `main` al terminar.
+(Es el mismo texto de la sección 5 del reporte técnico: [`docs/reporte/REPORTE.md`](docs/reporte/REPORTE.md#5-uso-de-ia).)
 
 ## Reglas de seguridad que seguimos
 
