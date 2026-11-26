@@ -13,7 +13,7 @@ pasada final.
   regenera con el script.
 - Capturas: [`../capturas/`](../capturas/) son **de la primera pasada**; en la pasada final no se subieron capturas nuevas
   (pesan unos 5 MB).
-- Se repite con `docs/herramientas/auditar_accesibilidad.mjs` (las herramientas se instalan aparte; las instrucciones van en su cabecera).
+- Se repite con `docs/herramientas/auditar_accesibilidad.mjs` (las herramientas se instalan aparte; las instrucciones van en su cabecera). El script trae las 17 vistas locales de la pasada final; el segundo argumento elige por nombre cuáles medir (por ejemplo `moderacion-coordinador,detalle-encharcamiento-moderador`). Las 5 vistas nuevas se midieron con una copia de la versión anterior del script que solo agregaba esas rutas y otro puerto de depuración; esa diferencia ya está incorporada en el script del repositorio.
 
 ## Qué se midió exactamente (pasada final)
 
@@ -88,7 +88,8 @@ principales; se cumple en todas las vistas medidas (mínimo 100).
 Al abrir el formulario de rechazo en el detalle (moderador), el botón "Rechazar este reporte" desaparece y el foco del teclado se va
 al `body` (no hay `.focus()` en `FormularioRechazo.tsx`). axe no lo marca como violación (da 0, con el formulario abierto, a 360 px)
 y no afecta a Lighthouse, pero conviene revisarlo con teclado y lector de pantalla (WCAG 2.4.3, orden del foco): mover el foco al
-primer campo del formulario al abrirlo y devolverlo al botón al cancelar.
+primer campo del formulario al abrirlo y devolverlo al botón al cancelar. **Corregido en #93** (fusionado): el foco pasa al primer campo
+al abrir y vuelve al botón al cancelar, en los tres formularios de moderación.
 
 ## Cómo se hizo y qué NO cubre
 

@@ -47,6 +47,13 @@ const RUTAS = [
   { rol: 'coordinador', ruta: '/tablero', nombre: 'tablero' },
   { rol: 'coordinador', ruta: '/admin/colonias', nombre: 'admin-colonias' },
   { rol: 'coordinador', ruta: '/admin/usuarios', nombre: 'admin-usuarios' },
+  // Vistas de la pasada final (26-nov). Los ids salen de la semilla, que es determinista: el reporte 500 es un
+  // encharcamiento activo y el 1 es un bache validado (compruébalo con GET /api/reportes si cambia la semilla).
+  { rol: 'coordinador', ruta: '/moderacion', nombre: 'moderacion-coordinador' },
+  { rol: 'ciudadano', ruta: '/reportes/500', nombre: 'detalle-encharcamiento-ciudadano' },
+  { rol: 'ciudadano', ruta: '/reportes/1', nombre: 'detalle-bache-ciudadano' },
+  { rol: 'moderador', ruta: '/reportes/500', nombre: 'detalle-encharcamiento-moderador' },
+  { rol: 'moderador', ruta: '/reportes/1', nombre: 'detalle-bache-moderador' },
 ].filter((r) => !filtro || filtro.split(',').includes(r.nombre))
 
 const VISTAS = {
