@@ -1,0 +1,78 @@
+/* --- Moderación (HU-05.1 y HU-05.2) --- */
+
+/* Pestañas: la activa se distingue por el borde inferior grueso Y por el texto en negritas (no solo por color) */
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.pestana {
+  min-height: var(--alto-tactil);
+  padding: var(--espacio-2) var(--espacio-3);
+  font: inherit;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 4px solid transparent;
+}
+
+.pestana[aria-selected='true'] {
+  font-weight: 700;
+  color: var(--color-marca);
+  border-bottom-color: currentcolor;
+}
+
+.panel-pestana h2 {
+  margin-top: 0;
+}
+
+/* Filtros: uno debajo de otro en el celular, lado a lado desde 640 px */
+.filtros-moderacion {
+  display: grid;
+  gap: var(--espacio-2) var(--espacio-3);
+  max-width: 40rem;
+  margin: 0 0 var(--espacio-3);
+  padding: var(--espacio-3);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+
+.filtros-moderacion legend {
+  padding: 0 var(--espacio-1);
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .filtros-moderacion {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filtros-moderacion legend,
+  .filtros-moderacion .campo-ayuda {
+    grid-column: 1 / -1;
+  }
+}
+
+.moderacion-descripcion {
+  font-style: italic;
+}
+
+/* Formulario que se abre dentro de la tarjeta al elegir una acción */
+.formulario-moderacion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  width: 100%;
+  padding-top: var(--espacio-2);
+  border-top: 1px solid var(--color-borde);
+}
+
+.formulario-moderacion-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-2);
+}

@@ -186,6 +186,9 @@ class ReporteDetalle(ReportePublico):
 
     longevidad_dias: int
     ultima_actividad: datetime
+    ultima_confirmacion: datetime | None = Field(
+        default=None, description="Fecha de la confirmación más reciente («confirma» o «sigue»); null si no hay"
+    )
     historial: list[CambioEstado] = Field(description="Del más reciente al más antiguo")
 
 
@@ -250,8 +253,9 @@ def a_cercano(reporte: Reporte, hoy: date, distancia: float) -> Cercano:
     return Cercano(**_campos_publicos(reporte, hoy), distancia_m=round(distancia))
 
 
-def a_reporte_detalle(reporte: Reporte, hoy: date) -> ReporteDetalle:
-    """Reporte -> ReporteDetalle. El historial sale del más reciente al más antiguo y SIN el actor."""
+def a_reporte_detalle(reporte: Reporte, hoy: date, ultima_confirmacion: datetime | None = None) -> ReporteDetalle:
+    """Reporte -> ReporteDetalle. El historial sale del más reciente al más antiguo y SIN el actor.
+    `ultima_confirmacion` la calcula el servicio (es una consulta a la tabla de confirmaciones)."""
     filas = sorted(reporte.historial, key=lambda f: f.id, reverse=True)
     historial = [
         CambioEstado(
@@ -263,5 +267,6 @@ def a_reporte_detalle(reporte: Reporte, hoy: date) -> ReporteDetalle:
     ultima = filas[0].creado_en if filas else reporte.creado_en
     publico = _campos_publicos(reporte, hoy)
     return ReporteDetalle(
-        **publico, longevidad_dias=publico["antiguedad_dias"], ultima_actividad=ultima, historial=historial
+        **publico, longevidad_dias=publico["antiguedad_dias"], ultima_actividad=ultima,
+        ultima_confirmacion=ultima_confirmacion, historial=historial,
     )
