@@ -174,18 +174,25 @@ misma consulta; una restricción `CHECK` exige los campos correctos según la ca
 
 ### 3.1 Frontend
 
-[PENDIENTE: Carlos revisa esta sección; se redactó a partir del código de frontend/src/.]
-
-- **16 rutas** en `frontend/src/App.tsx`: públicas (consulta, zona, mapa, detalle, inicio de sesión, registro y privacidad), del
-  ciudadano (reportar, mis reportes, editar y perfil), del moderador (moderación) y del coordinador (colonias, usuarios y tablero),
-  más la página 404. `RutaPrivada` manda a `/login` recordando la ruta de origen; ocultar enlaces no es la seguridad real, porque el
-  servidor vuelve a validar el rol.
-- **Tres estados siempre visibles:** toda pantalla que consume la API usa el hook `useApi`, que devuelve carga, error con
-  "Reintentar" y vacío, y descarta respuestas viejas (fragmento después de la Figura 3).
+- **16 rutas** en `frontend/src/App.tsx` (15 pantallas y la 404): públicas (consulta, zona, detalle, inicio de sesión, registro,
+  privacidad y mapa), del ciudadano (reportar, mis reportes, editar y perfil), de moderación (el moderador ve "Por revisar" y "En
+  seguimiento"; el coordinador solo "En seguimiento") y del coordinador (colonias, usuarios y tablero). **El mapa (HU-04.5) y Mi
+  perfil (HU-01.4) son pantallas provisionales ("Próximamente")** de historias deseables que no se hicieron. `RutaPrivada` manda a
+  `/login` recordando la ruta de origen; ocultar enlaces no es la seguridad real, porque el servidor vuelve a validar el rol.
+- **Tres estados siempre visibles:** toda pantalla que consulta datos (consulta, detalle, zona, mis reportes, edición, moderación,
+  administración, tablero y los formularios que cargan catálogos) usa el hook `useApi` y el componente `Estado`: carga, error con
+  "Reintentar" y vacío; `useApi` descarta respuestas viejas (fragmento después de la Figura 3). Inicio de sesión, registro y reporte
+  manejan su propio estado de envío y muestran los errores del servidor junto a cada campo.
 - **Formulario dinámico** (HU-02.2): los campos cambian según el tipo de daño (`utils/reportes.ts`) y el servidor vuelve a validar lo
-  mismo; los límites se piden con `GET /api/reglas` para no repetirlos.
-- **Pantallas de Carlos:** consulta con filtros y paginación, detalle con historial, moderación con bandeja y seguimiento,
-  administración de colonias y usuarios, y el tablero con una gráfica semanal en SVG propio (`GraficaSemanal.tsx`, sin librerías).
+  mismo; los límites se piden con `GET /api/reglas` (`useReglas`) para no repetirlos.
+- **Pantallas de Carlos:** consulta con filtros guardados en la URL (tipo, estado, sector, colonia, severidad, fechas y búsqueda por
+  calle o folio) y paginación; detalle con historial; "¿Cómo está mi zona?" con búsqueda de dirección o ubicación del dispositivo;
+  moderación con bandeja y seguimiento; administración de colonias y usuarios; el tablero con una gráfica semanal en SVG propio
+  (`GraficaSemanal.tsx`, sin librerías); y la franja del aviso de lluvia en el encabezado. [PENDIENTE: con #81 a #84 fusionados, el
+  detalle también permite "Sigue ahí", "Ya no hay agua" y rechazar un encharcamiento (moderador).]
+- **Componentes compartidos y pruebas:** `TarjetaReporte`, `Confirmar`, `Campo` y `Paginacion` se reutilizan en varias pantallas; hay
+  25 archivos de pruebas con Vitest (220 pruebas en `main` al 26-nov; recalcular con la etiqueta). Lighthouse de accesibilidad
+  100 y axe sin violaciones en 12 vistas a 360 y 1280 px (#27).
 - **Estilos:** hojas externas con variables de color, diseño desde 360 px con cortes en 640 y 1024 px, foco visible y
   `prefers-reduced-motion`; el tipo de reporte se distingue con ícono y texto, no solo con color.
 
@@ -374,20 +381,24 @@ bloquear la fila y dos moderadores podían dejar un historial incoherente. Lo de
 que, si el error toca datos que no se pueden borrar, hay que pedir cambios. En #28 también aprendí a separar "no se hizo" de "no hay
 evidencia": pedí corregir la bitácora y resultó que la comparación sí se había hecho, solo faltaba documentarla.
 
-**Reflexión crítica (Carlos).** [PENDIENTE: Carlos escribe su reflexión crítica.]
+**Reflexión crítica (Carlos).** Lo que más me enseñó fue el PR #23. Estaba apilado sobre la rama de C3, pasaba el CI y estaba
+aprobado, y el asistente lo fusionó sin comprobar su base: el detalle quedó en la rama equivocada y no en `main`. El asistente lo
+detectó al revisar `main`, me avisó y lo corregimos con #30. Aprendí que "aprobado y en verde" no es lo mismo que "está donde
+debe", y que una IA repite un paso sin darse cuenta si nadie verifica el resultado. Desde entonces cada fusión comprueba primero
+la base y revisa `main` al terminar.
 
 ## 6. Contribución individual
 
 La Tabla 9 resume la contribución de cada quien. Los 16 PRs de Carlos están fusionados (#23 a una rama; su contenido llegó a `main`
 con #30). De los de Luis siguen abiertos #31 y #81. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 19 de Luis
-(pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). [PENDIENTE: el porcentaje de contribución lo acuerda el
-equipo; recalcular las cifras sobre la etiqueta v1.0.0.]
+(pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). Carlos propone un reparto de 60 % para Luis y 40 % para Carlos
+[PENDIENTE: Luis confirma el porcentaje; recalcular las cifras sobre la etiqueta v1.0.0.].
 
 <!-- tabla: anchos=1238,2800,1100,1250,900,1550 -->
 | Integrante | Tareas principales | Commits (`main` / todas) | PRs (fusionados) | Revisó | % acordado |
 |---|---|---|---|---|---|
-| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 20 (18) | 16 PRs | [PENDIENTE] |
-| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | [PENDIENTE] |
+| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 20 (18) | 16 PRs | 60 % (propuesta de Carlos) |
+| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | 40 % (propuesta de Carlos) |
 
 Tabla 9. Contribución individual al 25-nov-2026, 20:30 (`main` en `5a0d6cd`). Commits sin merge en `main` y en todas las ramas publicadas (`git shortlog -sn --no-merges`); PRs con `gh pr list --state all`.
 
@@ -399,7 +410,7 @@ Cada integrante califica a la otra persona de 1 a 5 en compromiso, calidad y com
 | Evaluador | Evaluado | Compromiso | Calidad | Comunicación | Comentario |
 |---|---|---|---|---|---|
 | Luis David Reyna Morisco | Carlos Limones Ayala | 5 | 5 | 5 | Carlos revisó todos mis PRs (los 14 de la noche del 24 los aprobó en la mañana del 25) y entregó de punta a punta consulta, zona, detalle, moderación, administración, tablero y aviso de lluvia. Cuando le pedí cambios en #28 los atendió y documentó la comparación, y corrigió en #32 a #34 lo que señalé en mis revisiones. |
-| Carlos Limones Ayala | Luis David Reyna Morisco | — | — | — | [PENDIENTE: Carlos pone sus calificaciones y su comentario] |
+| Carlos Limones Ayala | Luis David Reyna Morisco | 5 | 5 | 5 | Luis entregó la base completa (API, base de datos, autenticación y despliegue) antes de que yo empezara. Revisó mis PRs con comentarios concretos (la carrera en moderación, el foco del teclado) y su auditoría de criterios encontró fallos reales en #81 a #84. Cuando pedí cambios los atendió con evidencia. |
 
 Tabla 10. Coevaluación (cada integrante llena su fila).
 
