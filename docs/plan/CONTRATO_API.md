@@ -14,6 +14,8 @@ agregan a este archivo; las formas de `ReportePublico` y de la paginación ya so
 - Coordenadas: `lat` y `lon` como números decimales (grados).
 - Paginación: `?pagina=1&tam=20`. Respuesta `{"items": [...], "total": 137, "pagina": 1, "tam": 20}`. `pagina` va de 1 a 10 000
   (`PAGINA_MAX`); un valor mayor responde 422 `VALIDACION`.
+- Ids enteros (en la ruta, en `?colonia_id=`/`?sector_id=` y en el cuerpo): de 1 a 2 147 483 647; fuera de ese rango
+  responde 422 `VALIDACION`.
 - Nombres de campos en `snake_case` y sin acentos ni eñes (`tamano`, `senalizado`).
 
 ### Errores
