@@ -37,7 +37,7 @@ function menuPara(usuario: UsuarioPublico | null): string[] {
 describe('menú por rol (HU-01.3 CA1)', () => {
   it('el ciudadano no ve opciones de moderación ni de administración', () => {
     const enlaces = menuPara(CIUDADANO)
-    expect(enlaces).toEqual(expect.arrayContaining(['Reportar', 'Mis reportes', 'Mi perfil']))
+    expect(enlaces).toEqual(expect.arrayContaining(['Reportar', 'Mis reportes']))
     expect(enlaces).not.toContain('Moderación')
     expect(enlaces).not.toContain('Colonias')
     expect(enlaces).not.toContain('Usuarios')
@@ -60,7 +60,13 @@ describe('menú por rol (HU-01.3 CA1)', () => {
 
   it('sin sesión solo se ofrece lo público, iniciar sesión y crear cuenta', () => {
     const enlaces = menuPara(null)
-    expect(enlaces).toEqual(['Reportes', '¿Cómo está mi zona?', 'Mapa', 'Iniciar sesión', 'Crear cuenta'])
+    expect(enlaces).toEqual(['Reportes', '¿Cómo está mi zona?', 'Iniciar sesión', 'Crear cuenta'])
+  })
+
+  it('no ofrece las pantallas provisionales (mapa y perfil)', () => {
+    const enlaces = menuPara(CIUDADANO)
+    expect(enlaces).not.toContain('Mapa')
+    expect(enlaces).not.toContain('Mi perfil')
   })
 })
 

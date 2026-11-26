@@ -33,6 +33,11 @@ describe('RutaPrivada', () => {
     expect(screen.queryByText('Contenido del ciudadano')).not.toBeInTheDocument()
   })
 
+  it('si la persona salió por su cuenta, no recuerda la pantalla donde estaba', () => {
+    renderizar(authFalso({ salioPorSuCuenta: true }))
+    expect(screen.getByText(/Pantalla de login/)).not.toHaveTextContent('/reportar')
+  })
+
   it('con un rol insuficiente muestra el aviso "No tienes permiso"', () => {
     renderizar(authFalso({ usuario: MODERADOR }))
     expect(screen.getByRole('heading', { level: 1, name: 'No tienes permiso' })).toBeInTheDocument()

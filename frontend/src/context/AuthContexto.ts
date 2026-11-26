@@ -10,6 +10,7 @@ export interface AuthValor {
   login: (correo: string, password: string) => Promise<void>
   registro: (datos: DatosRegistro) => Promise<void>
   logout: () => void
+  salioPorSuCuenta: boolean // true tras cerrar sesión a mano: la pantalla donde estaba no se recuerda
   // true si hay sesión y el rol de la persona está en la lista. Solo decide qué mostrar: el servidor vuelve a validar.
   tienePermiso: (roles: readonly Rol[]) => boolean
 }

@@ -10,7 +10,7 @@ interface Props {
 // Protege un grupo de rutas (se usa como `element` de una ruta que contiene a las demás).
 // Ocultar enlaces no es seguridad: el servidor vuelve a validar el rol en cada petición.
 export default function RutaPrivada({ roles }: Props) {
-  const { usuario, cargando, tienePermiso } = useAuth()
+  const { usuario, cargando, salioPorSuCuenta, tienePermiso } = useAuth()
   const ubicacion = useLocation()
 
   // Aún se comprueba el token guardado: no se redirige todavía
@@ -22,9 +22,11 @@ export default function RutaPrivada({ roles }: Props) {
     )
   }
 
-  // Sin sesión: a /login, recordando a dónde quería ir
+  // Sin sesión: a /login, recordando a dónde quería ir. Si la persona salió por su cuenta no se recuerda:
+  // quien entre después en el mismo equipo (quizá con otro rol) debe llegar al inicio, no a esa pantalla.
   if (!usuario) {
-    return <Navigate to="/login" replace state={{ desde: ubicacion.pathname + ubicacion.search }} />
+    const estado = salioPorSuCuenta ? null : { desde: ubicacion.pathname + ubicacion.search }
+    return <Navigate to="/login" replace state={estado} />
   }
 
   if (roles && !tienePermiso(roles)) return <SinPermiso />

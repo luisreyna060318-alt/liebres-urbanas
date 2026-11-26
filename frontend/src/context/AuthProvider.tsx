@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<UsuarioPublico | null>(() => (leerToken() ? leerUsuarioGuardado() : null))
   const [cargando, setCargando] = useState(() => leerToken() !== null)
   const [aviso, setAviso] = useState<string | null>(null)
+  const [salioPorSuCuenta, setSalioPorSuCuenta] = useState(false)
 
   // Valor de GET /api/reglas (30 minutos si la API aún no responde)
   const { inactividad_min } = useReglas()
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ultimaRenovacion.current = Date.now()
     setUsuario(sesion.usuario)
     setAviso(null)
+    setSalioPorSuCuenta(false)
   }, [])
 
   // Cierra la sesión (a mano, por inactividad o porque el servidor respondió 401)
@@ -141,7 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [abrirSesion],
   )
 
-  const logout = useCallback(() => cerrar(null), [cerrar])
+  const logout = useCallback(() => {
+    setSalioPorSuCuenta(true)
+    cerrar(null)
+  }, [cerrar])
   const descartarAviso = useCallback(() => setAviso(null), [])
 
   const tienePermiso = useCallback(
@@ -150,7 +155,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <AuthContext.Provider value={{ usuario, cargando, aviso, descartarAviso, login, registro, logout, tienePermiso }}>
+    <AuthContext.Provider
+      value={{ usuario, cargando, aviso, descartarAviso, login, registro, logout, salioPorSuCuenta, tienePermiso }}
+    >
       {children}
     </AuthContext.Provider>
   )
