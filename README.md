@@ -1,12 +1,14 @@
 # Liebre Urbana
 
+[![CI](https://github.com/luisreyna060318-alt/liebres-urbanas/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/luisreyna060318-alt/liebres-urbanas/actions/workflows/ci.yml)
+
 Plataforma ciudadana de baches y encharcamientos de Ciudad Juárez. Los vecinos reportan, consultan antes de salir qué calles
 conviene evitar cuando llueve y dan seguimiento a la reparación; los voluntarios validan; la mesa directiva presenta cifras.
 
 Proyecto final de **Programación Web (AEB-1055)**, Instituto Tecnológico de Ciudad Juárez, agosto a diciembre de 2026.
 El cliente (A.C. "Calles Seguras Juárez") es ficticio y se creó con fines académicos.
 
-> Estado: **en desarrollo**. Las historias se integran por pull requests con revisión cruzada; este README se completa antes de `v1.0.0`.
+> Las 20 historias indispensables están en `main`. Los cambios entran por pull requests con revisión cruzada.
 
 ## Integrantes y roles
 
@@ -66,7 +68,3 @@ Son cuentas de **demostración** (ficticias y públicas, definidas en `.env.exam
 
 Render y Neon son gratuitos y se duermen sin tráfico: la primera petición puede tardar entre 30 y 60 segundos.
 El despliegue público usa las mismas cuentas de demostración de la tabla de arriba.
-
-## Pendiente de completar antes de `v1.0.0`
-
-- Insignia del CI
