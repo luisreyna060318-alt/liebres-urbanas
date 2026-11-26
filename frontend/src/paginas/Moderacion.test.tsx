@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -346,5 +346,49 @@ describe('Moderación: coordinador (RN-05)', () => {
     renderizar(COORDINADOR)
     expect(await screen.findByRole('tab', { name: 'En seguimiento' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.queryByRole('tab', { name: 'Por revisar' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Moderación: foco del teclado al abrir y cerrar un formulario (WCAG 2.4.3)', () => {
+  it('rechazar: el foco pasa al motivo al abrir y vuelve al botón "Rechazar" al cancelar', async () => {
+    simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([VIEJO]) })
+    renderizar()
+    const u = userEvent.setup()
+
+    await u.click(await screen.findByRole('button', { name: 'Rechazar BCH-2026-000001' }))
+    expect(await screen.findByLabelText(/Motivo del rechazo/)).toHaveFocus()
+
+    await u.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Rechazar BCH-2026-000001' })).toHaveFocus())
+  })
+
+  it('validar: el foco pasa al comentario al abrir y vuelve al botón "Validar" al cancelar', async () => {
+    simularApi({ ...CATALOGOS, 'GET /api/moderacion/bandeja': pagina([VIEJO]) })
+    renderizar()
+    const u = userEvent.setup()
+
+    await u.click(await screen.findByRole('button', { name: 'Validar BCH-2026-000001' }))
+    expect(screen.getByLabelText(/Comentario/)).toHaveFocus()
+
+    await u.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Validar BCH-2026-000001' })).toHaveFocus())
+  })
+
+  it('seguimiento: el foco pasa a la fecha al abrir y vuelve al botón al cancelar', async () => {
+    const validado = publico({ id: 10, folio: 'BCH-2026-000010', estado: 'en_reparacion', sin_validar: false, creado_en: '2026-01-10T18:00:00Z' })
+    simularApi({
+      ...CATALOGOS,
+      'GET /api/moderacion/bandeja': pagina([], 0),
+      'GET /api/moderacion/seguimiento': pagina([validado]),
+    })
+    renderizar()
+    const u = userEvent.setup()
+    await u.click(screen.getByRole('tab', { name: 'En seguimiento' }))
+
+    await u.click(await screen.findByRole('button', { name: 'Marcar reparado BCH-2026-000010' }))
+    expect(screen.getByLabelText(/Fecha de reparación/)).toHaveFocus()
+
+    await u.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Marcar reparado BCH-2026-000010' })).toHaveFocus())
   })
 })

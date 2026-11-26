@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.core.deps import SesionDB, require_role
 from app.models import Usuario
-from app.schemas.comun import respuestas_error
+from app.schemas.comun import IdEntero, respuestas_error
 from app.schemas.tablero import TableroSalida
 from app.services import tablero as tablero_service
 
@@ -25,7 +25,7 @@ def ver_tablero(
     _coordinador: Annotated[Usuario, Depends(require_role("coordinador"))],
     desde: Annotated[date | None, Query(description="AAAA-MM-DD, día de Ciudad Juárez (incluido)")] = None,
     hasta: Annotated[date | None, Query(description="AAAA-MM-DD, día de Ciudad Juárez (incluido)")] = None,
-    sector_id: Annotated[int | None, Query(ge=1, description="Solo las colonias de este sector")] = None,
+    sector_id: Annotated[IdEntero | None, Query(description="Solo las colonias de este sector")] = None,
 ):
     """Totales por tipo y estado, top 10 colonias, tiempo de reparación, reportes por semana y longevidad.
 

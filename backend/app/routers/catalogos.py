@@ -1,11 +1,13 @@
 """Catálogos públicos para llenar formularios y filtros."""
 
+from typing import Annotated
+
 from fastapi import APIRouter, Query
 
 from app.core.deps import SesionDB
 from app.core.reglas import PAGINA_MAX, TAM_PAGINA_CATALOGOS, TAM_PAGINA_MAX_COLONIAS
 from app.schemas.catalogos import ColoniaSalida, MotivoRechazoSalida, SectorSalida, TipoDanoSalida
-from app.schemas.comun import Pagina, respuestas_error
+from app.schemas.comun import IdEntero, Pagina, respuestas_error
 from app.services import catalogos as catalogos_service
 
 router = APIRouter(prefix="/api", tags=["Catálogos"])
@@ -23,7 +25,7 @@ def listar_sectores(db: SesionDB):
 def listar_colonias(
     db: SesionDB,
     q: str | None = Query(None, max_length=100, description="Parte del nombre, sin distinguir mayúsculas"),
-    sector_id: int | None = Query(None, description="Solo las de este sector"),
+    sector_id: Annotated[IdEntero | None, Query(description="Solo las de este sector")] = None,
     solo_activas: bool = Query(True, description="false incluye las desactivadas (administración)"),
     pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Página, empieza en 1"),
     tam: int = Query(

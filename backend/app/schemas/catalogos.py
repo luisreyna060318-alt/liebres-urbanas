@@ -3,6 +3,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.reglas import NOMBRE_COLONIA_MAX, NOMBRE_COLONIA_MIN, NOMBRE_SECTOR_MAX
+from app.schemas.comun import IdEntero
 
 
 class SectorSalida(BaseModel):
@@ -63,7 +64,7 @@ class ColoniaEntrada(BaseModel):
     """Alta de colonia. Las coordenadas (centro aproximado) son opcionales, pero van las dos o ninguna."""
 
     nombre: str = Field(examples=["Colonia Ficticia"], description=f"Hasta {NOMBRE_COLONIA_MAX} caracteres")
-    sector_id: int = Field(examples=[1])
+    sector_id: IdEntero = Field(examples=[1])
     lat: float | None = Field(default=None, ge=-90, le=90, examples=[31.73])
     lon: float | None = Field(default=None, ge=-180, le=180, examples=[-106.48])
 

@@ -8,6 +8,7 @@ import Alerta from '../../componentes/Alerta.tsx'
 import Boton from '../../componentes/Boton.tsx'
 import Estado from '../../componentes/Estado.tsx'
 import { useApi } from '../../hooks/useApi.ts'
+import { devolverFoco } from '../../utils/foco.ts'
 import type { PropsAccion } from './acciones.ts'
 import FormularioRechazo from './FormularioRechazo.tsx'
 
@@ -20,6 +21,7 @@ export default function RechazarEncharcamiento({ reporte, alCambiar }: Props) {
   const [abierto, setAbierto] = useState(false)
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null)
   const rechazado = reporte.estado === 'rechazado'
+  const idBoton = `rechazar-encharcamiento-${reporte.id}`
 
   function terminar(tipo: 'exito' | 'error', texto: string) {
     setAbierto(false)
@@ -34,6 +36,7 @@ export default function RechazarEncharcamiento({ reporte, alCambiar }: Props) {
       {mensaje && <Alerta tipo={mensaje.tipo}>{mensaje.texto}</Alerta>}
       {!rechazado && !abierto && (
         <Boton
+          id={idBoton}
           variante="peligro"
           onClick={() => {
             setMensaje(null)
@@ -48,7 +51,10 @@ export default function RechazarEncharcamiento({ reporte, alCambiar }: Props) {
           reporte={reporte}
           alTerminar={(texto) => terminar('exito', texto)}
           alDesfasarse={(texto) => terminar('error', texto)}
-          alCancelar={() => setAbierto(false)}
+          alCancelar={() => {
+            setAbierto(false)
+            devolverFoco(idBoton) // vuelve al botón que abrió el formulario
+          }}
         />
       )}
     </section>

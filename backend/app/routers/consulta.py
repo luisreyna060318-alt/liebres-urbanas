@@ -21,7 +21,7 @@ from app.core.reglas import (
     TAM_PAGINA_CONSULTA,
     TAM_PAGINA_MAX,
 )
-from app.schemas.comun import Pagina, respuestas_error
+from app.schemas.comun import IdEntero, Pagina, respuestas_error
 from app.schemas.reportes import ReporteDetalle, ReportePublico
 from app.services import consulta as consulta_service
 
@@ -43,8 +43,8 @@ def consultar_reportes(
     usuario: UsuarioOpcional,
     categoria: Literal[CATEGORIAS] | None = Query(None, description="bache o encharcamiento"),
     estado: Literal[ESTADOS] | None = Query(None, description="Sin valor: solo los activos"),
-    colonia_id: int | None = Query(None, ge=1),
-    sector_id: int | None = Query(None, ge=1, description="Solo las colonias de ese sector"),
+    colonia_id: Annotated[IdEntero | None, Query()] = None,
+    sector_id: Annotated[IdEntero | None, Query(description="Solo las colonias de ese sector")] = None,
     severidad: Literal[SEVERIDADES] | None = Query(None, description="Solo baches"),
     desde: Annotated[date | None, Query(description="AAAA-MM-DD, día de Ciudad Juárez (incluido)")] = None,
     hasta: Annotated[date | None, Query(description="AAAA-MM-DD, día de Ciudad Juárez (incluido)")] = None,
@@ -78,7 +78,7 @@ def consultar_reportes(
     summary="Detalle e historial de un reporte",
     responses=respuestas_error(404),
 )
-def detalle_reporte(reporte_id: int, db: SesionDB, usuario: UsuarioOpcional):
+def detalle_reporte(reporte_id: IdEntero, db: SesionDB, usuario: UsuarioOpcional):
     """Datos del reporte, confirmaciones, estado e **historial público** del más reciente al más antiguo (sin quién
     hizo cada cambio). Incluye `longevidad_dias` y `ultima_confirmacion`.
 

@@ -105,6 +105,14 @@ def test_colonias_filtros(client, colonias):
     assert client.get("/api/colonias?tam=500").json()["tam"] == 500
 
 
+@pytest.mark.parametrize("comodin", ["%25", "_", "%25%25", "__"])  # %25 es "%" en la URL
+def test_q_con_comodines_de_like_se_busca_tal_cual(client, colonias, comodin):
+    """S7: "%" y "_" no funcionan como comodín de LIKE (antes ?q=% devolvía todas las colonias)."""
+    r = client.get(f"/api/colonias?q={comodin}")
+    assert r.status_code == 200
+    assert r.json()["total"] == 0  # ninguna colonia de prueba tiene "%" ni "_" en el nombre
+
+
 @pytest.mark.parametrize("consulta", ["tam=501", "tam=0", "pagina=0", "sector_id=abc"])
 def test_colonias_parametros_invalidos(client, consulta):
     r = client.get(f"/api/colonias?{consulta}")

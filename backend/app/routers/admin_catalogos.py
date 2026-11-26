@@ -10,7 +10,7 @@ from app.schemas.catalogos import (
     SectorEntrada,
     SectorSalida,
 )
-from app.schemas.comun import respuestas_error
+from app.schemas.comun import IdEntero, respuestas_error
 from app.services import catalogos as catalogos_service
 
 # Todas las rutas de este archivo exigen rol coordinador (401 sin sesión, 403 con otro rol)
@@ -39,7 +39,7 @@ def crear_sector(datos: SectorEntrada, db: SesionDB):
     summary="Renombrar sector",
     responses=respuestas_error(401, 403, 404, 409, 422),
 )
-def actualizar_sector(sector_id: int, datos: SectorEntrada, db: SesionDB):
+def actualizar_sector(sector_id: IdEntero, datos: SectorEntrada, db: SesionDB):
     return catalogos_service.actualizar_sector(db, sector_id, datos)
 
 
@@ -61,7 +61,7 @@ def crear_colonia(datos: ColoniaEntrada, db: SesionDB):
     summary="Editar o desactivar colonia",
     responses=respuestas_error(401, 403, 404, 409, 422),
 )
-def actualizar_colonia(colonia_id: int, datos: ColoniaActualizacion, db: SesionDB):
+def actualizar_colonia(colonia_id: IdEntero, datos: ColoniaActualizacion, db: SesionDB):
     """Reemplaza los datos de la colonia; `activa: false` la desactiva (deja de ofrecerse en los formularios)."""
     return catalogos_service.actualizar_colonia(db, colonia_id, datos)
 
@@ -72,7 +72,7 @@ def actualizar_colonia(colonia_id: int, datos: ColoniaActualizacion, db: SesionD
     summary="Eliminar colonia",
     responses=respuestas_error(401, 403, 404, 409),
 )
-def borrar_colonia(colonia_id: int, db: SesionDB):
+def borrar_colonia(colonia_id: IdEntero, db: SesionDB):
     """Elimina una colonia sin reportes. Con reportes responde 409 `COLONIA_CON_REPORTES`: solo se puede desactivar."""
     catalogos_service.borrar_colonia(db, colonia_id)
     return Response(status_code=204)
