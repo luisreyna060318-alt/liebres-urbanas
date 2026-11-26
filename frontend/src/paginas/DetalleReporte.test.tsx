@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
@@ -226,5 +226,22 @@ describe('Rechazar un encharcamiento desde el detalle (RN-06)', () => {
     renderizar('/reportes/345', authFalso({ usuario: MODERADOR }))
     await screen.findByText('Estado: Validado')
     expect(screen.queryByRole('button', { name: 'Rechazar este reporte' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Rechazar un encharcamiento: foco del teclado (WCAG 2.4.3)', () => {
+  const activo = () => detalle({ estado: 'activo', historial: [] }, encharcamientoMio())
+  const MOTIVOS = [{ id: 4, codigo: 'contenido_inapropiado', nombre: 'Contenido inapropiado', pide_explicacion: false }]
+
+  it('el foco pasa al motivo al abrir el formulario y vuelve al botón al cancelar', async () => {
+    simularApi({ 'GET /api/reportes/500': { cuerpo: activo() }, 'GET /api/motivos-rechazo': { cuerpo: MOTIVOS } })
+    renderizar('/reportes/500', authFalso({ usuario: MODERADOR }))
+    const u = userEvent.setup()
+
+    await u.click(await screen.findByRole('button', { name: 'Rechazar este reporte' }))
+    expect(await screen.findByLabelText(/Motivo del rechazo/)).toHaveFocus()
+
+    await u.click(screen.getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Rechazar este reporte' })).toHaveFocus())
   })
 })
