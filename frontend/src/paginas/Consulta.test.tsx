@@ -62,6 +62,9 @@ describe('Consulta pública (HU-04.1 y HU-04.2)', () => {
     const charco = screen.getByRole('heading', { name: 'ENC-2026-000002' }).closest('article')!
     expect(within(charco).getByText(/Encharcamiento/)).toBeInTheDocument()
     expect(within(charco).getByText('Estado: Activo')).toBeInTheDocument()
+    // HU-04.1 CA1: la severidad del bache y el nivel del agua se ven en la lista
+    expect(within(bache).getByText(/^Severidad: (Baja|Media|Alta)$/)).toBeInTheDocument()
+    expect(within(charco).getByText(/^Nivel del agua: .+/)).toBeInTheDocument()
     expect(within(bache).getByRole('link', { name: /Ver detalle/ })).toHaveAttribute('href', '/reportes/1')
     expect(screen.getByText('Página 1 de 1 (2 resultados)')).toBeInTheDocument()
   })
