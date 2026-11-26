@@ -17,9 +17,8 @@ interface Props extends PropsAccion {
 }
 
 export default function FormularioRechazo({ reporte, motivos, alTerminar, alDesfasarse, alCancelar }: Props) {
-  // PENDIENTE: el comentario tiene su propio límite (COMENTARIO_MAX en backend/app/core/reglas.py, hoy 500, igual que la
-  // descripción). Cuando GET /api/reglas exponga `comentario_max` (otro PR), usarlo aquí en lugar de `descripcion_max`.
-  const { descripcion_max } = useReglas()
+  // Límite propio del comentario (COMENTARIO_MAX en el backend), tomado de GET /api/reglas
+  const { comentario_max } = useReglas()
   const [motivoId, setMotivoId] = useState('')
   const [explicacion, setExplicacion] = useState('')
   const [comentario, setComentario] = useState('')
@@ -83,7 +82,7 @@ export default function FormularioRechazo({ reporte, motivos, alTerminar, alDesf
         requerido={pideExplicacion}
         valor={explicacion}
         onCambio={setExplicacion}
-        maxLength={descripcion_max}
+        maxLength={comentario_max}
         error={campos.motivo_texto}
         ayuda={pideExplicacion ? 'Este motivo necesita una explicación.' : undefined}
       />
@@ -94,7 +93,7 @@ export default function FormularioRechazo({ reporte, motivos, alTerminar, alDesf
         filas={2}
         valor={comentario}
         onCambio={setComentario}
-        maxLength={descripcion_max}
+        maxLength={comentario_max}
         error={campos.comentario}
         ayuda="Aparece en el historial del reporte."
       />

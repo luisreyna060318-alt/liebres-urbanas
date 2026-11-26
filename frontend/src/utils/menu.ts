@@ -13,6 +13,8 @@ export interface OpcionMenu {
 export const ROLES_CIUDADANO: readonly Rol[] = ['ciudadano']
 export const ROLES_MODERADOR: readonly Rol[] = ['moderador']
 export const ROLES_COORDINADOR: readonly Rol[] = ['coordinador']
+// /moderacion: el coordinador solo entra a registrar el avance de las reparaciones (RN-05)
+export const ROLES_SEGUIMIENTO: readonly Rol[] = ['moderador', 'coordinador']
 
 export const OPCIONES_MENU: readonly OpcionMenu[] = [
   { ruta: '/', texto: 'Reportes', roles: null },
@@ -21,7 +23,7 @@ export const OPCIONES_MENU: readonly OpcionMenu[] = [
   { ruta: '/reportar', texto: 'Reportar', roles: ROLES_CIUDADANO },
   { ruta: '/mis-reportes', texto: 'Mis reportes', roles: ROLES_CIUDADANO },
   { ruta: '/perfil', texto: 'Mi perfil', roles: ROLES_CIUDADANO },
-  { ruta: '/moderacion', texto: 'Moderación', roles: ROLES_MODERADOR },
+  { ruta: '/moderacion', texto: 'Moderación', roles: ROLES_SEGUIMIENTO },
   { ruta: '/admin/colonias', texto: 'Colonias', roles: ROLES_COORDINADOR },
   { ruta: '/admin/usuarios', texto: 'Usuarios', roles: ROLES_COORDINADOR },
   { ruta: '/tablero', texto: 'Tablero', roles: ROLES_COORDINADOR },

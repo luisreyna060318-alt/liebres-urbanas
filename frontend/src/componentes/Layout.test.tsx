@@ -52,9 +52,9 @@ describe('menú por rol (HU-01.3 CA1)', () => {
     expect(enlaces).not.toContain('Reportar')
   })
 
-  it('el coordinador ve colonias, usuarios y tablero', () => {
+  it('el coordinador ve moderación (para el avance), colonias, usuarios y tablero', () => {
     const enlaces = menuPara(COORDINADOR)
-    expect(enlaces).toEqual(expect.arrayContaining(['Colonias', 'Usuarios', 'Tablero']))
+    expect(enlaces).toEqual(expect.arrayContaining(['Moderación', 'Colonias', 'Usuarios', 'Tablero']))
     expect(enlaces).not.toContain('Reportar')
   })
 
