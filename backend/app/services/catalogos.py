@@ -101,7 +101,17 @@ def borrar_colonia(db: Session, colonia_id: int) -> None:
     # Las colonias de interés de las personas apuntan a ésta: se quitan primero (en PostgreSQL ya iría en cascada)
     db.execute(delete(UsuarioColonia).where(UsuarioColonia.colonia_id == colonia.id))
     db.delete(colonia)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Carrera: alguien creó un reporte en esta colonia entre el conteo y el borrado. La llave foránea de
+        # `reportes` lo impide; se responde el mismo 409 en lugar de un 500.
+        db.rollback()
+        raise ErrorApi(
+            409,
+            "COLONIA_CON_REPORTES",
+            "Esta colonia tiene reportes y no se puede eliminar. Desactívala para que deje de ofrecerse",
+        ) from None
 
 
 def _sector_o_404(db: Session, sector_id: int) -> Sector:
@@ -159,7 +169,13 @@ def _revisar_nombre_de_colonia(db: Session, nombre: str, sector_id: int, propia_
 
 def _guardar(db: Session, error_duplicado) -> None:
     """Confirma los cambios. Si dos coordinadores guardan el mismo nombre a la vez, la restricción única de la
-    base lo detecta aunque la revisión previa no lo haya visto."""
+    base lo detecta aunque la revisión previa no lo haya visto, y se responde el mismo 409.
+
+    LIMITACIÓN CONOCIDA: las revisiones _revisar_nombre_de_* comparan con lower() (sin distinguir mayúsculas),
+    pero las restricciones únicas de la base (sectores.nombre y colonias(sector_id, nombre)) comparan el texto
+    EXACTO. El respaldo solo cubre el nombre idéntico: si dos peticiones guardan a la vez «Centro» y «CENTRO»,
+    ambas podrían quedar. Cerrarlo del todo requiere un índice único sobre lower(nombre), que es una migración
+    (las crea Luis)."""
     try:
         db.commit()
     except IntegrityError:

@@ -16,6 +16,7 @@ from app.core.reglas import (
     CATEGORIAS,
     ESTADOS_BACHE,
     ESTADOS_ENCHARCAMIENTO,
+    PAGINA_MAX,
     SEVERIDADES,
     TAM_PAGINA_CONSULTA,
     TAM_PAGINA_MAX,
@@ -47,7 +48,7 @@ def consultar_reportes(
     desde: Annotated[date | None, Query(description="AAAA-MM-DD, día de Ciudad Juárez (incluido)")] = None,
     hasta: Annotated[date | None, Query(description="AAAA-MM-DD, día de Ciudad Juárez (incluido)")] = None,
     q: str | None = Query(None, max_length=Q_MAX, description="Parte de la calle o del folio"),
-    pagina: int = Query(1, ge=1, description="Empieza en 1"),
+    pagina: int = Query(1, ge=1, le=PAGINA_MAX, description="Empieza en 1"),
     tam: int = Query(TAM_PAGINA_CONSULTA, ge=1, le=TAM_PAGINA_MAX),
 ):
     """Reportes del más reciente al más antiguo, **20 por página** con el total. Nunca incluye al autor.

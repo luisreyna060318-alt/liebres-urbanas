@@ -175,6 +175,10 @@ def test_pagina_de_20_con_el_total(client, datos):
         ({"desde": "2026-13-01"}, "desde"),
         ({"hasta": "ayer"}, "hasta"),
         ({"desde": "2026-11-21", "hasta": "2026-11-20"}, "hasta"),
+        ({"hasta": "9999-12-31"}, "hasta"),  # antes: 500 por OverflowError al sumar un día
+        ({"desde": "0001-01-01"}, "desde"),
+        ({"desde": "1999-12-31"}, "desde"),
+        ({"hasta": "2101-01-01"}, "hasta"),
         ({"categoria": "grafiti"}, "categoria"),
         ({"estado": "abierto"}, "estado"),
         ({"severidad": "extrema"}, "severidad"),
@@ -188,6 +192,10 @@ def test_parametros_invalidos_responden_422_por_campo(client, params, campo):
     r = consultar(client, **params)
     assert r.status_code == 422
     assert r.json()["codigo"] == "VALIDACION" and campo in r.json()["campos"]
+
+
+def test_los_extremos_del_rango_de_fechas_se_aceptan(client):
+    assert consultar(client, desde="2000-01-01", hasta="2100-12-31").status_code == 200
 
 
 # --- Vigencia de encharcamientos --------------------------------------------------------------------
