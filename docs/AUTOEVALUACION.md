@@ -36,5 +36,5 @@ punta el backend, la base de datos y el despliegue, pero todavía tengo que repa
 **Carlos Limones Ayala.** El criterio que más me costó fue el 8 (calidad y flujo de trabajo): los PRs apilados y las ramas que
 tocaban los mismos archivos me obligaron a resolver conflictos varias veces, y de ahí salió el error de #23. Si lo repitiera,
 abriría PRs independientes desde `main` y definiría desde el inicio qué pantalla monta cada componente. Creo estar en un nivel
-Notable: puedo explicar de punta a punta consulta, zona, moderación, administración y tablero, pero todavía repaso las pantallas
-de reporte de Luis para la defensa.
+Notable: puedo explicar claramente de punta a punta consulta, zona, moderación, administración y tablero, aunque todavía repaso las
+pantallas de reporte de Luis para la defensa.

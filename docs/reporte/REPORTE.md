@@ -384,14 +384,14 @@ la base y revisa `main` al terminar.
 
 La Tabla 9 resume la contribución de cada quien. Los 16 PRs de Carlos están fusionados (#23 a una rama; su contenido llegó a `main`
 con #30). De los de Luis siguen abiertos #31 y #81. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 19 de Luis
-(pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). [PENDIENTE: el porcentaje de contribución lo acuerda el
-equipo; recalcular las cifras sobre la etiqueta v1.0.0.]
+(pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). Carlos propone un reparto de 60 % para Luis y 40 % para Carlos
+[PENDIENTE: Luis confirma el porcentaje; recalcular las cifras sobre la etiqueta v1.0.0.].
 
 <!-- tabla: anchos=1238,2800,1100,1250,900,1550 -->
 | Integrante | Tareas principales | Commits (`main` / todas) | PRs (fusionados) | Revisó | % acordado |
 |---|---|---|---|---|---|
-| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 20 (18) | 16 PRs | [PENDIENTE] |
-| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | [PENDIENTE] |
+| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 20 (18) | 16 PRs | 60 % (propuesta de Carlos) |
+| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | 40 % (propuesta de Carlos) |
 
 Tabla 9. Contribución individual al 25-nov-2026, 20:30 (`main` en `5a0d6cd`). Commits sin merge en `main` y en todas las ramas publicadas (`git shortlog -sn --no-merges`); PRs con `gh pr list --state all`.
 
@@ -403,7 +403,7 @@ Cada integrante califica a la otra persona de 1 a 5 en compromiso, calidad y com
 | Evaluador | Evaluado | Compromiso | Calidad | Comunicación | Comentario |
 |---|---|---|---|---|---|
 | Luis David Reyna Morisco | Carlos Limones Ayala | 5 | 5 | 5 | Carlos revisó todos mis PRs (los 14 de la noche del 24 los aprobó en la mañana del 25) y entregó de punta a punta consulta, zona, detalle, moderación, administración, tablero y aviso de lluvia. Cuando le pedí cambios en #28 los atendió y documentó la comparación, y corrigió en #32 a #34 lo que señalé en mis revisiones. |
-| Carlos Limones Ayala | Luis David Reyna Morisco | [PENDIENTE: 1 a 5] | [PENDIENTE: 1 a 5] | [PENDIENTE: 1 a 5] | Luis entregó la base completa (API, base de datos, autenticación y despliegue) antes de que yo empezara. Revisó mis PRs con comentarios concretos (la carrera en moderación, el foco del teclado) y su auditoría de criterios encontró fallos reales en #81 a #84. Cuando pedí cambios los atendió con evidencia. |
+| Carlos Limones Ayala | Luis David Reyna Morisco | 5 | 5 | 5 | Luis entregó la base completa (API, base de datos, autenticación y despliegue) antes de que yo empezara. Revisó mis PRs con comentarios concretos (la carrera en moderación, el foco del teclado) y su auditoría de criterios encontró fallos reales en #81 a #84. Cuando pedí cambios los atendió con evidencia. |
 
 Tabla 10. Coevaluación (cada integrante llena su fila).
 
