@@ -21,6 +21,7 @@ export function authFalso(parcial: Partial<AuthValor> = {}): AuthValor {
     login: vi.fn().mockResolvedValue(undefined),
     registro: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn(),
+    salioPorSuCuenta: false,
     tienePermiso: (roles) => usuario !== null && roles.includes(usuario.rol),
     ...parcial,
   }

@@ -16,13 +16,12 @@ export const ROLES_COORDINADOR: readonly Rol[] = ['coordinador']
 // /moderacion: el coordinador solo entra a registrar el avance de las reparaciones (RN-05)
 export const ROLES_SEGUIMIENTO: readonly Rol[] = ['moderador', 'coordinador']
 
+// /mapa (HU-04.5) y /perfil (HU-01.4) son pantallas provisionales: no se ofrecen en el menú hasta construirlas
 export const OPCIONES_MENU: readonly OpcionMenu[] = [
   { ruta: '/', texto: 'Reportes', roles: null },
   { ruta: '/zona', texto: '¿Cómo está mi zona?', roles: null },
-  { ruta: '/mapa', texto: 'Mapa', roles: null },
   { ruta: '/reportar', texto: 'Reportar', roles: ROLES_CIUDADANO },
   { ruta: '/mis-reportes', texto: 'Mis reportes', roles: ROLES_CIUDADANO },
-  { ruta: '/perfil', texto: 'Mi perfil', roles: ROLES_CIUDADANO },
   { ruta: '/moderacion', texto: 'Moderación', roles: ROLES_SEGUIMIENTO },
   { ruta: '/admin/colonias', texto: 'Colonias', roles: ROLES_COORDINADOR },
   { ruta: '/admin/usuarios', texto: 'Usuarios', roles: ROLES_COORDINADOR },
