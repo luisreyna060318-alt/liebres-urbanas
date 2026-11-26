@@ -67,9 +67,9 @@ pública, arranque en menos de 3 minutos, contraseñas protegidas, consulta en m
 español de México y datos de demostración). La Tabla 3 resume qué entró en cada nivel.
 
 <!-- tabla: anchos=2000,4338,2500 -->
-| Nivel | Qué incluye | Estado al 25-nov, 21:50 |
+| Nivel | Qué incluye | Estado al 25-nov, 23:10 |
 |---|---|---|
-| P0 (se entrega sí o sí) | 20 historias indispensables y los requisitos de la materia | Las 20 en `main`; 16 cumplen todos sus criterios y 4 tienen uno pendiente |
+| P0 (se entrega sí o sí) | 20 historias indispensables y los requisitos de la materia | Las 20 en `main` con sus criterios cumplidos |
 | P1 (si P0 está desplegado) | 8 historias deseables: mapa, exportar CSV y XML, colonias de interés, puntos recurrentes, resumen por colonia, catálogos, avisos y encharcamientos sin recargar | No iniciadas (`/mapa` y `/perfil` son pantallas provisionales) |
 | P2 (trabajo futuro) | 6 historias: fotos, trayecto, fusionar duplicados, cuadrillas, enlace municipal y PWA | Fuera del alcance (sección 4.5) |
 
@@ -88,21 +88,21 @@ La Tabla 4 resume el estado por épica.
 |---|---|---|---|---|---|
 | E1. Cuentas y acceso | HU-01.1 a 01.4 | 3 de 3 | 1 | — | #1, #2, #12 |
 | E2. Reporte de baches | HU-02.1 a 02.5 | 4 de 4 | — | 1 | #4, #5, #7 a #10 |
-| E3. Reporte de encharcamientos | HU-03.1 a 03.4 | 1 de 3 | 1 | — | #6, #11 |
-| E4. Consulta ciudadana | HU-04.1 a 04.6 | 3 de 4 | 1 | 1 | #19, #22, #30 |
-| E5. Validación y seguimiento | HU-05.1 a 05.5 | 2 de 2 | — | 3 | #24, #25 |
+| E3. Reporte de encharcamientos | HU-03.1 a 03.4 | 3 de 3 | 1 | — | #6, #11, #81 |
+| E4. Consulta ciudadana | HU-04.1 a 04.6 | 4 de 4 | 1 | 1 | #19, #22, #30, #82, #83 |
+| E5. Validación y seguimiento | HU-05.1 a 05.5 | 2 de 2 | — | 3 | #24, #25, #84 |
 | E6. Administración | HU-06.1 a 06.3 | 2 de 2 | 1 | — | #20, #21 |
-| E7. Indicadores | HU-07.1 a 07.3 | 0 de 1 | 2 | — | #26 |
+| E7. Indicadores | HU-07.1 a 07.3 | 1 de 1 | 2 | — | #26, #83 |
 | E8. Avisos | HU-08.1 a 08.4 | 1 de 1 | 2 | 1 | #18 |
-| **Total** | **34** | **16 de 20** | **8** | **6** | |
+| **Total** | **34** | **20 de 20** | **8** | **6** | |
 
 Tabla 4. Historias por épica (P1 sin iniciar; P2 es trabajo futuro). Fuente: `BACKLOG.md` y `gh pr list`, 25-nov-2026.
 
 **Backlog en issues, sin tablero.** El 25 de noviembre registramos el backlog en GitHub Issues: la propuesta (#36), las 34
 historias con sus criterios (#38 a #71) y las tareas transversales (#72 a #80). Se registraron al final y no durante el trabajo. Al
-auditar cada criterio antes de cerrar, 16 historias indispensables quedaron cerradas como completas y 4 siguen abiertas porque un
-criterio no se observa desde la interfaz: #48 y #49 (se corrigen en #81), #51 y #65. No se creó un tablero de GitHub Projects;
-durante el trabajo el seguimiento se hizo con la columna PR de `BACKLOG.md`, la descripción de cada PR y la lista de PRs.
+auditar cada criterio antes de cerrar encontramos 4 historias indispensables con un criterio que no se observaba desde la interfaz
+(#48, #49, #51 y #65); se corrigieron en #81 a #83 y las 20 quedaron cerradas. No se creó un tablero de GitHub Projects; durante el
+trabajo el seguimiento se hizo con la columna PR de `BACKLOG.md`, la descripción de cada PR y la lista de PRs.
 
 ### 2.2 Cronograma real
 
@@ -122,15 +122,14 @@ UTC−7).
 | Mié 25, 15:08 a 15:55 | Luis revisa y se fusionan #16 a #27 y #30; con #30 las 20 historias P0 quedan en `main` | G3 (20:00) |
 | Mié 25, 15:46 a 16:10 | Se abren #31 (este reporte) y #32 a #34 (arreglos de la revisión) | — |
 | Mié 25, 20:12 a 20:13 | Luis aprueba y se fusionan #34, #33, #32 y #28 | — |
-| Mié 25, 20:55 a 21:15 | Se fusiona #29; búsqueda de secretos en el historial y arranque cronometrado desde un clon limpio | — |
-| Mié 25, 21:15 a 21:50 | Se fusiona #35, se auditan los criterios, se registran los issues y se abre #81 | — |
+| Mié 25, 20:55 a 23:10 | Comprobaciones, issues y auditoría de criterios; se fusionan #29, #35, #81 a #84 y #31; despliegue manual de la API (#86) | — |
 | [PENDIENTE: fecha] | Congelamiento de código y etiqueta `v1.0.0` | G4 y G5 |
 
 Tabla 5. Plan frente a lo registrado. Fuente: `PLAN_DE_TRABAJO.md`, `git log` y `gh pr list`.
 
 La revisión de la mañana terminó casi media hora después de lo previsto y el despliegue de humo se movió de las 13:00 a la tarde.
-En cambio, el código de las 20 historias P0 llegó a `main` antes de las 20:00 planeadas, aunque la auditoría posterior
-encontró 4 con un criterio pendiente. Las historias P1 no se iniciaron.
+En cambio, el código de las 20 historias P0 llegó a `main` antes de las 20:00 planeadas, y la auditoría posterior
+encontró 4 con un criterio pendiente, que se corrigieron esa misma noche. Las historias P1 no se iniciaron.
 
 ### 2.3 Arquitectura
 
@@ -188,10 +187,10 @@ misma consulta; una restricción `CHECK` exige los campos correctos según la ca
 - **Pantallas de Carlos:** consulta con filtros guardados en la URL (tipo, estado, sector, colonia, severidad, fechas y búsqueda por
   calle o folio) y paginación; detalle con historial; "¿Cómo está mi zona?" con búsqueda de dirección o ubicación del dispositivo;
   moderación con bandeja y seguimiento; administración de colonias y usuarios; el tablero con una gráfica semanal en SVG propio
-  (`GraficaSemanal.tsx`, sin librerías); y la franja del aviso de lluvia en el encabezado. [PENDIENTE: con #81 a #84 fusionados, el
-  detalle también permite "Sigue ahí", "Ya no hay agua" y rechazar un encharcamiento (moderador).]
+  (`GraficaSemanal.tsx`, sin librerías); y la franja del aviso de lluvia en el encabezado. Desde #81 a #84, el
+  detalle también permite "Sigue ahí", "Ya no hay agua" y rechazar un encharcamiento (moderador).
 - **Componentes compartidos y pruebas:** `TarjetaReporte`, `Confirmar`, `Campo` y `Paginacion` se reutilizan en varias pantallas; hay
-  25 archivos de pruebas con Vitest (220 pruebas en `main` al 26-nov; recalcular con la etiqueta). Lighthouse de accesibilidad
+  25 archivos de pruebas con Vitest (227 pruebas en `main` al 25-nov). Lighthouse de accesibilidad
   100 y axe sin violaciones en 12 vistas a 360 y 1280 px (#27).
 - **Estilos:** hojas externas con variables de color, diseño desde 360 px con cortes en 640 y 1024 px, foco visible y
   `prefers-reduced-motion`; el tipo de reporte se distingue con ícono y texto, no solo con color.
@@ -291,10 +290,10 @@ gratuito de Render "duerme" el servicio, así que el primer pedido puede tardar;
 |---|---|---|---|
 | API | `pytest` + `TestClient` + SQLite en memoria | Registro y login, matriz rol × endpoint, autoría, privacidad, duplicados a 30 y 50 m, vigencia de 6 h, máquina de estados, límite de 10 por hora, geocodificación y clima simulados, zona, moderación, tablero y semilla | **642 pruebas pasan** |
 | Estilo | `ruff` | Backend y `db/` | Sin errores |
-| Frontend | Vitest + Testing Library | Validaciones, estados de carga, error y vacío, rutas privadas, formularios, consulta, detalle, moderación, administración y tablero | **220 pruebas en 25 archivos pasan**; lint y build correctos |
+| Frontend | Vitest + Testing Library | Validaciones, estados de carga, error y vacío, rutas privadas, formularios, consulta, detalle, moderación, administración y tablero | **227 pruebas en 25 archivos pasan**; lint y build correctos |
 | Docker | Docker Compose en el CI | Construcción de las imágenes | Correcta |
 
-Tabla 7. Pruebas automáticas. Fuente: CI de GitHub Actions sobre `main` (commit `5a0d6cd`, 25-nov-2026, 20:13).
+Tabla 7. Pruebas automáticas. Fuente: CI de GitHub Actions sobre `main` (commit `b779d0f`, 25-nov-2026, 22:55).
 
 Las cifras salen del registro de GitHub Actions (no las corrimos de nuevo en local). Las pruebas de la API usan SQLite, así que lo que depende de PostgreSQL se comprobó aparte y a mano: la migración y los triggers (#1), la comparación del tablero
 con la lista sobre los 500 reportes de la semilla (conteos 75, 94, 56, 112 y 115 iguales; comentario de Carlos en #28) y el bloqueo de
@@ -328,30 +327,23 @@ revisión manual con lector de pantalla (W3C, 2023). [PENDIENTE: repetir la medi
 | Desborde a 360 px en administración y orden de encabezados en `/mis-reportes` | Auditoría de accesibilidad (#27) | Corregido en #20, #21 y #27 |
 | #23 se fusionó a la rama de su PR base y no a `main` | Se notó después de fusionar | Se reabrió como #30 y se fusionó; ahora se revisa la base antes de fusionar |
 | La bitácora de Carlos afirmaba una comparación en PostgreSQL sin evidencia enlazada | Revisión de Luis en #28 | Carlos documentó la comparación en #28, ya fusionado |
-| Los botones "Sigue ahí" y "Ya no hay agua" no estaban en ninguna pantalla (HU-03.3), aunque las pruebas pasaban | Auditoría de criterios antes de cerrar los issues | Corregido en #81, en revisión |
-| La lista pública no muestra severidad ni nivel del agua ni filtra por sector, y no se puede rechazar un encharcamiento desde la interfaz | Misma auditoría | Corregido en #82, #83 y #84, en revisión |
+| Los botones "Sigue ahí" y "Ya no hay agua" no estaban en ninguna pantalla (HU-03.3), aunque las pruebas pasaban | Auditoría de criterios antes de cerrar los issues | Corregido en #81 |
+| La lista pública no muestra severidad ni nivel del agua ni filtra por sector, y no se puede rechazar un encharcamiento desde la interfaz | Misma auditoría | Corregido en #82, #83 y #84 |
+| La API publicada se quedó atrasada: Render no se redesplegaba solo y la lista de reportes respondía 404 | Prueba en el sitio público | Despliegue manual del 25-nov; flujo que despliega y comprueba (#86), en revisión |
 
-Tabla 8. Problemas encontrados y su estado al 25-nov-2026, 21:50. Fuente: revisiones y descripciones de los PRs.
+Tabla 8. Problemas encontrados y su estado al 25-nov-2026, 23:10. Fuente: revisiones y descripciones de los PRs.
 
 ### 4.4 Lecciones aprendidas
 
-- **PRs pequeños, pero con cuidado:** partir el trabajo en PRs apilados permitió revisar 14 PRs en una mañana, pero hay que confirmar
-  la rama base antes de fusionar (le pasó a #23).
-- **Revisar corriendo la rama:** las revisiones más útiles buscaron casos límite (fechas extremas, dos peticiones a la vez, uso con
-  teclado), no solo leyeron el diff.
-- **Una nota "no bloqueante" se olvida fácil:** la carrera de moderación llegó a `main` y se corrigió después (#34). Si el error
-  afecta datos que no se pueden borrar, hay que pedir cambios.
-- **Reglas en el servidor y en la base:** rol, autoría, estados, restricciones únicas y triggers no dependen de que la pantalla "se
-  porte bien".
-- **Toda afirmación con evidencia:** la auditoría encontró problemas que no se veían, y una bitácora afirmó una comprobación sin
-  enlazar su respaldo (sección 5).
+- **Confirmar la rama base** antes de fusionar un PR apilado (le pasó a #23).
+- **Revisar corriendo la rama** y buscar casos límite (fechas extremas, dos peticiones a la vez, teclado), no solo leer el diff.
+- **Una nota "no bloqueante" se olvida:** si el error toca datos que no se pueden borrar, hay que pedir cambios (#24 y #34).
+- **Toda afirmación con evidencia:** auditar cada criterio desde la interfaz encontró fallos que las pruebas no veían.
 
 ### 4.5 Trabajo futuro
 
-Las 8 historias P1 (mapa, exportar CSV y XML, colonias de interés, puntos recurrentes, resumen por colonia, catálogos editables,
-avisos y actualización periódica) y las 6 P2 (fotos, trayecto, fusionar duplicados, cuadrillas, enlace municipal y PWA). También:
-límite de intentos en el login, decidir si `/docs` se apaga en producción, índices únicos sin distinguir mayúsculas en nombres de
-colonias y sectores (pendiente que deja #34), pruebas de la API contra PostgreSQL en el CI y revisión manual con lector de pantalla.
+Las 8 historias P1 y las 6 P2 (sección 1.4), límite de intentos en el login, decidir si `/docs` se apaga en producción, índices
+únicos sin distinguir mayúsculas (#34), pruebas de la API contra PostgreSQL en el CI y revisión con lector de pantalla.
 
 ## 5. Uso de IA
 
@@ -359,22 +351,19 @@ La declaración completa está en [`AI_USAGE.md`](https://github.com/luisreyna06
 bitácoras en [`docs/ai/`](https://github.com/luisreyna060318-alt/liebres-urbanas/tree/main/docs/ai). Seguimos la política de autoría
 de la ACM (Association for Computing Machinery, s. f.): la IA no es autora y respondemos por todo el material. Los dos usamos Claude
 Code con Claude Sonnet 5.5 como orquestador y agentes de apoyo con Claude Opus 5.5 y Claude Sonnet 5.5, cada uno en su propia copia
-de Git; push, PRs, despliegue y descargas solo con autorización de la persona. El contexto está en `CLAUDE.md` y `docs/plan/`. Los 136 commits sin merge de todas las ramas llevan
+de Git; push, PRs, despliegue y descargas solo con autorización de la persona. El contexto está en `CLAUDE.md` y `docs/plan/`. Los 154 commits sin merge de todas las ramas llevan
 `Co-Authored-By` con el modelo real. Estimamos en ~95 % el código generado con IA en cada carpeta.
 [PENDIENTE: en AI_USAGE.md falta la parte de Carlos, incluida su reflexión (#37).]
 
 Casi todo el código lo escribieron agentes a partir de nuestro plan; nuestro trabajo principal fue decidir qué construir, revisar y
 comprobar. Estos casos, registrados en los PRs, muestran por qué la revisión no se puede saltar:
 
-- **Un error que podía tumbar el servidor.** El límite de "un pedido por segundo" a Nominatim usaba un candado sin tiempo máximo de
-  espera: pasaba las pruebas, pero con muchas búsquedas a la vez dejaba sin hilos a la API. Lo encontró la revisión A01/A02 (#12).
-- **Una carrera de datos.** Moderación leía el reporte sin bloquear la fila, aunque en #21 sí se había usado `with_for_update`: la IA
-  no aplica sola en un lugar lo que ya hizo bien en otro. Se corrigió en #34.
-- **Accesibilidad que las pruebas no ven.** Los filtros perdían el foco del teclado y las pruebas pasaban porque no simulan a alguien
-  que navega solo con teclado (#22, #26; corregido en #33).
-- **Una afirmación sin evidencia enlazada.** La bitácora de Carlos decía que se había comparado el tablero contra los 500 reportes en
-  PostgreSQL, pero el PR #26 no lo respaldaba (decía que las pruebas usan SQLite). La comparación sí se había hecho a mano, pero sin
-  dejar evidencia; lo detectó la revisión de #28 y Carlos la documentó ahí. La lección: un "ya se verificó" vale lo que su evidencia.
+- **Un error que podía tumbar el servidor:** el límite de un pedido por segundo a Nominatim usaba un candado sin espera máxima;
+  pasaba las pruebas, pero con muchas búsquedas dejaba sin hilos a la API (revisión A01/A02, #12).
+- **Una carrera de datos:** moderación leía el reporte sin bloquear la fila, aunque en #21 sí se había usado `with_for_update` (#34).
+- **Piezas sin conectar:** el componente para confirmar o desmentir no estaba en ninguna pantalla y sus pruebas pasaban (#81).
+- **Una afirmación sin evidencia enlazada:** una bitácora citaba una comparación en PostgreSQL que sí se hizo a mano, pero sin dejar
+  respaldo; lo detectó la revisión de #28 y Carlos la documentó ahí.
 
 **Reflexión crítica (Luis).** Lo que más me enseñó fue revisar #24: el código pasaba todas las pruebas, pero leía el reporte sin
 bloquear la fila y dos moderadores podían dejar un historial incoherente. Lo dejé como nota no bloqueante, se fusionó así y aprendí
@@ -389,18 +378,19 @@ la base y revisa `main` al terminar.
 
 ## 6. Contribución individual
 
-La Tabla 9 resume la contribución de cada quien. Los 16 PRs de Carlos están fusionados (#23 a una rama; su contenido llegó a `main`
-con #30). De los de Luis siguen abiertos #31 y #81. Luis revisó los 16 PRs de Carlos (pidió cambios en #28) y Carlos revisó los 19 de Luis
-(pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5). Carlos propone un reparto de 60 % para Luis y 40 % para Carlos
-[PENDIENTE: Luis confirma el porcentaje; recalcular las cifras sobre la etiqueta v1.0.0.].
+La Tabla 9 resume la contribución de cada quien. De los 17 PRs de Carlos hay 16 fusionados (#23 a una rama; su contenido llegó a
+`main` con #30) y #85 en revisión; de los 25 de Luis hay 23 fusionados y #86 y #87 en revisión. Luis revisó los 17 de Carlos (pidió
+cambios en #28) y Carlos revisó 23 de Luis (pidió cambios en #31). Todos los commits se hicieron con asistencia de IA (sección 5).
+El equipo acordó el reparto de la contribución: **60 % Luis y 40 % Carlos**. [PENDIENTE: recalcular las cifras sobre la etiqueta
+v1.0.0.]
 
 <!-- tabla: anchos=1238,2800,1100,1250,900,1550 -->
 | Integrante | Tareas principales | Commits (`main` / todas) | PRs (fusionados) | Revisó | % acordado |
 |---|---|---|---|---|---|
-| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 62 / 66 | 20 (18) | 16 PRs | 60 % (propuesta de Carlos) |
-| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 70 | 16 (16) | 19 PRs | 40 % (propuesta de Carlos) |
+| Luis David Reyna Morisco | Plan y contrato; API base, modelos, migración y autenticación; reportes, duplicados, encharcamientos, geocodificación y seguridad; frontend base y pantallas de reporte; Docker, CI y despliegue; colonias y semilla | 79 / 81 | 25 (23) | 17 PRs | 60 % |
+| Carlos Limones Ayala | Aviso de lluvia, zona, consulta, detalle, moderación y avance, administración de colonias y usuarios, tablero; auditoría de accesibilidad; arreglos de la revisión (#32 a #34) | 70 / 73 | 17 (16) | 23 PRs | 40 % |
 
-Tabla 9. Contribución individual al 25-nov-2026, 20:30 (`main` en `5a0d6cd`). Commits sin merge en `main` y en todas las ramas publicadas (`git shortlog -sn --no-merges`); PRs con `gh pr list --state all`.
+Tabla 9. Contribución individual al 25-nov-2026, 23:10 (`main` en `b779d0f`). Commits sin merge en `main` y en todas las ramas publicadas (`git shortlog -sn --no-merges`); PRs con `gh pr list --state all`.
 
 ## 7. Coevaluación entre pares
 
