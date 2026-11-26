@@ -322,7 +322,7 @@ revisión manual con lector de pantalla (W3C, 2023). [PENDIENTE: repetir la medi
 | #23 se fusionó a la rama de su PR base y no a `main` | Se notó después de fusionar | Se reabrió como #30 y se fusionó; ahora se revisa la base antes de fusionar |
 | La bitácora de Carlos afirmaba una comparación en PostgreSQL sin evidencia enlazada | Revisión de Luis en #28 | Carlos documentó la comparación en #28, ya fusionado |
 | Los botones "Sigue ahí" y "Ya no hay agua" no estaban en ninguna pantalla (HU-03.3), aunque las pruebas pasaban | Auditoría de criterios antes de cerrar los issues | Corregido en #81, en revisión |
-| La lista pública no muestra severidad ni nivel del agua ni filtra por sector, y no se puede rechazar un encharcamiento desde la interfaz | Misma auditoría | Abierto (#51, #65 y #79) |
+| La lista pública no muestra severidad ni nivel del agua ni filtra por sector, y no se puede rechazar un encharcamiento desde la interfaz | Misma auditoría | Corregido en #82, #83 y #84, en revisión |
 
 Tabla 8. Problemas encontrados y su estado al 25-nov-2026, 21:50. Fuente: revisiones y descripciones de los PRs.
 

@@ -55,6 +55,7 @@ Cada integrante lleva su propia bitácora para evitar choques al fusionar: [Luis
 | 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 y agente con Claude Opus 5.5 | Redactar el borrador del reporte técnico y de la autoevaluación a partir del repositorio y darles el formato de un reporte previo del equipo (docx y PDF) | `docs/reporte/*`, `docs/REPORTE.docx`, `docs/REPORTE.pdf`, `docs/AUTOEVALUACION.md` (PR #31) | Luis entregó el modelo de formato y el número de control de Carlos; en revisión por Carlos |
 | 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 (orquestador) | Corregir las observaciones que quedaban de la revisión y comprobar antes de la etiqueta: secretos en el historial y arranque desde un clon limpio | `frontend/`, `docs/plan/CONTRATO_API.md` (PR #35) | Luis pidió las correcciones y autorizó las comprobaciones |
 | 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 (orquestador) y agente auditor con Claude Opus 5.5 | Registrar el backlog como issues, auditar los criterios de las historias indispensables antes de cerrarlas, corregir los botones de confirmar y desmentir y pedir a Carlos sus textos | Issues #36 a #80, `frontend/` (PR #81) | Luis pidió abrir los issues y cerrar solo lo completo |
+| 2026-11-25 | Luis | Claude Code / Claude Sonnet 5.5 (orquestador) | Corregir los huecos que halló la auditoría: severidad y nivel del agua en la lista, filtro por sector en la consulta y rechazo de encharcamientos desde el detalle | `frontend/`, `backend/` (PRs #82 a #84) | Luis pidió corregir los tres |
 
 ## 5. Marcado en commits
 
