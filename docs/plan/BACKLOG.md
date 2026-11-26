@@ -1,7 +1,7 @@
 # Liebre Urbana — Backlog
 
 Fuente: *Requerimientos del cliente* (5 de noviembre de 2026). Cada historia conserva su ID (HU-xx.x) y sus criterios (CA1, CA2…)
-para usarlos en issues, PRs y pruebas. Este archivo es la versión de trabajo; el tablero de GitHub Projects se crea desde aquí.
+para usarlos en issues, PRs y pruebas. Este archivo es la versión de trabajo; en GitHub el backlog está en los issues #38 a #71 (no se creó un tablero de Projects).
 
 Leyenda: **I** indispensable, **D** deseable. **P0** se entrega sí o sí, **P1** si P0 está desplegado, **P2** trabajo futuro.
 **L** = Luis, **C** = Carlos. Los PRs se describen en `PLAN_DE_TRABAJO.md` (sección 5). El reparto de P1 se confirma el miércoles a las 20:00.
@@ -15,7 +15,7 @@ Leyenda: **I** indispensable, **D** deseable. **P0** se entrega sí o sí, **P1*
 | P2 (D) | 6 | — | — |
 | **Total** | **34** | | |
 
-La materia exige un backlog con al menos 15 historias: aquí hay 34 con criterios de aceptación, y 28 se implementan.
+La materia exige un backlog con al menos 15 historias: aquí hay 34 con criterios de aceptación. Al 26-nov están implementadas las 20 indispensables (P0).
 
 ---
 

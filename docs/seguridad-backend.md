@@ -91,7 +91,7 @@ de **solo lectura**: no se cambió código; cada hallazgo trae el arreglo propue
 | K2 | Baja (conocido) | `main.py:23` | `/docs` y `/openapi.json` públicos también en producción (A02) | Ambos 200 sin sesión | `FastAPI(docs_url=None, openapi_url=None)` si `settings.es_produccion` | abierto (conocido) |
 | K3 | Baja (conocido) | `services/catalogos.py:170-178` | Unicidad de nombres de sector y colonia sin distinguir mayúsculas solo en el servicio; la base compara exacto (carrera «Centro»/«CENTRO») | Documentado en el código | Índice único sobre `lower(nombre)` (migración de Luis) | abierto (conocido) |
 
-**Actualización del 26-nov (tarde):** S1, S3, S4, S7 y S12 quedaron corregidos en #94; el resto de los hallazgos sigue abierto. S1 y S3 se comprobaron en PostgreSQL real con peticiones concurrentes (sección de pruebas de #94).
+**Actualización del 26-nov:** S1, S3, S4, S7 y S12 quedaron corregidos en #94; el resto de los hallazgos sigue abierto. S1 y S3 se comprobaron en PostgreSQL real con peticiones concurrentes (sección de pruebas de #94).
 
 No se encontró ningún hallazgo de severidad alta: ningún rol entra donde no debe, ninguna respuesta pública lleva datos
 del autor y no hay secretos en el historial.
