@@ -294,6 +294,7 @@ export interface FiltroReportes {
   categoria?: Categoria
   estado?: Estado
   colonia_id?: number
+  sector_id?: number // solo las colonias de ese sector
   severidad?: Severidad
   desde?: string // "AAAA-MM-DD", día de Ciudad Juárez
   hasta?: string

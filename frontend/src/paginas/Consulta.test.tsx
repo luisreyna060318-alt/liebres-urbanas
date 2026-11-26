@@ -131,6 +131,24 @@ describe('Consulta pública (HU-04.1 y HU-04.2)', () => {
     expect(screen.getByTestId('url').textContent).not.toContain('pagina')
   })
 
+  it('filtra por sector, igual que el tablero (HU-07.1 CA5)', async () => {
+    const api = simularApi({
+      'GET /api/reportes': pagina([BACHE]),
+      'GET /api/colonias': COLONIAS_API,
+      'GET /api/sectores': { cuerpo: [{ id: 3, nombre: 'Suroriente' }] },
+    })
+    renderizar()
+    const u = userEvent.setup()
+
+    await screen.findByRole('heading', { name: 'BCH-2026-000001' })
+    await screen.findByRole('option', { name: 'Suroriente' })
+    await u.selectOptions(screen.getByLabelText('Sector'), '3')
+    await u.click(screen.getByRole('button', { name: 'Buscar' }))
+
+    await screen.findByText(/sector_id=3/)
+    expect(api.de('GET /api/reportes').at(-1)!.url.searchParams.get('sector_id')).toBe('3')
+  })
+
   it('no consulta si la fecha final es anterior a la inicial', async () => {
     const api = simularApi({ 'GET /api/reportes': pagina([BACHE]), 'GET /api/colonias': COLONIAS_API })
     renderizar()
