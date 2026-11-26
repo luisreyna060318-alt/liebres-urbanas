@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import type { ReporteDetalle } from '../api/tipos.ts'
-import { authFalso, ConAuth, simularApi } from '../pruebas/ayudas.tsx'
+import { authFalso, CIUDADANO, ConAuth, simularApi } from '../pruebas/ayudas.tsx'
 import { encharcamientoMio, reporteMio } from '../pruebas/datos.ts'
 import DetalleReporte from './DetalleReporte.tsx'
 
@@ -26,9 +26,9 @@ function detalle(parcial: Partial<ReporteDetalle> = {}, base = reporteMio()): Re
   }
 }
 
-function renderizar(ruta = '/reportes/345') {
+function renderizar(ruta = '/reportes/345', auth = authFalso()) {
   return render(
-    <ConAuth valor={authFalso()}>
+    <ConAuth valor={auth}>
       <MemoryRouter initialEntries={[ruta]}>
         <Routes>
           <Route path="/reportes/:id" element={<DetalleReporte />} />
@@ -140,5 +140,52 @@ describe('Detalle de un reporte (HU-04.4)', () => {
     expect(await screen.findByText(/No se pudo conectar con el servidor/)).toBeInTheDocument()
     await userEvent.setup().click(screen.getByRole('button', { name: 'Reintentar' }))
     expect(await screen.findByRole('heading', { level: 1, name: /BCH-2026-000123/ })).toBeInTheDocument()
+  })
+})
+
+describe('Confirmar o desmentir desde el detalle (HU-03.3 y HU-02.3)', () => {
+  const comoCiudadano = () => authFalso({ usuario: CIUDADANO })
+  const activo = () => detalle({ estado: 'activo', historial: [] }, encharcamientoMio())
+
+  it('un encharcamiento activo ofrece "Sigue ahí" y "Ya no hay agua" y registra la respuesta', async () => {
+    const api = simularApi({
+      'GET /api/reportes/500': [{ cuerpo: activo() }, { cuerpo: { ...activo(), estado: 'historico' } }],
+      'POST /api/reportes/500/confirmaciones': { status: 201, cuerpo: { ...activo(), estado: 'historico' } },
+    })
+    renderizar('/reportes/500', comoCiudadano())
+
+    expect(await screen.findByRole('button', { name: 'Sigue ahí' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Ya no hay agua' }))
+
+    expect(await screen.findByText(/Registramos que ya no hay agua/)).toBeInTheDocument()
+    expect(api.de('POST /api/reportes/500/confirmaciones')[0].cuerpo).toEqual({ tipo: 'ya_no_hay' })
+    // El reporte pasó a Histórico: se actualiza el estado y desaparecen los botones
+    expect(await screen.findByText('Estado: Histórico')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ya no hay agua' })).not.toBeInTheDocument()
+  })
+
+  it('un bache abierto se puede confirmar y se actualiza el contador', async () => {
+    simularApi({
+      'GET /api/reportes/345': [{ cuerpo: detalle() }, { cuerpo: detalle({ confirmaciones: 4 }) }],
+      'POST /api/reportes/345/confirmaciones': { status: 201, cuerpo: detalle({ confirmaciones: 4 }) },
+    })
+    renderizar('/reportes/345', comoCiudadano())
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirmar que sigue ahí' }))
+
+    expect(await screen.findByText(/Confirmaste este reporte/)).toBeInTheDocument()
+    expect(screen.getByText('Confirmaciones').nextElementSibling).toHaveTextContent('4')
+  })
+
+  it('sin sesión invita a iniciar sesión y un reporte reparado no ofrece confirmar', async () => {
+    simularApi({ 'GET /api/reportes/345': { cuerpo: detalle() } })
+    const { unmount } = renderizar()
+    expect(await screen.findByRole('link', { name: 'inicia sesión' })).toBeInTheDocument()
+    unmount()
+
+    simularApi({ 'GET /api/reportes/345': { cuerpo: detalle({ estado: 'reparado' }) } })
+    renderizar('/reportes/345', comoCiudadano())
+    await screen.findByText('Estado: Reparado')
+    expect(screen.queryByRole('button', { name: 'Confirmar que sigue ahí' })).not.toBeInTheDocument()
   })
 })
