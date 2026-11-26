@@ -190,7 +190,7 @@ misma consulta; una restricción `CHECK` exige los campos correctos según la ca
   (`GraficaSemanal.tsx`, sin librerías); y la franja del aviso de lluvia en el encabezado. Desde #81 a #84, el
   detalle también permite "Sigue ahí", "Ya no hay agua" y rechazar un encharcamiento (moderador).
 - **Componentes compartidos y pruebas:** `TarjetaReporte`, `Confirmar`, `Campo` y `Paginacion` se reutilizan en varias pantallas; hay
-  pruebas con Vitest (231 en 25 archivos antes de #96; 234 en 26 con él). Lighthouse de accesibilidad 100 y axe sin violaciones
+  pruebas con Vitest (234 en 26 archivos en `main`). Lighthouse de accesibilidad 100 y axe sin violaciones
   en 17 vistas (sección 4.2).
 - **Estilos:** hojas externas con variables de color, diseño desde 360 px con cortes en 640 y 1024 px, foco visible y
   `prefers-reduced-motion`; el tipo de reporte se distingue con ícono y texto, no solo con color.
@@ -265,8 +265,8 @@ comprueba con `backend/tests/test_seguridad.py`:
 
 El 26 de noviembre una segunda revisión (#91) cubrió las historias C3 a C11 con una matriz de rol por ruta en vivo, tokens
 manipulados, acceso a datos ajenos, privacidad y CORS, sin hallazgos altos. De sus 12 hallazgos nuevos se corrigieron 5 en #94;
-los dos principales, saltarse el límite de 10 reportes por hora con peticiones simultáneas y borrar un reporte recién validado,
-se comprobaron en PostgreSQL. Siguen abiertos, entre otros, que tres cuentas nuevas pueden cerrar un encharcamiento ajeno, la
+dos de ellos, S1 (saltarse el límite de 10 reportes por hora con peticiones simultáneas) y S3 (borrar un reporte recién
+validado), se comprobaron en PostgreSQL. Siguen abiertos, entre otros, que tres cuentas nuevas pueden cerrar un encharcamiento ajeno, la
 falta de límite de intentos en el login (A07) y `/docs` público. El historial (248 commits de las ramas publicadas) no tiene
 tokens, llaves privadas ni contraseñas reales, y nunca se subió un `.env`; las cadenas de conexión son de ejemplo o locales.
 
@@ -293,10 +293,10 @@ El plan gratuito de Render "duerme" el servicio, así que el primer pedido puede
 |---|---|---|---|
 | API | `pytest` + `TestClient` + SQLite en memoria | Registro y login, matriz rol × endpoint, autoría, privacidad, duplicados a 30 y 50 m, vigencia de 6 h, máquina de estados, límite de 10 por hora, geocodificación y clima simulados, zona, moderación, tablero y semilla | **698 pruebas pasan** |
 | Estilo | `ruff` | Backend y `db/` | Sin errores |
-| Frontend | Vitest + Testing Library | Validaciones, estados de carga, error y vacío, rutas privadas, formularios, consulta, detalle, moderación, administración y tablero | **231 pruebas en 25 archivos pasan** (234 con #96); lint y build correctos |
+| Frontend | Vitest + Testing Library | Validaciones, estados de carga, error y vacío, rutas privadas, formularios, consulta, detalle, moderación, administración y tablero | **234 pruebas en 26 archivos pasan**; lint y build correctos |
 | Docker | Docker Compose en el CI | Construcción de las imágenes | Correcta |
 
-Tabla 7. Pruebas automáticas. Fuente: CI de GitHub Actions sobre `main` (commit `d5aab9c`, 26-nov-2026).
+Tabla 7. Pruebas automáticas. Fuente: CI de GitHub Actions sobre `main` (commit `3d9288e`, 26-nov-2026).
 
 Las cifras salen del registro de GitHub Actions (no las corrimos de nuevo en local). Las pruebas de la API usan SQLite, así que lo que depende de PostgreSQL se comprobó aparte y a mano: la migración y los triggers (#1), la comparación del tablero
 con la lista sobre los 500 reportes de la semilla (conteos 75, 94, 56, 112 y 115 iguales; comentario de Carlos en #28) y el bloqueo de
